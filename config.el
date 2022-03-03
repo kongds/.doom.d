@@ -544,6 +544,15 @@
   (add-hook 'ein:notebook-mode-hook 'ein-mode-hooks)
   )
 
+(use-package! rime
+  :config
+  (setq default-input-method "rime")
+  (setq rime-librime-root "~/.emacs.d/librime/dist")
+  (setq rime-show-candidate 'posframe)
+  (setq rime-cursor "˰")
+  )
+
+
 (load! "config-org")
 
 (load! "start-sync")
@@ -557,4 +566,3 @@
 (load! "+bindings")
 
 (load! "+patches")
-

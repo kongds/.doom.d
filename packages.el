@@ -52,7 +52,6 @@
 (package! org-download)
 (package! tao-theme)
 (package! wakatime-mode)
-(package! pyim)
 (package! immortal-scratch)
 (package! persistent-scratch)
 (package! posframe)
@@ -99,3 +98,7 @@
 (package! cape)
 
 (package! org-modren :recipe (:host github :repo "minad/org-modern" :files ("*.el" "out")))
+
+(package! pyim-basedict)
+
+(package! rime)

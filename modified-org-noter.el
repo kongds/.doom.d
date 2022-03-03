@@ -355,6 +355,12 @@ notes file, even if it finds one."
           (org-noter-insert-precise-note t)
           (pdf-view-deactivate-region)
           ;;(car (pdf-view-active-region-text))
-          )))
+          )
+    "s"  (lambda ()
+           (interactive)
+           (get-paper (car (pdf-view-active-region-text)))
+           (pdf-view-deactivate-region)
+           )
+    ))
 
 (provide 'modified-org-noter)

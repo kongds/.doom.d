@@ -96,6 +96,7 @@
 
 (package! corfu)
 (package! cape)
+(package! kind-icon)
 
 (package! org-modren :recipe (:host github :repo "minad/org-modern" :files ("*.el" "out")))
 

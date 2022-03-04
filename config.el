@@ -515,9 +515,8 @@
 (after! vterm
   (add-hook 'vterm-mode-hook
             (lambda() (modify-syntax-entry ?_ "w"))))
-(after! emacs-lisp
-  (add-hook 'emacs-lisp-mode-hook
-            (lambda() (modify-syntax-entry ?- "w"))))
+(add-hook 'emacs-lisp-mode-hook
+        (lambda() (modify-syntax-entry ?- "w")))
 
 
 (after! telega
@@ -566,3 +565,5 @@
 (load! "+bindings")
 
 (load! "+patches")
+
+(load! "corfu-company")

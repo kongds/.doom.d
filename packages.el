@@ -103,3 +103,7 @@
 (package! pyim-basedict)
 
 (package! rime)
+
+(package! gscholar-bibtex)
+
+(package! org-protocol-capture-html)

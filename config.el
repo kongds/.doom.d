@@ -174,7 +174,6 @@
 
 (use-package! wakatime-mode
   :config
-  (setq wakatime-api-key "04c51493-fb46-4603-b923-0a42a9822e69")
   (setq wakatime-cli-path "/usr/local/bin/wakatime")
   (global-wakatime-mode))
 
@@ -415,23 +414,26 @@
       (with-current-buffer buffer
         (doom-persist-scratch-buffer-h-with-cache))))
 
+  ;; show modeline in buffer
+  (advice-add 'doom/open-scratch-buffer :after #'(lambda (&rest r)
+                                                 (+modeline-mode 1)))
+
   ;;(fmakunbound 'doom-persist-scratch-buffer-h)
   ;;(defalias 'doom-persist-scratch-buffer-h #'doom-persist-scratch-buffer-h-with-cache)
   (remove-hook 'kill-emacs-hook #'doom-persist-scratch-buffers-h)
   (add-hook 'kill-emacs-hook #'doom-persist-scratch-buffers-h-with-cache)
-
   (add-hook 'doom-scratch-buffer-created-hook
             (lambda ()
               (setq buffer-undo-list nil)
               (remove-hook 'kill-buffer-hook #'doom-persist-scratch-buffer-h 'local)
               (add-hook 'kill-buffer-hook #'doom-persist-scratch-buffer-h-with-cache nil 'local)
-              (local-set-key (kbd "C-x s")
-                             #'(lambda ()
-                                 (interactive)
-                                 (when (member (current-buffer) doom-scratch-buffers)
-                                   (doom-persist-scratch-buffer-h-with-cache)
-                                   (set-buffer-modified-p nil))
-                                 )))))
+              (local-set-key (kbd "C-x s") #'(lambda ()
+                                               (interactive)
+                                               (when (member (current-buffer) doom-scratch-buffers)
+                                                 (doom-persist-scratch-buffer-h-with-cache)
+                                                 (set-buffer-modified-p nil))))
+              (local-set-key (kbd "s-s") (kbd "C-x s"))
+              (local-set-key (kbd "C-x C-s") (kbd "C-x s")))))
 
 (after! python
   (add-hook 'python-mode-hook
@@ -551,6 +553,14 @@
   (setq rime-cursor "˰")
   )
 
+(use-package! org-protocol-capture-html
+  :after org-capture
+  :config
+  (add-to-list 'org-capture-templates
+               '("w" "Web site" entry
+                 (file "")
+                 "* %a :website:\n\n%U %?\n\n%:initial")))
+
 
 (load! "config-org")
 
@@ -562,8 +572,11 @@
 
 (load! "run-command-with-notify")
 
+(load! "corfu-company")
+
+(load! "local")
+
 (load! "+bindings")
 
 (load! "+patches")
 
-(load! "corfu-company")

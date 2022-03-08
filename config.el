@@ -26,7 +26,8 @@
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
 (setq doom-theme 'doom-nord)
-(setq doom-font "Roboto Mono 14")
+(setq doom-font (font-spec :family "Roboto Mono" :size 14))
+
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -80,79 +81,6 @@
 ;;(use-package! window-numbering
 ;;  :config
 ;;  (window-numbering-mode))
-
-(use-package! org-tempo)
-
-(use-package! org
-  :config
-  (require 'ox)
-  (defun format-image-inline (source attributes info)
-    (format "<img src=\"data:image/%s;base64,%s\"%s />"
-            (or (file-name-extension source) "")
-            (base64-encode-string
-             (with-temp-buffer
-               (insert-file-contents-literally source)
-               (buffer-string)))
-            (file-name-nondirectory source)))
-
-  (defun org-html-export-to-mhtml (async subtree visible body)
-    (cl-letf (((symbol-function 'org-html--format-image) 'format-image-inline))
-      (org-html-export-to-html nil subtree visible body)))
-
-  (org-export-define-derived-backend 'html-inline-images 'html
-    :menu-entry '(?h "Export to HTML" ((?m "As MHTML file and open" org-html-export-to-mhtml))))
-
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((dot . t)
-     (python . t)
-     (shell . t)
-     (jupyter . t)
-     (sql . t)))
-  (setq org-hide-emphasis-markers t)
-  (setq org-babel-python-command "/opt/homebrew/bin//python3")
-
-  ;; overide python blocks to jupyter python
-  ;; (org-babel-jupyter-override-src-block "python")
-  ;; no sync
-  (setq ob-async-no-async-languages-alist '("python" "jupyter-python"))
-
-  (setq org-babel-default-header-args:jupyter-julia '((:async . "yes")
-                                                      (:session . "py")))
-
-  (setq org-emphasis-alist
-        (quote (
-                ("/" italic)
-                ("_" underline)
-                ("+" (:strike-through t))
-                ("~" org-verbatim verbatim)
-              ;;  ("*" (:foreground "yellow" :background "black"))
-                )))
-
-  (setq org-html-text-markup-alist
-        '((bold . "<mark style=\"font-style:normal;font-weight:normal\">%s</mark>")
-          (code . "<code>%s</code>")
-          (italic . "<i>%s</i>")
-          (strike-through . "<del>%s</del>")
-          (underline . "<span class=\"underline\">%s</span>")
-          (verbatim . "<code>%s</code>")))
-  )
-
-(use-package! ob-ipython)
-(use-package! ob-async)
-
-(use-package! org-download
-  :config
-  (add-hook 'dired-mode-hook 'org-download-enable)
-  (setq-default org-download-heading-lvl nil
-                org-download-image-dir "~/.org/images"
-                org-download-screenshot-method "screencapture -s %s"
-                org-download-screenshot-file (expand-file-name "screenshot.jpg" temporary-file-directory)))
-
-(use-package! org-capture
-  :config
-  (setq org-directory "~/.org")
-  (setq org-default-notes-file (concat org-directory "/inbox.org")))
 
 ;;(add-load-path! "~/emacs_configs/.emacs.d/elpa/org-protocol-capture-html")
 ;;(use-package! org-protocol-capture-html
@@ -538,7 +466,7 @@
 
   (defun ein-mode-hooks ()
     (make-local-variable 'evil-motion-state-map)
-    (setq evil-motion-state-map (copy-tree evil-motion-state-map))
+    (setq-local evil-motion-state-map (copy-tree evil-motion-state-map))
     (define-key  evil-motion-state-map (kbd "C-o") nil)
     (define-key  evil-motion-state-map (kbd "C-j") nil)
     )
@@ -553,13 +481,6 @@
   (setq rime-cursor "˰")
   )
 
-(use-package! org-protocol-capture-html
-  :after org-capture
-  :config
-  (add-to-list 'org-capture-templates
-               '("w" "Web site" entry
-                 (file "")
-                 "* %a :website:\n\n%U %?\n\n%:initial")))
 
 
 (load! "config-org")
@@ -569,6 +490,8 @@
 (load! "quick-open")
 
 (load! "get-paper")
+
+(load! "pdf-search")
 
 (load! "run-command-with-notify")
 

@@ -107,3 +107,7 @@
 (package! gscholar-bibtex)
 
 (package! org-protocol-capture-html)
+
+(package! elisp-format)
+
+(package! org-fragtog)

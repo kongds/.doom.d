@@ -479,7 +479,31 @@
   (setq rime-librime-root "~/.emacs.d/librime/dist")
   (setq rime-show-candidate 'posframe)
   (setq rime-cursor "˰")
-  )
+
+  (defvar in-updating-cursor nil)
+  (defvar rime-init nil)
+  (defvar rime-enable nil)
+
+  (global-set-key (kbd "C-\\") ;;'toggle-input-method)
+                  (lambda ()
+                    (interactive)
+                    (unless rime-init
+                      (setq rime-init t)
+                      (setq evil-default-cursor
+                            (lambda ()
+                              (if (or (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-emacs-color))
+                                      (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-normal-color)))
+                                  (evil-set-cursor-color (if rime-enable
+                                                             (get 'cursor 'evil-emacs-color)
+                                                           (get 'cursor 'evil-normal-color)))
+                                (+evil-update-cursor-color-h))))
+                      (add-hook 'input-method-activate-hook (lambda ()
+                                                              (setq-local rime-enable t)
+                                                              (funcall evil-default-cursor)))
+                      (add-hook 'input-method-deactivate-hook (lambda ()
+                                                                (setq-local rime-enable nil)
+                                                                (funcall evil-default-cursor))))
+                    (toggle-input-method))))
 
 
 

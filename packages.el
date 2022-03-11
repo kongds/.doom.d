@@ -111,3 +111,5 @@
 (package! elisp-format)
 
 (package! org-fragtog)
+
+(package! osx-dictionary)

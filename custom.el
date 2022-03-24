@@ -7,9 +7,9 @@
  '(+modeline-height 20)
  '(ansi-color-names-vector
    ["#fafafa" "#e45649" "#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42"])
- '(company-dabbrev-downcase nil t)
- '(company-dabbrev-ignore-case nil t)
- '(company-dabbrev-other-buffers nil t)
+ '(company-dabbrev-downcase nil)
+ '(company-dabbrev-ignore-case nil)
+ '(company-dabbrev-other-buffers nil)
  '(company-global-modes
    '(not erc-mode circe-mode message-mode help-mode gud-mode vterm-mode))
  '(company-idle-delay 0)
@@ -22,7 +22,7 @@
  '(conda-anaconda-home "/opt/homebrew/Caskroom/miniforge/base/")
  '(custom-safe-themes
    '("246a9596178bb806c5f41e5b571546bb6e0f4bd41a9da0df5dfbca7ec6e2250c" "1704976a1797342a1b4ea7a75bdbb3be1569f4619134341bd5a4c1cfb16abad4" "88f59acbeacefb4998f45126d4d8ae8b2184f2a48753db362a349fd55321c7e1" "dbade2e946597b9cda3e61978b5fcc14fa3afa2d3c4391d477bdaeff8f5638c5" "fce3524887a0994f8b9b047aef9cc4cc017c5a93a5fb1f84d300391fba313743" "f4876796ef5ee9c82b125a096a590c9891cec31320569fc6ff602ff99ed73dca" "99ea831ca79a916f1bd789de366b639d09811501e8c092c85b2cb7d697777f93" "e074be1c799b509f52870ee596a5977b519f6d269455b84ed998666cf6fc802a" "bf387180109d222aee6bb089db48ed38403a1e330c9ec69fe1f52460a8936b66" default))
- '(doom-big-font-mode t)
+ '(doom-big-font-mode t t)
  '(ein:jupyter-server-command "/opt/homebrew/Caskroom/miniforge/base/bin/jupyter")
  '(ein:output-area-inlined-images t)
  '(exwm-floating-border-color "#c8c8c8")
@@ -38,9 +38,9 @@
  '(jdee-db-spec-breakpoint-face-colors (cons "#191C25" "#434C5E"))
  '(lsp-enable-file-watchers t)
  '(lsp-enable-imenu nil)
- '(lsp-session-file "/Users/royokong/.emacs.d/.local/etc/lsp-session" t)
+ '(lsp-session-file "/Users/royokong/.emacs.d/.local/etc/lsp-session")
  '(objed-cursor-color "#BF616A")
- '(org-agenda-files '("~/.org/"))
+ '(org-agenda-files '("~/.org/" "~/.org/roam/"))
  '(org-agenda-inhibit-startup t)
  '(org-agenda-loop-over-headlines-in-active-region nil)
  '(org-agenda-skip-unavailable-files t)

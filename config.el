@@ -271,7 +271,6 @@
   ;;(add-hook 'lsp-completion-mode-hook #'lsp-completion-mode-setup)
 )
 
-(set-repl-handler! 'python-mode #'+python/open-ipython-repl)
 
 (after! evil
   ;; evil move between frame
@@ -364,6 +363,7 @@
               (local-set-key (kbd "C-x C-s") (kbd "C-x s")))))
 
 (after! python
+  (set-repl-handler! 'python-mode #'+python/open-ipython-repl)
   (add-hook 'python-mode-hook
             (lambda()
               (which-function-mode 1))))
@@ -487,16 +487,16 @@
   (global-set-key (kbd "C-\\") ;;'toggle-input-method)
                   (lambda ()
                     (interactive)
+                    (setq evil-default-cursor
+                          (lambda ()
+                            (if (or (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-emacs-color))
+                                    (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-normal-color)))
+                                (evil-set-cursor-color (if rime-enable
+                                                           (get 'cursor 'evil-emacs-color)
+                                                         (get 'cursor 'evil-normal-color)))
+                              (+evil-update-cursor-color-h))))
                     (unless rime-init
                       (setq rime-init t)
-                      (setq evil-default-cursor
-                            (lambda ()
-                              (if (or (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-emacs-color))
-                                      (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-normal-color)))
-                                  (evil-set-cursor-color (if rime-enable
-                                                             (get 'cursor 'evil-emacs-color)
-                                                           (get 'cursor 'evil-normal-color)))
-                                (+evil-update-cursor-color-h))))
                       (add-hook 'input-method-activate-hook (lambda ()
                                                               (setq-local rime-enable t)
                                                               (funcall evil-default-cursor)))
@@ -506,6 +506,11 @@
                     (toggle-input-method))))
 
 
+;; proxy here
+(setq url-proxy-services
+   '(("no_proxy" . "^\\(localhost\\|10\\..*\\|192\\.168\\..*\\)")
+     ("http" . "127.0.0.1:1087")
+     ("https" . "127.0.0.1:1087")))
 
 (load! "config-org")
 
@@ -519,7 +524,7 @@
 
 (load! "run-command-with-notify")
 
-(load! "corfu-company")
+;; (load! "corfu-company")
 
 (load! "local")
 

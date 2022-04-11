@@ -7,9 +7,9 @@
  '(+modeline-height 20)
  '(ansi-color-names-vector
    ["#fafafa" "#e45649" "#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42"])
- '(company-dabbrev-downcase nil)
- '(company-dabbrev-ignore-case nil)
- '(company-dabbrev-other-buffers nil)
+ '(company-dabbrev-downcase nil t)
+ '(company-dabbrev-ignore-case nil t)
+ '(company-dabbrev-other-buffers nil t)
  '(company-global-modes
    '(not erc-mode circe-mode message-mode help-mode gud-mode vterm-mode))
  '(company-idle-delay 0)
@@ -57,6 +57,7 @@
  '(package-selected-packages '(epc forge))
  '(pdf-view-midnight-colors (cons "#ECEFF4" "#2E3440"))
  '(persistent-scratch-scratch-buffer-p-function '(lambda nil (string= (buffer-name) "*doom:scratch*")))
+ '(realgud:pdb-command-name "bash debug_remote_pdb.sh")
  '(rime-deactivate-when-exit-minibuffer nil)
  '(rustic-ansi-faces
    ["#2E3440" "#BF616A" "#A3BE8C" "#EBCB8B" "#81A1C1" "#B48EAD" "#88C0D0" "#ECEFF4"])
@@ -265,6 +266,7 @@ is the buffer position of the start of the containing expression."
              (advice-add #'calculate-lisp-indent :around #'wrap-calculate-lisp-indent)))
      (checkdoc-package-keywords-flag)
      (ffip-project-root . "/Users/royokong/")))
+ '(twittering-proxy-use t)
  '(vc-annotate-background "#fafafa")
  '(vc-annotate-color-map
    (list

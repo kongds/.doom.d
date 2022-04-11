@@ -86,7 +86,7 @@
        :tools
        ;;ansible
        biblio            ; Writes a PhD for you (citation needed)
-       ;;debugger          ; FIXME stepping through code, to help you add bugs
+       (debugger +lsp)   ; FIXME stepping through code, to help you add bugs
        ;;direnv
        ;;docker
        ;;editorconfig      ; let someone else argue about tabs vs spaces
@@ -133,7 +133,7 @@
        ;;(haskell +dante)  ; a language that's lazier than I am
        ;;hy                ; readability of scheme w/ speed of python
        ;;idris             ;
-       ;;json              ; At least it ain't XML
+       json              ; At least it ain't XML
        ;;(java +meghanada) ; the poster child for carpal tunnel syndrome
        ;;javascript        ; all(hope(abandon(ye(who(enter(here))))))
        ;;julia             ; a better, faster MATLAB
@@ -164,16 +164,16 @@
        ;;rust              ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
        ;;scala             ; java, but good
        ;;scheme            ; a fully conniving family of lisps
-       ;;sh                ; she sells {ba,z,fi}sh shells on the C xor
+       sh                ; she sells {ba,z,fi}sh shells on the C xor
        ;;sml
        ;;solidity          ; do you need a blockchain? No.
        ;;swift             ; who asked for emoji variables?
        ;;terra             ; Earth and Moon in alignment for performance.
        ;;web               ; the tubes
-       ;;yaml              ; JSON, but readable
+       yaml              ; JSON, but readable
 
        :email
-       ;;(mu4e +gmail)
+       (mu4e +gmail)
        ;;notmuch
        ;;(wanderlust +gmail)
 
@@ -181,7 +181,7 @@
        ;;calendar
        ;;irc               ; how neckbeards socialize
        ;;(rss +org)        ; emacs as an RSS reader
-       ;;twitter           ; twitter client https://twitter.com/vnought
+       twitter           ; twitter client https://twitter.com/vnought
 
        :config
        ;;literate

@@ -113,3 +113,7 @@
 (package! org-fragtog)
 
 (package! osx-dictionary)
+
+(package! copilot :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "out" ".js")))
+
+(package! go-translate)

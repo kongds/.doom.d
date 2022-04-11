@@ -159,10 +159,12 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
 (use-package! org-protocol-capture-html
   :after org-capture
   :config
-  (add-to-list 'org-capture-templates
-               '("w" "Web site" entry
-                 (file "")
-                 "* %a :website:\n\n%U %?\n\n%:initial")))
+  (setq org-capture-templates
+       `(("t" "Task" entry (file ,(concat org-directory "/todo.org"))
+           "* TODO %?\n  %T\n  %a")
+          ("w" "Web site" entry
+           (file "")
+           "* %a :website:\n\n%U %?\n\n%:initial"))))
 
 (use-package! org-fragtog
   :after org

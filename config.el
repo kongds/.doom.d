@@ -93,12 +93,6 @@
 ;;          ("m" "Memory" entry (file+headline org-default-notes-file "Memorys")
 ;;           "* %?\nEntered on %U\n  %i\n  %a"))))
 
-;;(add-load-path! "~/emacs_configs/.emacs.d/telega.el")
-;;(use-package! telega
-;;  :config
-;;  (set-popup-rule! "◀{肥仔}" :size 0.25 :vslot -4 :select t :quit nil :ttl nil)
-;;  (setq telega-proxies (list '(:server "127.0.0.1" :port 1080 :enable t
-;;                               :type (:@type "proxyTypeSocks5")))))
 
 (use-package! wakatime-mode
   :config
@@ -224,47 +218,11 @@
                     ol))
             (hl-line-mode 1))))
 
-(use-package! company-tabnine
-  :when (featurep! :completion company)
-  :config
-  (defun company//sort-by-tabnine (candidates)
-    (if (or (functionp company-backend)
-            (not (and (listp company-backend) (memq 'company-tabnine company-backend))))
-        candidates
-      (let ((candidates-table (make-hash-table :test #'equal))
-            candidates-1
-            candidates-2)
-        (dolist (candidate candidates)
-          (if (eq (get-text-property 0 'company-backend candidate)
-                  'company-tabnine)
-              (unless (gethash candidate candidates-table)
-                (push candidate candidates-2))
-            (push candidate candidates-1)
-            (puthash candidate t candidates-table)))
-        (setq candidates-1 (nreverse candidates-1))
-        (setq candidates-2 (nreverse candidates-2))
-        (nconc (seq-take candidates-1 2)
-               (seq-take candidates-2 2)
-               (seq-drop candidates-1 2)
-               (seq-drop candidates-2 2)))))
-  ;; (add-to-list 'company-transformers 'company//sort-by-tabnine t)
-  ;; The free version of TabNine is good enough,
-  ;; and below code is recommended that TabNine not always
-  ;; prompt me to purchase a paid version in a large project.
-  ;; 禁止tabnine提示升级付费版本
-  (defadvice company-echo-show (around disable-tabnine-upgrade-message activate)
-      (let ((company-message-func (ad-get-arg 0)))
-        (when (and company-message-func
-                   (stringp (funcall company-message-func)))
-          (unless (string-match "The free version of TabNine only indexes up to" (funcall company-message-func))
-            ad-do-it))))
-  ;;将tabnine添加到backends
-  (add-to-list 'company-backends 'company-tabnine))
-
 (after! lsp-mode
   (push "[/\\\\][^/\\\\]*\\.\\(json\\|html\\|jade\\|org\\|ipynb\\)$" lsp-file-watch-ignored)
   ;;(setq +lsp-company-backends '(company-capf :with company-dabbrev-code :separate))
-  (setq +lsp-company-backends '(company-capf company-yasnippet company-tabnine :separate))
+  ;;(setq +lsp-company-backends '(company-capf company-yasnippet company-tabnine-capf :separate))
+  ;;(setq +lsp-company-backends '(company-capf company-yasnippet :separate))
   ;;(setq lsp-session-file "/dev/null")
   ;;(defun lsp-completion-mode-setup ()
     ;;(setq-local company-backends '((company-capf :with company-dabbrev-code :separate))))
@@ -295,14 +253,12 @@
 
 (after! goto-chg
     (let ((after-fn (lambda (&rest _) (recenter nil))))
-    (advice-add 'goto-last-change :after after-fn)
-  ))
+    (advice-add 'goto-last-change :after after-fn)))
 
 (after! better-jumper
     (let ((after-fn (lambda (&rest _) (recenter nil))))
     (advice-add 'better-jumper-jump-backward :after after-fn)
-    (advice-add 'better-jumper-jump-forward :after after-fn)
-  ))
+    (advice-add 'better-jumper-jump-forward :after after-fn)))
 
 (after! dired
   (setq ranger-show-hidden t))
@@ -322,8 +278,7 @@
           (scratch (expand-file-name (concat (or doom-scratch-current-project
                                                  doom-scratch-default-file)
                                              ".el")
-                                     doom-scratch-dir)
-                   ))
+                                     doom-scratch-dir)))
       (copy-file scratch
                  (concat scratch "." (format-time-string "%H:%M:%S-%m-%d-%Y" (current-time))))
       (with-temp-file scratch
@@ -453,8 +408,7 @@
   (setq telega-proxies
       (list
        '(:server "127.0.0.1" :port 1087 :enable t
-                 :type (:@type "proxyTypeHttp"))
-       )))
+                 :type (:@type "proxyTypeHttp")))))
 
 
 (after! ein-notebook
@@ -468,10 +422,8 @@
     (make-local-variable 'evil-motion-state-map)
     (setq-local evil-motion-state-map (copy-tree evil-motion-state-map))
     (define-key  evil-motion-state-map (kbd "C-o") nil)
-    (define-key  evil-motion-state-map (kbd "C-j") nil)
-    )
-  (add-hook 'ein:notebook-mode-hook 'ein-mode-hooks)
-  )
+    (define-key  evil-motion-state-map (kbd "C-j") nil))
+  (add-hook 'ein:notebook-mode-hook 'ein-mode-hooks))
 
 (use-package! rime
   :config
@@ -505,12 +457,39 @@
                                                                 (funcall evil-default-cursor))))
                     (toggle-input-method))))
 
+(after! realgud
+  (defun realgud:file-loc-from-line-before (args)
+    (mapcar #'(lambda (x)
+        (if (typep x 'string)
+            (replace-regexp-in-string ".mnt.jt" "/Users/royokong/nlp" x) x))
+     args))
+  (advice-add 'realgud:file-loc-from-line
+              :filter-args 'realgud:file-loc-from-line-before)
+  (advice-add 'realgud:file-column-from-string
+              :filter-args 'realgud:file-loc-from-line-before)
+  (advice-add 'realgud:file-line-count
+              :filter-args 'realgud:file-loc-from-line-before)
 
-;; proxy here
-(setq url-proxy-services
-   '(("no_proxy" . "^\\(localhost\\|10\\..*\\|192\\.168\\..*\\)")
-     ("http" . "127.0.0.1:1087")
-     ("https" . "127.0.0.1:1087")))
+  (defun realgud-send-command-before (args)
+    (message (prin1-to-string args))
+    (mapcar #'(lambda (x)
+        (if (typep x 'string)
+            (replace-regexp-in-string  ".Users.royokong.nlp" "/mnt/jt" x) x))
+     args))
+  (advice-add 'realgud-send-command
+              :filter-args 'realgud-send-command-before)
+  (defun pdb-reset ()
+  "Pdb cleanup - remove debugger's internal buffers (frame,
+breakpoints, etc.)."
+  (interactive)
+  ;; (pdb-breakpoint-remove-all-icons)
+  (dolist (buffer (buffer-list))
+    (when (string-match "\\*pdb-[a-z]+\\*" (buffer-name buffer))
+      (let ((w (get-buffer-window buffer)))
+        (when w
+          (delete-window w)))))))
+
+
 
 (load! "config-org")
 
@@ -526,9 +505,13 @@
 
 ;; (load! "corfu-company")
 
+(load! "tabnine-capf")
+(load! "copilot-company")
+
 (load! "local")
 
 (load! "+bindings")
 
 (load! "+patches")
 
+(load! "trans")

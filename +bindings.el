@@ -1,4 +1,19 @@
 ;;; +bindings.el -*- lexical-binding: t; -*-
+(defun in-project-switch (on-other-window invalidate-cache)
+  "Jump to a project's file using completion.
+With a prefix arg INVALIDATE-CACHE invalidates the cache first."
+  (interactive "P")
+  (projectile-maybe-invalidate-cache invalidate-cache)
+  (let* ((project-root (loop for i in projectile-known-projects
+                             if (equal (+workspace-current-name) (doom-project-name i))
+                             return i))
+         (file (projectile-completing-read "Find file: "
+                                           (projectile-project-files (s-replace "~" "/Users/royokong" project-root))))
+         (ff (if on-other-window #'find-file-other-window #'find-file)))
+    (when file
+      (funcall ff (expand-file-name file project-root))
+      (run-hooks 'projectile-find-file-hook))))
+
 
 (map!
  "s-k" #'kill-this-buffer
@@ -17,36 +32,49 @@
 
  "C-0" #'toggle-frame-fullscreen
 
+
  "C-x w" #'winner-undo
  (:leader
   ;;:desc "switch buffer" :n "j" #'+ivy/switch-buffer
   ;;:desc "switch workspace buffer" :n "k" #'+ivy/switch-workspace-buffer
-  :desc "switch" :n "SPC" #'(lambda (&optional invalidate-cache)
-  "Jump to a project's file using completion.
-With a prefix arg INVALIDATE-CACHE invalidates the cache first."
-  (interactive "P")
-  (projectile-maybe-invalidate-cache invalidate-cache)
-  (let* ((project-root (loop for i in projectile-known-projects
-                             if (equal (+workspace-current-name) (doom-project-name i))
-                             return i))
-         (file (projectile-completing-read "Find file: "
-                                           (projectile-project-files (s-replace "~" "/Users/royokong" project-root))))
-         (ff #'find-file))
-    (when file
-      (funcall ff (expand-file-name file project-root))
-      (run-hooks 'projectile-find-file-hook))))
 
+  :desc "switch" :n "SPC" #'(lambda(arg)
+                              (interactive "P")
+                              (condition-case nil
+                                  (in-project-switch nil nil)
+                                (error (project-find-file))))
+
+  :desc "music" :n "m m" #'netease-cloud-music
   :desc "bibtex" :n "n b" #'helm-bibtex
   :desc "switch buffer" :n "j" #'switch-to-buffer
   :desc "switch workspace buffer" :n "k" #'+vertico/switch-workspace-buffer
+  :desc "kill workspace buffer" :n "K" #'persp-kill-buffer
   :desc "Org roam find file" :n "v" #'org-roam-node-find
   :desc "toggle last popup" :n "d" #'(lambda()
                                        (interactive)
                                        (let ((closep (+popup-windows)))
                                            (+popup/toggle)
                                            (if closep
-                                               (balance-windows)))
-                                       ))
+                                               (balance-windows))))
+
+  (:prefix-map ("/" . "remote")
+        :desc "switch buffer other window" :n "j" #'switch-to-buffer-other-window
+        :desc "switch workspace buffer other window" :n "k" #'(lambda (arg)
+                                                                (interactive "P")
+                                                                (let ((consult--buffer-display  #'switch-to-buffer-other-window))
+                                                                (+vertico/switch-workspace-buffer)))
+        :desc "switch other window" :n "SPC" #'(lambda (arg)
+                                                (interactive "P")
+                                                (condition-case nil
+                                                    (in-project-switch t nil)
+                                                  (error (projectile-find-file-other-window))))
+        :desc "horizontal split" :n "/" #'split-window-horizontally)
+
+  :desc "vertical split" :n "-" #'split-window-vertically
+  :desc "ace" :n "w a" #'ace-select-window
+  :desc "kill other window" :n "w 0" #'delete-other-windows)
+
+
 
  (:after company
   "M-/" #'company-complete)

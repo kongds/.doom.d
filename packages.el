@@ -70,8 +70,6 @@
 (package! epc)
 (package! ctable)
 (package! s)
-;;(package! eaf
-  ;;:recipe (:host github :repo "manateelazycat/emacs-application-framework"))
 
 (package! websocket)
 (package! org-roam-ui :recipe (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out")))
@@ -117,3 +115,15 @@
 (package! copilot :recipe (:host github :repo "zerolfx/copilot.el" :files ("*.el" "out" ".js")))
 
 (package! go-translate)
+
+(package! vterm-toggle)
+
+(package! netease-cloud-music :recipe (:host github :repo "SpringHan/netease-cloud-music.el" :files ("*.el")))
+
+;;(package! eaf :recipe (:host github :repo "emacs-eaf/emacs-application-framework" :files ("*")))
+
+(package! keytar)
+(package! lsp-grammarly :recipe (:host github :repo "emacs-grammarly/lsp-grammarly" :files ("*")))
+
+;; (package! lsp-bridge :recipe (:host github :repo "manateelazycat/lsp-bridge" :files ("*")))
+(package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab" :files ("*")))

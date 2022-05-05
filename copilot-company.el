@@ -17,13 +17,14 @@
   (defun copilot-reload-enter-unactive ()
     (interactive)
     (or (copilot-accept-completion)
-        (newline-and-indent)))
+        (unless buffer-read-only
+          (newline-and-indent))))
 
   (map! (:when (featurep! :completion company)
          (:after company
           (:map company-mode-map
-           "RET"    #'copilot-reload-enter-unactive
-           [return] #'copilot-reload-enter-unactive
+           "RET"    nil
+           [return] nil
            "TAB"    #'copilot-reload-tab
            [tab]    #'copilot-reload-tab)
           (:map company-active-map

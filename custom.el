@@ -7,11 +7,11 @@
  '(+modeline-height 20)
  '(ansi-color-names-vector
    ["#fafafa" "#e45649" "#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42"])
- '(company-dabbrev-downcase nil t)
- '(company-dabbrev-ignore-case nil t)
- '(company-dabbrev-other-buffers nil t)
+ '(company-dabbrev-downcase nil)
+ '(company-dabbrev-ignore-case nil)
+ '(company-dabbrev-other-buffers nil)
  '(company-global-modes
-   '(not erc-mode circe-mode message-mode help-mode gud-mode vterm-mode))
+   '(not erc-mode circe-mode message-mode help-mode gud-mode vterm-mode netease-cloud-music-switch-playlist-mode-map netease-cloud-music-mode netease-cloud-music-change-playlist-mode netease-cloud-music-switch-playlist-mode))
  '(company-idle-delay 0)
  '(company-minimum-prefix-length 2)
  '(company-require-match 'never)
@@ -27,7 +27,7 @@
  '(ein:output-area-inlined-images t)
  '(exwm-floating-border-color "#c8c8c8")
  '(fci-rule-color "#383a42")
- '(global-company-mode nil)
+ '(global-company-mode t)
  '(highlight-tail-colors
    ((("#e9f1e8" "#50a14f" "green")
      . 0)
@@ -38,7 +38,7 @@
  '(jdee-db-spec-breakpoint-face-colors (cons "#191C25" "#434C5E"))
  '(lsp-enable-file-watchers t)
  '(lsp-enable-imenu nil)
- '(lsp-session-file "/Users/royokong/.emacs.d/.local/etc/lsp-session")
+ '(lsp-session-file "/Users/royokong/.emacs.d/.local/etc/lsp-session" t)
  '(objed-cursor-color "#BF616A")
  '(org-agenda-files '("~/.org/" "~/.org/roam/"))
  '(org-agenda-inhibit-startup t)

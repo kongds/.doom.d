@@ -78,7 +78,4 @@ tabnine's candidate have greater position then others."
     (add-to-list 'company-backends 'company-tabnine-capf)
     (message "company-tabnine-capf enabled!")))
 
-(after! lsp-mode
-  (setq +lsp-company-backends '(company-capf company-yasnippet company-tabnine-capf :separate)))
-
 (provide 'tabnine-capf)

@@ -220,33 +220,44 @@
 
 (after! lsp-mode
   (push "[/\\\\][^/\\\\]*\\.\\(json\\|html\\|jade\\|org\\|ipynb\\)$" lsp-file-watch-ignored)
-  ;;(setq +lsp-company-backends '(company-capf :with company-dabbrev-code :separate))
-  ;;(setq +lsp-company-backends '(company-capf company-yasnippet company-tabnine-capf :separate))
-  ;;(setq +lsp-company-backends '(company-capf company-yasnippet :separate))
-  ;;(setq lsp-session-file "/dev/null")
-  ;;(defun lsp-completion-mode-setup ()
-    ;;(setq-local company-backends '((company-capf :with company-dabbrev-code :separate))))
-  ;;(add-hook 'lsp-completion-mode-hook #'lsp-completion-mode-setup)
+  (setq +lsp-company-backends '(company-capf company-dabbrev-code :separate))
 )
 
 
 (after! evil
   ;; evil move between frame
-  (evil-global-set-key 'normal (kbd "C-w h") #'(lambda ()
-                                                 (interactive)
-                                                 (condition-case nil
-                                                     (windmove-left)
-                                                   (error (if (> (length (frame-list)) 1)
-                                                              (+evil/next-frame 1))))))
-  (evil-global-set-key 'normal (kbd "C-w l") #'(lambda ()
-                                                 (interactive)
-                                                 (condition-case nil
-                                                     (windmove-right)
-                                                   (error (if (> (length (frame-list)) 1)
-                                                              (+evil/next-frame 1))))))
+  (defun -my-evil-move-window (&optional left)
+    (condition-case nil (if left (windmove-left) (windmove-right))
+      (error
+       (if (> (length (frame-list)) 1)
+           (+evil/next-frame 1)))))
+
+  (defun my-evil-move-left-window (args)
+    (interactive "p")
+    (-my-evil-move-window t))
+
+  (defun my-evil-move-right-window (args)
+    (interactive "p")
+    (-my-evil-move-window nil))
+
+  (evil-global-set-key 'normal (kbd "C-w h") #'my-evil-move-left-window)
+  (evil-global-set-key 'normal (kbd "C-w l") #'my-evil-move-right-window)
+  (evil-global-set-key 'normal (kbd "C-w C-h") #'my-evil-move-left-window)
+  (evil-global-set-key 'normal (kbd "C-w C-l") #'my-evil-move-right-window)
+
+  (evil-global-set-key 'normal (kbd "q") #'kill-this-buffer)
+  (evil-global-set-key 'normal (kbd "Q") #'evil-record-macro)
+
+  (map!
+   (:leader
+    :desc "evil window right" :n "w l" #'my-evil-move-right-window
+    :desc "evil window left" :n "w h" #'my-evil-move-left-window
+    ))
+
   ;; center after jump
-  (let ((after-fn (lambda (&rest _) (recenter nil))))
-    (advice-add 'evil-goto-mark-line :after after-fn)))
+  ;;(let ((after-fn (lambda (&rest _) (recenter nil))))
+   ;; (advice-add 'evil-goto-mark-line :after after-fn))
+  )
     ;;(advice-add 'evil-ex-search-next :after after-fn)
     ;;(advice-add 'evil-ex-search-previous :after after-fn))
 ;;(defalias 'forward-evil-word 'forward-evil-symbol))
@@ -491,6 +502,27 @@ breakpoints, etc.)."
 
 
 
+(after! netease-cloud-music
+  :config
+  (require 'netease-cloud-music-ui)
+
+  (setq netease-cloud-music-repeat-mode "playlist")
+
+  (add-to-list 'evil-emacs-state-modes 'netease-cloud-music-mode)
+  (define-key netease-cloud-music-mode-map (kbd "J") 'netease-cloud-music-storage-song)
+  (define-key netease-cloud-music-mode-map (kbd "j") 'next-line)
+  (define-key netease-cloud-music-mode-map (kbd "k") 'previous-line)
+  (define-key netease-cloud-music-mode-map (kbd "G") 'end-of-buffer)
+
+  (define-key netease-cloud-music-switch-playlist-mode-map (kbd "j") 'next-line)
+  (define-key netease-cloud-music-switch-playlist-mode-map (kbd "k") 'previous-line)
+
+  (define-key netease-cloud-music-mode-map (kbd "C-w h") 'my-evil-move-left-window)
+  (define-key netease-cloud-music-mode-map (kbd "C-w l") 'my-evil-move-right-window)
+  (define-key netease-cloud-music-mode-map (kbd "C-w C-h") 'my-evil-move-left-window)
+  (define-key netease-cloud-music-mode-map (kbd "C-w C-l") 'my-evil-move-right-window))
+
+
 (load! "config-org")
 
 (load! "start-sync")
@@ -508,6 +540,8 @@ breakpoints, etc.)."
 (load! "tabnine-capf")
 (load! "copilot-company")
 
+(load! "mu4e-config")
+
 (load! "local")
 
 (load! "+bindings")
@@ -515,3 +549,5 @@ breakpoints, etc.)."
 (load! "+patches")
 
 (load! "trans")
+
+(load! "doom-sort-tab")

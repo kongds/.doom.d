@@ -11,10 +11,13 @@
    ("SPC" . corfu-insert-separator))
   :custom
   (corfu-auto t)
+  (corfu-quit-no-match t)
   (corfu-cycle t)
   (corfu-auto-delay 0.1)
   :init
-  (corfu-global-mode)
+  (global-corfu-mode)
+  (require 'corfu-doc)
+  (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
 
   (setq evil-complete-next-func #'(lambda (arg)
                                     (corfu-next 1)))
@@ -99,10 +102,13 @@
   (defun my/lsp-mode-setup-completion ()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))
-    (setq-local
-     completion-at-point-functions
-     (list #'lsp-completion-at-point (cape-company-to-capf #'company-tabnine))
-     )
+    ;;(setq-local completion-at-point-functions (list (cape-company-to-capf #'company-lsp-bridge)))
+    ;;(setq-local
+     ;;completion-at-point-functions
+     ;;(list (cape-super-capf #'lsp-completion-at-point (cape-company-to-capf #'company-tabnine) #'cape-dabbrev)))
+    (setq-local completion-at-point-functions
+                (list  (cape-super-capf #'lsp-completion-at-point
+                                        (cape-company-to-capf (apply-partially #'company--multi-backend-adapter '(company-dabbrev-code company-tabnine))))))
     ) ;; Configure orderless
   :hook
   (lsp-completion-mode . my/lsp-mode-setup-completion))
@@ -112,6 +118,9 @@
   :init
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
+
+  (global-company-mode -1)
+  (setq +lsp-company-backends nil)
 
   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
   ;; Corfu commands are hidden, since they are not supposed to be used via M-x.

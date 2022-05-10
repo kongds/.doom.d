@@ -2,6 +2,7 @@
 
 (defvar startsync-running nil)
 (defvar startsync-dirs nil)
+(defvar startsync-update-dir nil)
 
 (defun startsync-controller-repl-filter (proc string)
   (when (buffer-live-p (process-buffer proc))
@@ -17,19 +18,42 @@
       )
     ))
 
-(defun startsync-after-save-hook ()
+(defun startsync-before-save-hook ()
   (let* ((project-root (loop for i in projectile-known-projects
                              if (equal (+workspace-current-name) (doom-project-name i))
-                             return i)))
-    (when (and project-root
-             (member t (mapcar
-                        (lambda (s)
-                          (equal (replace-regexp-in-string "~" "/Users/royokong" project-root) s)
-                          )
-                        startsync-dirs)))
-        (setq startsync-running t)
-        (force-mode-line-update)
+                             return i))
+         (project-root (if project-root (replace-regexp-in-string "~" "/Users/royokong" project-root) nil))
+         (buffer-dir (buffer-file-name)))
+    (setq startsync-update-dir nil)
+    (when (and project-root buffer-dir
+               (cl-search project-root buffer-dir)
+               (member t (mapcar (lambda (s) (equal project-root  s))
+                                 startsync-dirs)))
+      (setq startsync-update-dir project-root)
+      (shell-command "echo > ~/.sync.lock")
+      (setq startsync-running t)
+      (force-mode-line-update)
       )))
+
+(defun startsync-after-save-hook ()
+  (if (and startsync-update-dir
+           (not (get-buffer "*StartSync*")))
+      (save-window-excursion
+        (let* ((shell-buffer-name "*StartSync*")
+               (output-buffer (get-buffer-create shell-buffer-name))
+               (proc (progn
+                       (async-shell-command (concat "startSync "
+                                                    " -p " startsync-update-dir) output-buffer)
+                       (get-buffer-process output-buffer))))
+          (if (process-live-p proc)
+              (set-process-sentinel proc #'(lambda (process signal)
+                                             (when (memq (process-status process) '(exit signal))
+                                               (kill-buffer shell-buffer-name)
+                                               (setq startsync-running nil)
+                                               (force-mode-line-update)
+                                               (shell-command "rm ~/.sync.lock")
+                                               (shell-command-sentinel process signal))))))))
+  (setq startsync-update-dir nil))
 
 (def-modeline-var! +modeline-startsync
   '(:eval
@@ -41,9 +65,11 @@
   (interactive)
   (if (get-buffer "*startSync*")
       (kill-buffer "*startSync*"))
-  (start-process "*startSync*" "*startSync*" "startSync")
+  ;; (start-process "*startSync*" "*startSync*" "startSync")
 
+  (remove-hook 'before-save-hook 'startsync-before-save-hook)
   (remove-hook 'after-save-hook 'startsync-after-save-hook)
+  (add-hook 'before-save-hook 'startsync-before-save-hook)
   (add-hook 'after-save-hook 'startsync-after-save-hook)
 
   (setq startsync-dirs
@@ -78,6 +104,7 @@
 
   (set-modeline! :main 'default)
 
-  (set-process-filter (get-buffer-process "*startSync*") 'startsync-controller-repl-filter))
+  ;;(set-process-filter (get-buffer-process "*startSync*") 'startsync-controller-repl-filter)
+  )
 
 (provide 'start-sync)

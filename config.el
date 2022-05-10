@@ -245,6 +245,12 @@
   (evil-global-set-key 'normal (kbd "C-w C-h") #'my-evil-move-left-window)
   (evil-global-set-key 'normal (kbd "C-w C-l") #'my-evil-move-right-window)
 
+  (global-unset-key (kbd "C-w"))
+  (global-set-key (kbd "C-w h") #'my-evil-move-left-window)
+  (global-set-key (kbd "C-w l") #'my-evil-move-right-window)
+  (global-set-key (kbd "C-w C-h") #'my-evil-move-left-window)
+  (global-set-key (kbd "C-w C-l") #'my-evil-move-right-window)
+
   (evil-global-set-key 'normal (kbd "q") #'kill-this-buffer)
   (evil-global-set-key 'normal (kbd "Q") #'evil-record-macro)
 
@@ -447,6 +453,33 @@
   (defvar rime-init nil)
   (defvar rime-enable nil)
 
+  (defun rime-evil-escape-advice (orig-fun key)
+    "advice for `rime-input-method' to make it work together with `evil-escape'.
+  Mainly modified from `evil-escape-pre-command-hook'"
+    (if rime--preedit-overlay
+        ;; if `rime--preedit-overlay' is non-nil, then we are editing something, do not abort
+        (apply orig-fun (list key))
+      (when (featurep 'evil-escape)
+        (let* (
+               (fkey (elt evil-escape-key-sequence 0))
+               (skey (elt evil-escape-key-sequence 1))
+               (evt (read-event nil nil evil-escape-delay))
+               )
+          (cond
+           ((and (characterp evt)
+                 (or (and (char-equal key fkey) (char-equal evt skey))
+                     (and evil-escape-unordered-key-sequence
+                          (char-equal key skey) (char-equal evt fkey))))
+            (evil-repeat-stop)
+            (evil-normal-state))
+           ((null evt) (apply orig-fun (list key)))
+           (t
+            (setq unread-command-events (append unread-command-events (list evt)))
+            (apply orig-fun (list key))
+            ))))))
+
+  (advice-add 'rime-input-method :around #'rime-evil-escape-advice)
+
   (global-set-key (kbd "C-\\") ;;'toggle-input-method)
                   (lambda ()
                     (interactive)
@@ -535,7 +568,7 @@ breakpoints, etc.)."
 
 (load! "run-command-with-notify")
 
-;; (load! "corfu-company")
+(load! "corfu-company")
 
 (load! "tabnine-capf")
 (load! "copilot-company")
@@ -551,3 +584,5 @@ breakpoints, etc.)."
 (load! "trans")
 
 (load! "doom-sort-tab")
+
+(load! "eaf-config")

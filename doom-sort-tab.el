@@ -4,6 +4,8 @@
   :config
   (require 'consult)
   (defun sort-tab-workspace-buffer-list ()
+    (concatenate 'list
+    (eaf--get-eaf-buffers)
     (mapcar #'get-buffer (consult--buffer-query :sort 'visibility
                                                 :as #'buffer-name
                                                 :predicate #'(lambda (buf)
@@ -13,7 +15,7 @@
                                                                                        t))))
                                                                  (if workspace
                                                                      (+workspace-contains-buffer-p
-                                                                      buf workspace) nil))))))
+                                                                      buf workspace) nil)))))))
 
   (advice-add 'sort-tab-get-buffer-list
               :override #'(lambda ()
@@ -45,6 +47,98 @@
                                      :after #'(lambda (&rest r)
                                                 (unless (get-buffer-window (sort-tab-get-buffer))
                                                   (sort-tab-create-window))))))
+  (setq sort-tab-align 'center)
+  (cl-defmacro sort-tab-update-tabs (&rest body)
+  `(with-current-buffer (sort-tab-get-buffer)
+     ;; Clean buffer.
+     (erase-buffer)
+
+     ;; Update tabs.
+     ,@body
+
+     (when (eq sort-tab-align 'center)
+       (if (> (- (frame-text-cols) (point-max)) 0)
+           (indent-line-to (/ (- (frame-text-cols) (point-max)) 2))))
+
+     ;; Record last active buffer.
+     (setq sort-tab-last-active-buffer (current-buffer))
+     ))
+
+;;(defvar sort-tab-update-list-updating nil)
+(defun sort-tab-update-list ()
+
+  (when (not (equal (window-buffer) (sort-tab-get-buffer)))
+  (setq sort-tab-update-list-updating t)
+  (let ((current-buffer (window-buffer)))
+    (cond
+     ;; Display tabs if current-buffer is normal buffer.
+     ((sort-tab-is-normal-buffer-p current-buffer)
+      ;; Debug usage.
+      ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
+      ;;   (goto-char (point-max))
+      ;;   (insert (format "**** %s %s\n"
+      ;;                   last-command
+      ;;                   (buffer-name current-buffer))))
+
+      (let* ((current-tab-start-column 0)
+             (current-tab-end-column 0)
+             (tab-count 0)
+             (tab-window (get-buffer-window (sort-tab-get-buffer)))
+             found-current-tab
+             tab)
+        (sort-tab-update-tabs
+         ;; Don't sort tabs if using sort-tab commands.
+         (when (not (string-prefix-p "sort-tab-" (prin1-to-string last-command)))
+           (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
+
+         (dolist (buf sort-tab-visible-buffers)
+           ;; Insert tab.
+           (setq tab (sort-tab-get-tab-name buf current-buffer))
+           ;; (insert tab)
+           (incf tab-count)
+           (if (eq buf current-buffer)
+               (insert tab)
+             (insert
+              (concat
+               (propertize
+                (prin1-to-string tab-count)
+                'face 'bold)
+               "."
+               (propertize
+                (substring-no-properties tab 1)
+                'face
+                (if (eq (frame-parameter nil 'background-mode) 'dark)
+                    '(:foreground "#bdae93" )
+                  '(:foreground "#665c54"))))))
+           (insert sort-tab-propertized-separator)
+
+           ;; Calculate the current tab column.
+           (unless found-current-tab
+             (when (eq buf current-buffer)
+               (setq found-current-tab t)
+               (setq current-tab-start-column current-tab-end-column))
+             (setq current-tab-end-column (+ current-tab-end-column (length tab) (length sort-tab-separator)))))
+
+         ;; Make tab always visible.
+         (when tab-window
+           (with-selected-window tab-window
+             (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
+                    (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
+                   ((< current-tab-start-column (window-hscroll))
+                    (set-window-hscroll tab-window current-tab-start-column))
+                   ))))))
+     ;; Only display hide buffer at top if current buffer is match hide rule.
+     ((sort-tab-is-hidden-buffer-p current-buffer)
+      (sort-tab-update-tabs
+       ;; Insert current buffer.
+       (insert (sort-tab-get-tab-name current-buffer current-buffer))
+       (insert sort-tab-propertized-separator)))
+     ;; Erase sort-tab content if current buffer is sort-tab buffer.
+     ((string-equal sort-tab-buffer-name (buffer-name current-buffer))
+      (sort-tab-update-tabs))))))
+  ;;(setq sort-tab-update-list-upading nil))
+
 )
+
 
 (provide 'doom-sort-tab)

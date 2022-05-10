@@ -91,9 +91,9 @@
 ;; When using bibtex-completion via the `biblio` module
 (unpin! bibtex)
 
-
 (package! corfu)
 (package! cape)
+(package! corfu-doc)
 (package! kind-icon)
 
 (package! org-modren :recipe (:host github :repo "minad/org-modern" :files ("*.el" "out")))
@@ -120,10 +120,10 @@
 
 (package! netease-cloud-music :recipe (:host github :repo "SpringHan/netease-cloud-music.el" :files ("*.el")))
 
-;;(package! eaf :recipe (:host github :repo "emacs-eaf/emacs-application-framework" :files ("*")))
+(package! eaf :recipe (:host github :repo "emacs-eaf/emacs-application-framework" :files ("*")))
 
 (package! keytar)
 (package! lsp-grammarly :recipe (:host github :repo "emacs-grammarly/lsp-grammarly" :files ("*")))
 
-;; (package! lsp-bridge :recipe (:host github :repo "manateelazycat/lsp-bridge" :files ("*")))
+;;(package! lsp-bridge :recipe (:host github :repo "manateelazycat/lsp-bridge" :files ("*")))
 (package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab" :files ("*")))

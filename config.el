@@ -569,6 +569,7 @@ breakpoints, etc.)."
 (load! "run-command-with-notify")
 
 (load! "corfu-company")
+(load! "flex-orderless")
 
 (load! "tabnine-capf")
 (load! "copilot-company")

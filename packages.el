@@ -125,5 +125,5 @@
 (package! keytar)
 (package! lsp-grammarly :recipe (:host github :repo "emacs-grammarly/lsp-grammarly" :files ("*")))
 
-;;(package! lsp-bridge :recipe (:host github :repo "manateelazycat/lsp-bridge" :files ("*")))
+(package! lsp-bridge :recipe (:host github :repo "manateelazycat/lsp-bridge" :files ("*")))
 (package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab" :files ("*")))

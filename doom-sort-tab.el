@@ -17,6 +17,16 @@
                                                                      (+workspace-contains-buffer-p
                                                                       buf workspace) nil)))))))
 
+  (defun sort-tab-buffer-need-hide-p (buf)
+    (let* ((name (buffer-name buf)))
+      (and
+       (not (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*ein")));;white list
+      (or
+       (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*" " *" "COMMIT_EDITMSG"))
+       (eq (aref name 0) ?\s)
+       (sort-tab-is-magit-buffer-p buf)
+       ))))
+
   (advice-add 'sort-tab-get-buffer-list
               :override #'(lambda ()
                             (let ((bufs (sort-tab-workspace-buffer-list)))

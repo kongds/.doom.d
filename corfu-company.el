@@ -8,7 +8,14 @@
    ([tab] . corfu-next)
    ("S-TAB" . corfu-previous)
    ([backtab] . corfu-previous)
-   ("SPC" . corfu-insert-separator))
+   ;; ("SPC" . corfu-insert-separator) use flex orderless
+   ("SPC" . (lambda ()
+              (interactive)
+              (pcase-let ((`(,beg ,end ,table ,pred) completion-in-region--data))
+                (let ((newstr (buffer-substring-no-properties beg end)))
+                  (corfu-complete)
+                  (if (equal newstr (buffer-substring-no-properties beg (point)))
+                      (insert " ")))))))
   :custom
   (corfu-auto t)
   (corfu-quit-no-match t)
@@ -16,6 +23,9 @@
   (corfu-auto-delay 0.1)
   :init
   (global-corfu-mode)
+  (add-hook 'corfu-mode-hook (lambda ()
+                               (global-company-mode -1)))
+
   (require 'corfu-doc)
   (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
 
@@ -32,8 +42,7 @@
                       thereis (if (symbolp x)
                                   (eq sym x)
                                 (string-match-p x (symbol-name sym))))
-             (string-match-p "evil-complete-" (symbol-name sym)))))
-)
+             (string-match-p "evil-complete-" (symbol-name sym))))))
 
 ;; Use dabbrev with Corfu!
 (use-package dabbrev
@@ -82,36 +91,40 @@
   ;;(add-to-list 'completion-at-point-functions #'cape-line)
 )
 
-;; Optionally use the `orderless' completion style. See `+orderless-dispatch'
-;; in the Consult wiki for an advanced Orderless style dispatcher.
-;; Enable `partial-completion' for files to allow path expansion.
-;; You may prefer to use `initials' instead of `partial-completion'.
-(use-package! orderless
-  :init
-  ;; Configure a custom style dispatcher (see the Consult wiki)
-  ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
-  ;;       orderless-component-separator #'orderless-escapable-split-on-space)
-  (setq completion-styles '(orderless)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles . (partial-completion))))))
 
+;; disable lsp
 (use-package! lsp-mode
   :custom
   (lsp-completion-provider :none) ;; we use Corfu!
   :init
+  (setq lsp-completion-enable t)
   (defun my/lsp-mode-setup-completion ()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))
-    ;;(setq-local completion-at-point-functions (list (cape-company-to-capf #'company-lsp-bridge)))
-    ;;(setq-local
-     ;;completion-at-point-functions
-     ;;(list (cape-super-capf #'lsp-completion-at-point (cape-company-to-capf #'company-tabnine) #'cape-dabbrev)))
+    ;; (setq-local completion-at-point-functions
+    ;;             (list  (cape-super-capf #'lsp-completion-at-point
+    ;;                                     (cape-company-to-capf (apply-partially #'company--multi-backend-adapter '(company-dabbrev-code company-tabnine))))))
     (setq-local completion-at-point-functions
                 (list  (cape-super-capf #'lsp-completion-at-point
-                                        (cape-company-to-capf (apply-partially #'company--multi-backend-adapter '(company-dabbrev-code company-tabnine))))))
-    ) ;; Configure orderless
+                                        (cape-company-to-capf (apply-partially #'company--multi-backend-adapter '(company-dabbrev-code))))))) ;; Configure orderless
   :hook
   (lsp-completion-mode . my/lsp-mode-setup-completion))
+
+(if nil
+    (use-package! lsp-bridge
+      :init
+      ;; (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
+      (require 'lsp-bridge-icon) ;; show icon for completion items, optional
+      (setq lsp-completion-enable nil)
+      (defun lsp-bridge-python-hook ()
+        (setq-local corfu-auto nil) ;; let lsp-bridge control when popup completion frame
+        (lsp-bridge-mode 1)
+        (setq-local completion-at-point-functions (list (cape-super-capf #'lsp-bridge-capf
+                                                                         (cape-company-to-capf
+                                                                          (apply-partially
+                                                                           #'company--multi-backend-adapter
+                                                                           '(company-dabbrev-code company-tabnine)))))))
+      (add-hook 'python-mode-hook #'lsp-bridge-python-hook)))
 
 ;; A few more useful configurations...
 (use-package! emacs
@@ -119,7 +132,6 @@
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
 
-  (global-company-mode -1)
   (setq +lsp-company-backends nil)
 
   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.

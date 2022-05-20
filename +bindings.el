@@ -4,7 +4,7 @@
 With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   (interactive "P")
   (projectile-maybe-invalidate-cache invalidate-cache)
-  (let* ((project-root (loop for i in projectile-known-projects
+  (let* ((project-root (cl-loop for i in projectile-known-projects
                              if (equal (+workspace-current-name) (doom-project-name i))
                              return i))
          (file (projectile-completing-read "Find file: "
@@ -45,6 +45,8 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
                                 (error (project-find-file))))
 
   :desc "music" :n "m m" #'netease-cloud-music
+  :desc "eaf browser" :n "m b" #'eaf-open-browser
+  :desc "eaf browser h" :n "m h" #'eaf-open-browser-with-history
   :desc "bibtex" :n "n b" #'helm-bibtex
   :desc "switch buffer" :n "j" #'switch-to-buffer
   :desc "switch workspace buffer" :n "k" #'+vertico/switch-workspace-buffer

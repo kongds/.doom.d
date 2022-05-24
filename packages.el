@@ -126,4 +126,6 @@
 (package! lsp-grammarly :recipe (:host github :repo "emacs-grammarly/lsp-grammarly" :files ("*")))
 
 (package! lsp-bridge :recipe (:host github :repo "manateelazycat/lsp-bridge" :files ("*")))
+(package! tabnine-capf :recipe (:host github :repo "50ways2sayhard/tabnine-capf" :files ("*")))
+
 (package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab" :files ("*")))

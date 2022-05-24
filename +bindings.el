@@ -130,6 +130,14 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   "j" #'next-line
   "k" #'previous-line)
 
+ (:after python
+  :map python-mode-map
+  :n "P" #'(lambda ()
+             (interactive)
+             (evil-open-below 0)
+             (insert "import pdb;pdb.set_trace()")
+             (evil-normal-state)))
+
  (:after dired
   :map dired-mode-map
   :n "h" #'dired-up-directory

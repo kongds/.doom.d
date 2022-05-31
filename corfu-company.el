@@ -9,32 +9,73 @@
    ("S-TAB" . corfu-previous)
    ([backtab] . corfu-previous)
    ;; ("SPC" . corfu-insert-separator) use flex orderless
-   ("SPC" . (lambda ()
-              (interactive)
-              (pcase-let ((`(,beg ,end ,table ,pred) completion-in-region--data))
-                (let ((newstr (buffer-substring-no-properties beg end)))
-                  (corfu-complete)
-                  (if (equal newstr (buffer-substring-no-properties beg (point)))
-                      (insert " ")))))))
+   ;; ("SPC" . corfu-spc)
+   )
+
   :custom
   (corfu-auto t)
   (corfu-quit-no-match t)
   (corfu-cycle t)
   (corfu-auto-delay 0.1)
+
   :init
   (global-corfu-mode)
   (add-hook 'corfu-mode-hook (lambda ()
                                (global-company-mode -1)))
 
+  ;; (defun corfu-spec-pre-command ()
+  ;;   (message (prin1-to-string completion-in-region-mode))
+  ;;   (when completion-in-region-mode
+  ;;     (let ((evt (read-event nil nil 0.15)))
+  ;;       (when (and (characterp evt) (char-equal evt ? ))
+  ;;         (message "insert SPC")
+  ;;         (corfu-quit)
+  ;;         (run-with-timer 0.05 nil #'(lambda() (insert " ")))
+  ;;         (setq this-command 'self-insert-command)
+  ;;         (setq this-orginial-command 'self-insert-command)
+  ;;         ))))
+  ;; (add-hook 'pre-command-hook #'corfu-spec-pre-command)
+
+  (defun corfu-enable-in-minibuffer ()
+    "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+    (when (where-is-internal #'completion-at-point (list (current-local-map)))
+      ;; (setq-local corfu-auto nil) Enable/disable auto completion
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
+  ;; make completion work on  evil-ex
+  (define-key evil-ex-completion-map (kbd "(") (lambda ()
+                                               (interactive)
+                                               (if (= (point)  2)
+                                                   (setq-local completion-at-point-functions
+                                                               '(elisp-completion-at-point
+                                                                 cape-keyword cape-dabbrev cape-tex cape-file
+                                                                 tags-completion-at-point-function)))
+                                               (insert "(")))
+
+
   (require 'corfu-doc)
   (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
 
+  (defun corfu-spc ()
+    (interactive)
+    (pcase-let ((`(,beg ,end ,table ,pred) completion-in-region--data))
+      (let ((newstr (buffer-substring-no-properties beg end)))
+        (cond ((equal newstr "")
+               (corfu-quit)
+               (insert " "))
+              (t
+               (corfu-complete)
+               (setq-local corfu-spc-last-beg beg
+                           corfu-spc-last-end end
+                           corfu-spc-last-str newstr)
+               (if (equal newstr (buffer-substring-no-properties beg (point)))
+                   (insert " ")))))))
+
+
   (setq evil-complete-next-func #'(lambda (arg)
                                     (corfu-next 1)))
-
   (setq evil-complete-previous-func #'(lambda (arg)
                                         (corfu-next -1)))
-
   (defun corfu--match-symbol-p (pattern sym)
     "Return non-nil if SYM is matching an element of the PATTERN list."
     (and (symbolp sym)
@@ -101,7 +142,7 @@
       (require 'lsp-bridge-icon) ;; show icon for completion items, optional
       (require 'yasnippet)
       (yas-global-mode 1)
-      (add-load-path! "/Users/royokong/emacs_configs/.emacs.d.doom/.local/straight/repos/corfu/extensions")
+
       (require 'corfu-info)
       (require 'corfu-history)
       (require 'lsp-bridge-icon) ;; show icons for completion items, optional
@@ -125,6 +166,10 @@
 
       (remove-hook 'python-mode-local-vars-hook #'lsp!) ;; disable lsp
       (remove-hook 'python-mode-local-vars-hook #'+python-init-anaconda-mode-maybe-h)
+      (remove-hook 'python-mode-hook #'+python-use-correct-flycheck-executables-h)
+      (add-hook 'python-mode-hook #'(lambda()
+                                      (setq-local flycheck-checker 'python-pyright)))
+
       (add-hook 'python-mode-local-vars-hook #'lsp-bridge-init-hook))
   (use-package! lsp-mode
     :custom (lsp-completion-provider :none) ;; we use Corfu!
@@ -159,6 +204,6 @@
   ;; `completion-at-point' is often bound to M-TAB.
   (setq tab-always-indent 'complete))
 
-
+(corfu-history-mode t)
 
 (provide 'corfu-company)

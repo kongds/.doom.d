@@ -7,9 +7,9 @@
  '(+modeline-height 20)
  '(ansi-color-names-vector
    ["#fafafa" "#e45649" "#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42"])
- '(company-dabbrev-downcase nil)
- '(company-dabbrev-ignore-case nil)
- '(company-dabbrev-other-buffers nil)
+ '(company-dabbrev-downcase nil t)
+ '(company-dabbrev-ignore-case nil t)
+ '(company-dabbrev-other-buffers nil t)
  '(company-global-modes
    '(not erc-mode circe-mode message-mode help-mode gud-mode vterm-mode netease-cloud-music-switch-playlist-mode-map netease-cloud-music-mode netease-cloud-music-change-playlist-mode netease-cloud-music-switch-playlist-mode))
  '(company-idle-delay 0)
@@ -135,6 +135,7 @@
  '(jdee-db-active-breakpoint-face-colors (cons "#191C25" "#81A1C1"))
  '(jdee-db-requested-breakpoint-face-colors (cons "#191C25" "#A3BE8C"))
  '(jdee-db-spec-breakpoint-face-colors (cons "#191C25" "#434C5E"))
+ '(lsp-bridge-enable-signature-help t)
  '(lsp-bridge-lang-server-list
    '(((c-mode c++-mode)
       . "clangd")

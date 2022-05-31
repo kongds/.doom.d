@@ -338,6 +338,8 @@
   (set-repl-handler! 'python-mode #'+python/open-ipython-repl)
   (add-hook 'python-mode-hook
             (lambda()
+              (setq-local dash-docs-docsets '("PyTorch" "transformers" "Python 3"))
+              (setq-local dash-docs-browser-func 'browse-url)
               (which-function-mode 1))))
               ;;(evil-local-set-key 'normal (kbd "[ [") #'python-nav-backward-block)
               ;;(evil-local-set-key 'normal (kbd "] ]") #'python-nav-forward-block))))
@@ -569,7 +571,7 @@ breakpoints, etc.)."
 (load! "run-command-with-notify")
 
 (load! "corfu-company")
-(load! "flex-orderless")
+;;(load! "flex-orderless")
 
 (load! "tabnine-capf")
 (load! "copilot-company")

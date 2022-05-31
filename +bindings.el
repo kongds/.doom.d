@@ -132,11 +132,12 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
 
  (:after python
   :map python-mode-map
-  :n "P" #'(lambda ()
+  :n "X" #'(lambda ()
              (interactive)
              (evil-open-below 0)
              (insert "import pdb;pdb.set_trace()")
-             (evil-normal-state)))
+             (evil-normal-state)
+             (save-buffer)))
 
  (:after dired
   :map dired-mode-map
@@ -149,6 +150,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
            (dired-get-marked-files t current-prefix-arg))))
 
  (:after evil
+  :n "!" #'shell-command
   "C-a" nil
   "C-a h" #'(lambda ()
               (interactive)

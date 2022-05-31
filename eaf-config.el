@@ -73,23 +73,30 @@
   (defun eaf--mac-switch-to-python-timer-fun ()
     (if eaf--mac-switch-to-python
         (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
-          (unless (member front (list "Python\n" "python3\n"))
-            (setq eaf--mac-has-focus nil)
+        ;;(let ((front (shell-command-to-string "app-frontmost --name")))
+          (unless (member front (list "Python\n" "python3\n" "Emacs\n"))
+            (cancel-timer eaf--mac-switch-to-python-timer)
+            (setq eaf--mac-has-focus t)
             (setq eaf--mac-switch-to-python nil)
-            (eaf--mac-replace-eaf-buffers)))))
+            (eaf--mac-focus-out)))))
 
-  (setq eaf--mac-switch-to-python-timer (run-with-timer 0.3 1
-                                                        'eaf--mac-switch-to-python-timer-fun))
+
+  (defvar eaf--mac-switch-to-python-timer nil)
 
   (defun eaf--mac-focus-change ()
     "Manage Emacs's focus change."
+    ;; remove python timer
+    (if eaf--mac-switch-to-python-timer (cancel-timer eaf--mac-switch-to-python-timer))
+
     (if eaf--mac-safe-focus-change
         (if (executable-find "app-frontmost")
             (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
+            ;;(let ((front (shell-command-to-string "app-frontmost --name")))
               (cond
                ((member front (list "Python\n" "python3\n"))
-                (setq eaf--mac-switch-to-python t))
-
+                (setq eaf--mac-switch-to-python t)
+                (setq eaf--mac-switch-to-python-timer (run-with-timer 0.3 1
+                                                                      'eaf--mac-switch-to-python-timer-fun)))
                ((string= "Emacs\n" front)
                 (cond
                  (eaf--mac-switch-to-python
@@ -106,18 +113,25 @@
                               #'eaf--mac-unsafe-focus-change-handler)))))
 
   (defun eaf--mac-replace-eaf-buffers ()
-    (let ((current-window (selected-window)))
+    (let ((current-window (selected-window))
+          (need-select-current-window nil))
       (dolist (window (window-list))
-        (select-window window)
-        (when (eq major-mode 'eaf-mode)
+        (when (eq (with-current-buffer (window-buffer window)
+                    major-mode)  'eaf-mode)
+          (setq need-select-current-window t)
+          (select-window window)
           (get-buffer-create "*eaf temp*")
           (switch-to-buffer "*eaf temp*" t)))
-      (select-window current-window)))
+      (if need-select-current-window (select-window current-window))))
 
   (after! vertico-posframe
     (defun eaf-in-eaf-buffer (&rest r)
-      (eq (with-current-buffer (nth 1 (buffer-list))
-        major-mode)  'eaf-mode))
+      (let ((has-eaf-buffer nil))
+        (dolist (window (window-list))
+          (if (eq (with-current-buffer (window-buffer window)
+                    major-mode)  'eaf-mode)
+              (setq has-eaf-buffer t)))
+        has-eaf-buffer))
     (advice-add #'vertico-posframe--display :before-until #'eaf-in-eaf-buffer)
     (advice-add #'vertico-posframe--setup :before-until #'eaf-in-eaf-buffer))
   ;;(cancel-timer eaf--mac-switch-to-python-timer)

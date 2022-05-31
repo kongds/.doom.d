@@ -91,7 +91,7 @@
 ;; When using bibtex-completion via the `biblio` module
 (unpin! bibtex)
 
-(package! corfu)
+(package! corfu :recipe (:host github :repo "minad/corfu" :files ("*.el" "extensions/*.el")))
 (package! cape)
 (package! corfu-doc)
 (package! kind-icon)

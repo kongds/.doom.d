@@ -78,8 +78,11 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
 
 
 
- (:after company
-  "M-/" #'company-complete)
+ ;;(:after company
+ ;; "M-/" #'company-complete)
+
+ (:after cape
+  "M-/" #'cape-dabbrev)
 
  (:after org-capture
   "C-c c" #'org-capture)

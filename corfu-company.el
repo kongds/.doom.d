@@ -20,6 +20,11 @@
 
   :init
   (global-corfu-mode)
+  (corfu-history-mode t)
+
+  (require 'corfu-doc)
+  (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
+
   (add-hook 'corfu-mode-hook (lambda ()
                                (global-company-mode -1)))
 
@@ -53,8 +58,6 @@
                                                (insert "(")))
 
 
-  (require 'corfu-doc)
-  (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
 
   (defun corfu-spc ()
     (interactive)
@@ -86,12 +89,12 @@
              (string-match-p "evil-complete-" (symbol-name sym))))))
 
 ;; Use dabbrev with Corfu!
-(use-package dabbrev
+(use-package! dabbrev
 ;; Swap M-/ and C-M-/
 :bind (("M-/" . dabbrev-completion)
         ("C-M-/" . dabbrev-expand)))
 
-(use-package kind-icon
+(use-package! kind-icon
   ;;:ensure t
   :after corfu
   :custom
@@ -135,13 +138,17 @@
 
 ;; disable lsp
 
-(if t
+(if nil 
     (use-package! lsp-bridge
       :init
       ;; (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
       (require 'lsp-bridge-icon) ;; show icon for completion items, optional
       (require 'yasnippet)
       (yas-global-mode 1)
+
+      (when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))
+      (defun corfu-doc--popup-support-p () t)
+      (setq lsp-bridge-enable-candidate-doc-preview nil)
 
       (require 'corfu-info)
       (require 'corfu-history)
@@ -168,27 +175,78 @@
       (remove-hook 'python-mode-local-vars-hook #'+python-init-anaconda-mode-maybe-h)
       (remove-hook 'python-mode-hook #'+python-use-correct-flycheck-executables-h)
       (add-hook 'python-mode-hook #'(lambda()
-                                      (setq-local flycheck-checker 'python-pyright)))
+                                      (setq-local flycheck-checker 'python-pyright)
+                                      ))
+      (add-hook 'python-mode-local-vars-hook #'lsp-bridge-init-hook)))
 
-      (add-hook 'python-mode-local-vars-hook #'lsp-bridge-init-hook))
-  (use-package! lsp-mode
-    :custom (lsp-completion-provider :none) ;; we use Corfu!
-    :init (setq lsp-completion-enable t)
-    (defun my/lsp-mode-setup-completion ()
-      (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-            '(orderless))
-      ;; (setq-local completion-at-point-functions
-      ;;             (list  (cape-super-capf #'lsp-completion-at-point
-      ;;                                     (cape-company-to-capf (apply-partially #'company--multi-backend-adapter '(company-dabbrev-code company-tabnine))))))
-      (setq-local completion-at-point-functions (list  (cape-super-capf #'lsp-completion-at-point
-                                                                        (cape-company-to-capf
-                                                                         (apply-partially
-                                                                          #'company--multi-backend-adapter
-                                                                          '(company-dabbrev-code))))))) ;; Configure orderless
-    :hook (lsp-completion-mode . my/lsp-mode-setup-completion)))
+(if t
+    (use-package! lsp-bridge
+
+      :bind
+      (:map acm-mode-map
+       ("TAB"     . acm-select-next)
+       ("C-n"     . acm-select-next)
+       ([tab]     . acm-select-next)
+       ("S-TAB"   . acm-select-prev)
+       ("C-p"     . acm-select-prev)
+       ([backtab] . acm-select-prev))
+
+      :init
+      (require 'yasnippet)
+      (require 'lsp-bridge)
+
+      (setq acm-candidate-match-function 'orderless-flex)
+      (setq acm-enable-dabbrev nil)
+
+      (yas-global-mode 1)
+      ;;(global-lsp-bridge-mode)
+
+      (remove-hook 'python-mode-local-vars-hook #'lsp!) ;; disable lsp
+      (remove-hook 'python-mode-local-vars-hook #'+python-init-anaconda-mode-maybe-h)
+      (remove-hook 'python-mode-hook #'+python-use-correct-flycheck-executables-h)
+
+      (add-hook 'org-mode-hook #'(lambda()
+                                   (setq-local corfu-auto t)
+                                   ;;(setq-local acm-enable-english-helper t)
+                                   ;;(lsp-bridge-mode)
+                                   (setq-local completion-at-point-functions (list  (cape-super-capf  #'cape-dict #'cape-dabbrev)))
+                                   ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
+                                   ))
+
+      (add-hook 'tex-mode-hook #'(lambda()
+                                   (setq-local corfu-auto t)
+                                   ;;(setq-local acm-enable-english-helper t)
+                                   ;;(lsp-bridge-mode)
+                                   (setq-local corfu-auto-delay 0.5)
+                                   ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
+                                   ))
+
+      (add-hook 'python-mode-hook #'(lambda()
+                                      (setq-local corfu-auto nil)
+                                      (setq-local flycheck-checker 'python-pyright)
+                                      (lsp-bridge-mode)
+                                      ))))
+
+
+(use-package! lsp-mode
+  :custom (lsp-completion-provider :none) ;; we use Corfu!
+  :init (setq lsp-completion-enable t)
+  (defun my/lsp-mode-setup-completion ()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless))
+    (setq-local completion-at-point-functions (list  (cape-super-capf #'lsp-completion-at-point #'cape-dict))))
+    ;; (setq-local completion-at-point-functions
+    ;;             (list  (cape-super-capf #'lsp-completion-at-point
+    ;;                                     (cape-company-to-capf (apply-partially #'company--multi-backend-adapter '(company-dabbrev-code company-tabnine))))))
+    ;; (setq-local completion-at-point-functions (list  (cape-super-capf #'lsp-completion-at-point
+    ;;                                                                   (cape-company-to-capf
+    ;;                                                                    (apply-partially
+    ;;                                                                     #'company--multi-backend-adapter
+    ;;                                                                     '(company-dabbrev-code))))))) ;; Configure orderless
+  :hook (lsp-completion-mode . my/lsp-mode-setup-completion))
 
 ;; A few more useful configurations...
-(use-package! emacs
+(after! emacs
   :init
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
@@ -204,6 +262,5 @@
   ;; `completion-at-point' is often bound to M-TAB.
   (setq tab-always-indent 'complete))
 
-(corfu-history-mode t)
 
 (provide 'corfu-company)

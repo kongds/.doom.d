@@ -21,6 +21,7 @@
     (let* ((name (buffer-name buf)))
       (and
        (not (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*--ein")));;white list
+       ;;(not (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*doom:vterm")));;white list
       (or
        (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*" " *" "COMMIT_EDITMSG"))
        (eq (aref name 0) ?\s)
@@ -148,6 +149,28 @@
       (sort-tab-update-tabs))))))
   ;;(setq sort-tab-update-list-upading nil))
 
+(defun sort-tab-get-tab-name (buf current-buffer)
+  (propertize
+   (format " %s "
+           (let ((bufname (buffer-name buf))
+                 (ellipsis "..."))
+             ;; We need remove space in web page title.
+             (when (sort-tab-is-eaf-browser-buffer-p buf)
+               (setq bufname (replace-regexp-in-string "\\s-" "" bufname)))
+
+             (when (cl-search ".org" bufname)
+               (setq bufname (replace-regexp-in-string ".*-" "" bufname)))
+
+             (when (cl-search "*doom:vterm" bufname)
+               (setq bufname "vterm"))
+
+             (if (> (length bufname) sort-tab-name-max-length)
+                 (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
+               bufname)))
+   'face
+   (if (eq buf current-buffer)
+       'sort-tab-current-tab-face
+     'sort-tab-other-tab-face)))
 )
 
 

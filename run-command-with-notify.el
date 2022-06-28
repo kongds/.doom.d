@@ -1,7 +1,7 @@
 ;;; run-command-with-notify.el -*- lexical-binding: t; -*-
 
 (defun run-command-with-notify (command )
-  (unless (member '("\\*Async[a-z0-9 ]*" display-buffer-no-window)  display-buffer-alist)
+after  (unless (member '("\\*Async[a-z0-9 ]*" display-buffer-no-window)  display-buffer-alist)
     (add-to-list 'display-buffer-alist
              '("\\*Async[a-z0-9 ]*" display-buffer-no-window)))
   (let* ((shell-buffer-name (concat "*Async shell command" (prin1-to-string (random 1000000)) "*"))

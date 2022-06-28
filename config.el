@@ -9,6 +9,8 @@
 (setq user-full-name "royokong"
       user-mail-address "j614023177@icloud.com")
 
+(setenv "PATH" (concat  "/opt/homebrew/bin/" ":" (getenv "PATH")))
+
 ;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
 ;; are the three important ones:
 ;;
@@ -38,6 +40,11 @@
 ;;(setq display-line-numbers-type t)
 (setq display-line-numbers-type 'relative)
 
+;; proxy
+(setq url-proxy-services
+   '(("no_proxy" . "^\\(localhost\\|10\\..*\\|192\\.168\\..*\\)")
+     ("http" . "127.0.0.1:1087")
+     ("https" . "127.0.0.1:1087")))
 
 ;; Here are some additional functions/macros that could help you configure Doom:
 ;;
@@ -66,64 +73,11 @@
 (setq avy-all-windows t)
 (setq avy-background t)
 
-
-;;(use-package! tao-theme
-;;  :config
-;;  (load-theme 'tao-yin t)
-;;  (set-face-font 'default "Roboto Mono 13")
-;;  (tao-with-color-variables  tao-theme-yin-palette
-;;                             (eval `(set-face-attribute 'avy-lead-face  nil :foreground ,color-14 :background ,color-3 :inverse-video nil :bold t))
-;;                             (eval `(set-face-attribute 'avy-lead-face-0  nil :foreground ,color-14 :background ,color-5 :inverse-video nil :bold t))
-;;                             (eval `(set-face-attribute 'avy-lead-face-1  nil :foreground ,color-14 :background ,color-7 :inverse-video nil :bold t))
-;;                             (eval `(set-face-attribute 'avy-lead-face-2  nil :foreground ,color-14 :background ,color-9 :inverse-video nil :bold t))
-;;                             (eval `(set-face-attribute 'avy-background-face nil :foreground ,color-6 :background ,color-2 :inverse-video nil))))
-
-;;(use-package! window-numbering
-;;  :config
-;;  (window-numbering-mode))
-
-;;(add-load-path! "~/emacs_configs/.emacs.d/elpa/org-protocol-capture-html")
-;;(use-package! org-protocol-capture-html
-;;  :config
-;;  (setq org-capture-templates
-;;        `(("w" "Web site" entry (file ,(concat org-directory "/web.org"))
-;;           "* %a :website:\n\n%U %?\n\n%:initial")
-;;          ("t" "Task" entry (file+headline org-default-notes-file "Tasks")
-;;           "* TODO %?\n  %u\n  %a")
-;;          ("m" "Memory" entry (file+headline org-default-notes-file "Memorys")
-;;           "* %?\nEntered on %U\n  %i\n  %a"))))
-
-
 (use-package! wakatime-mode
   :config
-  (setq wakatime-cli-path "/usr/local/bin/wakatime")
+  (setq wakatime-cli-path "/opt/homebrew/bin/wakatime")
   (global-wakatime-mode))
 
-;;(use-package! posframe)
-
-;;(use-package! pyim
-;;  :config
-;;  (setq default-input-method "pyim")
-;;  (setq pyim-page-tooltip 'posframe)
-;;  (setq pyim-default-scheme 'rime-quanpin)
-;;  (setq pyim-page-length 9))
-
-;;(use-package! liberime)
-;;(after! liberime
-  ;;(liberime-build)
-  ;;(liberime-start "/Library/Input Methods/Squirrel.app/Contents/SharedSupport" (file-truename "/Users/royokong/Library/Rime"))
-  ;;(liberime-try-select-schema "luna_pinyin_simp"))
-
-
-;;(use-package! immortal-scratch
-;;  :config
-;;  (immortal-scratch-mode))
-;;(use-package! persistent-scratch
-;;  :config
-;;  (persistent-scratch-setup-default)
-;;  :hook
-;;  (after-init-hook . (lambda() (with-current-buffer "*scratch*"
-;;                                       (emacs-lock-mode 'kill)))))
 
 (after! doom-modeline
   :config
@@ -135,18 +89,6 @@
   ;;(load! "modeline-fan")
   )
 
-;;(use-package! lsp-pyright
-;;  :hook
-;;  (python-mode . (lambda ()
-;;                   (require 'lsp-pyright)
-;;                   (lsp)))
-;;  :config
-;;  (when (executable-find "python3")
-;;    (setq lsp-pyright-python-executable-cmd "python3")))
-
-;;(add-load-path! "/Users/royokong/emacs_configs/.emacs.d/elpa/ein-0.16.0")
-;;(use-package! ein)
-;;(use-package! ein-notebook)
 
 ;; set ttl to nil means vterm will not been killed
 (after! vterm
@@ -268,14 +210,14 @@
     ;;(advice-add 'evil-ex-search-previous :after after-fn))
 ;;(defalias 'forward-evil-word 'forward-evil-symbol))
 
-(after! goto-chg
-    (let ((after-fn (lambda (&rest _) (recenter nil))))
-    (advice-add 'goto-last-change :after after-fn)))
+;;(after! goto-chg
+    ;;(let ((after-fn (lambda (&rest _) (recenter nil))))
+    ;;(advice-add 'goto-last-change :after after-fn)))
 
-(after! better-jumper
-    (let ((after-fn (lambda (&rest _) (recenter nil))))
-    (advice-add 'better-jumper-jump-backward :after after-fn)
-    (advice-add 'better-jumper-jump-forward :after after-fn)))
+;;(after! better-jumper
+;;    (let ((after-fn (lambda (&rest _) (recenter nil))))
+;;    (advice-add 'better-jumper-jump-backward :after after-fn)
+;;    (advice-add 'better-jumper-jump-forward :after after-fn)))
 
 (after! dired
   (setq ranger-show-hidden t))
@@ -572,8 +514,7 @@ breakpoints, etc.)."
 
 (load! "corfu-company")
 ;;(load! "flex-orderless")
-
-(load! "tabnine-capf")
+;;(load! "tabnine-capf")
 (load! "copilot-company")
 
 (load! "mu4e-config")

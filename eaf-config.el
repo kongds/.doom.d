@@ -1,11 +1,13 @@
 ;;; eaf-config.el -*- lexical-binding: t; -*-
 
-(use-package eaf
+(use-package! eaf
   :config
   (require 'eaf-org)
   (require 'eaf-browser)
   ;; (require 'eaf-pdf-viewer)
   (require 'eaf-evil)
+
+  (setq eaf-python-command "/opt/homebrew/bin/python3")
 
   (advice-add '+lookup/online
               :override #'(lambda (query provider)

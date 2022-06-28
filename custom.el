@@ -7,9 +7,9 @@
  '(+modeline-height 20)
  '(ansi-color-names-vector
    ["#fafafa" "#e45649" "#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42"])
- '(company-dabbrev-downcase nil t)
- '(company-dabbrev-ignore-case nil t)
- '(company-dabbrev-other-buffers nil t)
+ '(company-dabbrev-downcase nil)
+ '(company-dabbrev-ignore-case nil)
+ '(company-dabbrev-other-buffers nil)
  '(company-global-modes
    '(not erc-mode circe-mode message-mode help-mode gud-mode vterm-mode netease-cloud-music-switch-playlist-mode-map netease-cloud-music-mode netease-cloud-music-change-playlist-mode netease-cloud-music-switch-playlist-mode))
  '(company-idle-delay 0)
@@ -17,7 +17,7 @@
  '(company-require-match 'never)
  '(company-show-quick-access t)
  '(company-tooltip-align-annotations t)
- '(company-tooltip-limit 14)
+ '(company-tooltip-limit 10)
  '(compilation-scroll-output t)
  '(conda-anaconda-home "/opt/homebrew/Caskroom/miniforge/base/")
  '(custom-safe-themes
@@ -124,6 +124,8 @@
      ("C-<backspace>" . "eaf-send-ctrl-backspace-sequence")))
  '(ein:jupyter-server-command "/opt/homebrew/Caskroom/miniforge/base/bin/jupyter")
  '(ein:output-area-inlined-images t)
+ '(exec-path
+   '("/opt/homebrew/bin" "/Users/royokong/.cargo/bin" "/opt/homebrew/Caskroom/miniforge/base/condabin" "/usr/local/bin" "/usr/bin" "/bin" "/usr/sbin" "/sbin" "/Library/TeX/texbin" "/Applications/VMware Fusion.app/Contents/Public" "/usr/local/aria2/bin" "/usr/local/share/dotnet" "/opt/X11/bin" "~/.dotnet/tools" "/Library/Apple/usr/bin" "/Library/Frameworks/Mono.framework/Versions/Current/Commands" "/opt/homebrew/Cellar/emacs-mac/HEAD-c479439/libexec/emacs/28.1/aarch64-apple-darwin21.4.0"))
  '(exwm-floating-border-color "#c8c8c8")
  '(fci-rule-color "#383a42")
  '(global-company-mode t)
@@ -135,7 +137,7 @@
  '(jdee-db-active-breakpoint-face-colors (cons "#191C25" "#81A1C1"))
  '(jdee-db-requested-breakpoint-face-colors (cons "#191C25" "#A3BE8C"))
  '(jdee-db-spec-breakpoint-face-colors (cons "#191C25" "#434C5E"))
- '(lsp-bridge-enable-signature-help t)
+ '(lsp-bridge-enable-signature-help nil)
  '(lsp-bridge-lang-server-list
    '(((c-mode c++-mode)
       . "clangd")

@@ -1,7 +1,7 @@
 ;;; config-org.el -*- lexical-binding: t; -*-
 (use-package! org-tempo)
 
-(use-package! org
+(after! org
   :config
   (require 'ox)
   (defun format-image-inline (source attributes info)
@@ -54,40 +54,40 @@
           (strike-through . "<del>%s</del>")
           (underline . "<span class=\"underline\">%s</span>")
           (verbatim . "<code>%s</code>")))
+  (use-package! ob-ipython)
+  (use-package! ob-async)
+
+  (use-package! org-download
+    :config
+    (add-hook 'dired-mode-hook 'org-download-enable)
+    (setq-default org-download-heading-lvl nil
+                  org-download-image-dir "~/.org/images"
+                  org-download-screenshot-method "screencapture -s %s"
+                  org-download-screenshot-file (expand-file-name "screenshot.jpg" temporary-file-directory)))
+
+  (use-package! org-capture
+    :config
+    (setq org-directory "~/.org")
+    (setq org-default-notes-file (concat org-directory "/inbox.org")))
   )
 
-(use-package! ob-ipython)
-(use-package! ob-async)
-
-(use-package! org-download
-  :config
-  (add-hook 'dired-mode-hook 'org-download-enable)
-  (setq-default org-download-heading-lvl nil
-                org-download-image-dir "~/.org/images"
-                org-download-screenshot-method "screencapture -s %s"
-                org-download-screenshot-file (expand-file-name "screenshot.jpg" temporary-file-directory)))
-
-(use-package! org-capture
-  :config
-  (setq org-directory "~/.org")
-  (setq org-default-notes-file (concat org-directory "/inbox.org")))
 
 
 (after! org-roam
   :config
+  (use-package! websocket
+    :after org-roam)
   (setq +org-roam-open-buffer-on-find-file nil))
 
-(use-package! websocket
-    :after org-roam)
 
-(use-package! org-roam-protocol
-    :after org-roam ;; or :after org
-    :config
-    (setq org-roam-capture-ref-templates '(("r" "ref" plain "${body}\n"
-                                            :if-new
-                                            (file+head "${slug}.org" "#+title: ${title}")
-                                            :unnarrowed t)))
-  )
+;;(use-package! org-roam-protocol
+    ;;:after org-roam ;; or :after org
+    ;;:config
+    ;;(setq org-roam-capture-ref-templates '(("r" "ref" plain "${body}\n"
+                                            ;;:if-new
+                                            ;;(file+head "${slug}.org" "#+title: ${title}")
+                                            ;;:unnarrowed t)))
+  ;;)
 
 (use-package! org-roam-ui
     :after org-roam ;; or :after org
@@ -156,15 +156,15 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
     (insert "\n#+attr_html: :width 700px
 #+attr_latex: :width 700px")))
 
-(use-package! org-protocol-capture-html
-  :after org-capture
-  :config
-  (setq org-capture-templates
-       `(("t" "Task" entry (file ,(concat org-directory "/todo.org"))
-           "* TODO %?\n  %T\n  %a")
-          ("w" "Web site" entry
-           (file "")
-           "* %a :website:\n\n%U %?\n\n%:initial"))))
+;;(use-package! org-protocol-capture-html
+;;  :after org-capture
+;;  :config
+;;  (setq org-capture-templates
+;;       `(("t" "Task" entry (file ,(concat org-directory "/todo.org"))
+;;           "* TODO %?\n  %T\n  %a")
+;;          ("w" "Web site" entry
+;;           (file "")
+;;           "* %a :website:\n\n%U %?\n\n%:initial"))))
 
 (use-package! org-fragtog
   :after org

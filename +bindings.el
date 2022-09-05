@@ -152,6 +152,18 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
            "open" nil
            (dired-get-marked-files t current-prefix-arg))))
 
+ (:after biblio
+  :map biblio-selection-mode-map
+  "j" #'biblio--selection-next
+  "k" #'biblio--selection-previous
+  "d" #'(lambda ()
+          (interactive)
+          (-if-let* ((url (biblio-get-url (biblio--selection-metadata-at-point))))
+              ;; https://arxiv.org/abs/1908.10084v1 -> https://arxiv.org/pdf/1908.10084v1.pdf
+              (browse-url (concat (string-replace "abs" "pdf" url) ".pdf"))
+            (user-error "This record does not contain a URL")))
+  )
+
  (:after evil
   :n "!" #'shell-command
   "C-a" nil

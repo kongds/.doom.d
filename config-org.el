@@ -69,6 +69,9 @@
     :config
     (setq org-directory "~/.org")
     (setq org-default-notes-file (concat org-directory "/inbox.org")))
+  ;; latex scale
+  (setq org-preview-latex-default-process 'dvisvgm)
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4))
   )
 
 
@@ -151,8 +154,8 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
   (defun org-screenshot ()
     (interactive)
     (org-download-screenshot)
-    (search-backward "DOWNLOADED" nil t)
-    (end-of-line)
+    (search-backward "[[attachment:" nil t)
+    (previous-line)
     (insert "\n#+attr_html: :width 700px
 #+attr_latex: :width 700px")))
 

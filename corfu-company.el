@@ -48,15 +48,53 @@
       (corfu-mode 1)))
   (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
   ;; make completion work on  evil-ex
-  (define-key evil-ex-completion-map (kbd "(") (lambda ()
-                                               (interactive)
-                                               (if (= (point)  2)
-                                                   (setq-local completion-at-point-functions
-                                                               '(elisp-completion-at-point
-                                                                 cape-keyword cape-dabbrev cape-tex cape-file
-                                                                 tags-completion-at-point-function)))
-                                               (insert "(")))
 
+  (defun evil-ex-corfu-bracket ()
+    (interactive)
+    (if (= (point)  2)
+        (setq-local completion-at-point-functions
+                    '(elisp-completion-at-point
+                      cape-keyword
+                      cape-dabbrev cape-tex
+                      cape-file
+                      tags-completion-at-point-function)))
+    (insert "("))
+
+(defun ex-sh-completion-at-point-function ()
+  (save-excursion
+    (skip-chars-forward "[:alnum:]_")
+    (let ((end (point))
+          (_ (skip-chars-backward "[:alnum:]_"))
+          (start (point)))
+        (list start end #'sh--cmd-completion-table
+              :company-kind
+              (lambda (s)
+                (cond
+                 ((member s sh--completion-keywords) 'keyword)
+                 ((string-suffix-p "=" s) 'variable)
+                 (t 'function)))
+              ))))
+
+  (defun evil-ex-corfu-excal ()
+    (interactive)
+    (if (= (point)  2)
+        (setq-local completion-at-point-functions
+                    '(ex-sh-completion-at-point-function
+                      cape-keyword
+                      cape-dabbrev cape-tex
+                      cape-file
+                      tags-completion-at-point-function)))
+    (insert "!"))
+
+  (defun evil-ex-ret-maybe-comp ()
+    (interactive)
+    (when (>= corfu--index 0)
+        (corfu--insert 'finished))
+      (exit-minibuffer))
+
+  (define-key evil-ex-completion-map (kbd "(") 'evil-ex-corfu-bracket)
+  (define-key evil-ex-completion-map (kbd "!") 'evil-ex-corfu-excal)
+  (define-key evil-ex-completion-map (kbd "<return>") 'evil-ex-ret-maybe-comp)
 
 
   (defun corfu-spc ()
@@ -138,94 +176,60 @@
 
 ;; disable lsp
 
-(if nil 
-    (use-package! lsp-bridge
-      :init
-      ;; (require 'lsp-bridge-orderless)   ;; make lsp-bridge support fuzzy match, optional
-      (require 'lsp-bridge-icon) ;; show icon for completion items, optional
-      (require 'yasnippet)
-      (yas-global-mode 1)
+(use-package! lsp-bridge
+  :bind
+  (:map acm-mode-map
+   ("TAB"     . acm-select-next)
+   ("C-n"     . acm-select-next)
+   ([tab]     . acm-select-next)
+   ("S-TAB"   . acm-select-prev)
+   ("C-p"     . acm-select-prev)
+   ([backtab] . acm-select-prev))
 
-      (when (> (frame-pixel-width) 3000) (custom-set-faces '(corfu-default ((t (:height 1.3))))))
-      (defun corfu-doc--popup-support-p () t)
-      (setq lsp-bridge-enable-candidate-doc-preview nil)
+  :init
+  (require 'yasnippet)
+  (require 'lsp-bridge)
+  (require 'acm-delay)
 
-      (require 'corfu-info)
-      (require 'corfu-history)
-      (require 'lsp-bridge-icon) ;; show icons for completion items, optional
-      (require 'lsp-bridge-orderless) ;; make lsp-bridge support fuzzy match, optional
-      (require 'tabnine-capf)
+  (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)
 
-      (defun lsp-bridge-init-hook ()
-        (setq-local corfu-auto nil) ;; let lsp-bridge control when popup completion frame
-        (lsp-bridge-mode 1)
-        (setq-local completion-category-defaults nil)
-        (setq-local completion-at-point-functions
-                    (list
-                     (cape-capf-buster
-                      (cape-super-capf
-                       #'lsp-bridge-capf
-                       #'cape-dabbrev
-                       ;; #'tabnine-completion-at-point
-                       ;; #'cape-file
-                       )
-                      'equal))))
+  ;; remove lsp-bridge modeline
+  (delete `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")) mode-line-misc-info)
 
-      (remove-hook 'python-mode-local-vars-hook #'lsp!) ;; disable lsp
-      (remove-hook 'python-mode-local-vars-hook #'+python-init-anaconda-mode-maybe-h)
-      (remove-hook 'python-mode-hook #'+python-use-correct-flycheck-executables-h)
-      (add-hook 'python-mode-hook #'(lambda()
-                                      (setq-local flycheck-checker 'python-pyright)
-                                      ))
-      (add-hook 'python-mode-local-vars-hook #'lsp-bridge-init-hook)))
+  (setq acm-candidate-match-function 'orderless-flex)
+  (setq acm-enable-dabbrev nil)
 
-(if t
-    (use-package! lsp-bridge
+  (yas-global-mode 1)
+  ;;(global-lsp-bridge-mode)
 
-      :bind
-      (:map acm-mode-map
-       ("TAB"     . acm-select-next)
-       ("C-n"     . acm-select-next)
-       ([tab]     . acm-select-next)
-       ("S-TAB"   . acm-select-prev)
-       ("C-p"     . acm-select-prev)
-       ([backtab] . acm-select-prev))
+  (remove-hook 'python-mode-local-vars-hook #'lsp!) ;; disable lsp
+  (remove-hook 'python-mode-local-vars-hook #'+python-init-anaconda-mode-maybe-h)
+  (remove-hook 'python-mode-hook #'+python-use-correct-flycheck-executables-h)
 
-      :init
-      (require 'yasnippet)
-      (require 'lsp-bridge)
+  (add-hook 'org-mode-hook #'(lambda()
+                               (setq-local corfu-auto t)
+                               ;;(setq-local acm-enable-english-helper t)
+                               ;;(lsp-bridge-mode)
+                               (setq-local completion-at-point-functions (list  (cape-super-capf  #'cape-dict #'cape-dabbrev)))
+                               ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
+                               ))
 
-      (setq acm-candidate-match-function 'orderless-flex)
-      (setq acm-enable-dabbrev nil)
+  (add-hook 'tex-mode-hook #'(lambda()
+                               (setq-local corfu-auto t)
+                               ;;(setq-local acm-enable-english-helper t)
+                               ;;(lsp-bridge-mode)
+                               (setq-local corfu-auto-delay 0.1)
+                               ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
+                               ))
 
-      (yas-global-mode 1)
-      ;;(global-lsp-bridge-mode)
-
-      (remove-hook 'python-mode-local-vars-hook #'lsp!) ;; disable lsp
-      (remove-hook 'python-mode-local-vars-hook #'+python-init-anaconda-mode-maybe-h)
-      (remove-hook 'python-mode-hook #'+python-use-correct-flycheck-executables-h)
-
-      (add-hook 'org-mode-hook #'(lambda()
-                                   (setq-local corfu-auto t)
-                                   ;;(setq-local acm-enable-english-helper t)
-                                   ;;(lsp-bridge-mode)
-                                   (setq-local completion-at-point-functions (list  (cape-super-capf  #'cape-dict #'cape-dabbrev)))
-                                   ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
-                                   ))
-
-      (add-hook 'tex-mode-hook #'(lambda()
-                                   (setq-local corfu-auto t)
-                                   ;;(setq-local acm-enable-english-helper t)
-                                   ;;(lsp-bridge-mode)
-                                   (setq-local corfu-auto-delay 0.5)
-                                   ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
-                                   ))
-
-      (add-hook 'python-mode-hook #'(lambda()
-                                      (setq-local corfu-auto nil)
-                                      (setq-local flycheck-checker 'python-pyright)
-                                      (lsp-bridge-mode)
-                                      ))))
+  (add-hook 'python-mode-hook #'(lambda()
+                                  (setq-local corfu-auto nil)
+                                  (setq-local flycheck-checker 'python-pyright)
+                                  (lsp-bridge-mode)
+                                  (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
+                                              +lookup-implementations-functions '(lsp-bridge-find-impl t)
+                                              +lookup-references-functions '(lsp-bridge-find-references t))))
+  )
 
 
 (use-package! lsp-mode

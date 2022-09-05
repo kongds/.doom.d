@@ -29,6 +29,7 @@
 ;; `load-theme' function. This is the default:
 (setq doom-theme 'doom-nord)
 (setq doom-font (font-spec :family "Roboto Mono" :size 14))
+;;(setq doom-font (font-spec :family "Monego" :size 14))
 
 
 ;; If you use `org' and don't want your org files in the default location below,
@@ -99,6 +100,7 @@
     (define-key vterm-mode-map [remap backward-kill-word] #'vterm-send-meta-backspace)
   (define-key vterm-mode-map (kbd "<insert-state> C-w") nil)
   (define-key vterm-mode-map (kbd "<insert-state> C-c") 'vterm-send-C-c)
+  (define-key vterm-mode-map (kbd "<insert-state> C-b") 'vterm-send-C-b)
   (define-key vterm-mode-map (kbd "<insert-state> C-l") 'vterm--self-insert)
   (define-key vterm-mode-map (kbd "<insert-state> C-w h") 'evil-window-left))
 
@@ -500,6 +502,29 @@ breakpoints, etc.)."
   (define-key netease-cloud-music-mode-map (kbd "C-w C-l") 'my-evil-move-right-window))
 
 
+
+;; citar open mendely file
+(after! citar
+  (defun citar-file--parser-mendeley (file-field)
+    "Split FILE-FIELD by `;'."
+    (seq-remove
+     #'string-empty-p
+     (mapcar
+      (lambda (x)
+        (let* ((x (string-trim x))
+               (x (replace-regexp-in-string ":pdf" "" x))
+               (x (replace-regexp-in-string ":Users" "/Users" x)))
+          x)
+        )
+      (citar-file--split-escaped-string file-field ?\;))))
+
+  (setq citar-file-parser-functions
+        '(citar-file--parser-mendeley)))
+
+
+(after! highlight-symbol
+  (set-face-attribute 'highlight-symbol-face nil :inherit 'evil-ex-lazy-highlight))
+
 (load! "config-org")
 
 (load! "start-sync")
@@ -530,3 +555,7 @@ breakpoints, etc.)."
 (load! "doom-sort-tab")
 
 (load! "eaf-config")
+
+(load! "work-remote-tmux")
+
+(load! "get-gpu-status")

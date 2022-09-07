@@ -100,15 +100,14 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   "C-j" #'avy-goto-char;;-timer
   :n "s" #'avy-goto-char)
 
- "s-i" #'(lambda (args)
+ "s-;" #'(lambda (args)
            (interactive "P")
            (if (eq major-mode 'vterm-mode)
                    (+vterm/toggle args)
                 (+vterm/toggle args)
                 (unless (eq major-mode 'vterm-mode) (+vterm/toggle args)))
            (when (s-contains?  "vterm" (buffer-name))
-             (evil-insert 0))
-           )
+             (evil-insert 0)))
   ;;"s-i" #'(lambda ()
   ;;        (interactive)
   ;;        (if (eq major-mode 'vterm-mode)

@@ -189,7 +189,6 @@
   :init
   (require 'yasnippet)
   (require 'lsp-bridge)
-  (require 'acm-delay)
 
   (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)
 

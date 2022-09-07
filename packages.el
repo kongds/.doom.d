@@ -135,3 +135,5 @@
 (package! sort-tab :recipe (:host github :repo "manateelazycat/sort-tab" :files ("*")))
 
 (package! highlight-symbol)
+
+(package! ef-theme :recipe (:host github :repo "protesilaos/ef-themes" :files ("*")))

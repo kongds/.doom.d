@@ -541,6 +541,7 @@ breakpoints, etc.)."
 ;;(load! "flex-orderless")
 ;;(load! "tabnine-capf")
 (load! "copilot-company")
+(load! "acm-delay")
 
 (load! "mu4e-config")
 

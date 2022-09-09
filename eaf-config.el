@@ -9,6 +9,13 @@
 
   (setq eaf-python-command "/opt/homebrew/bin/python3")
 
+  (add-hook 'eaf-browser-hook
+            (lambda ()
+              (define-key eaf-mode-map (kbd "n") nil)
+              (define-key eaf-mode-map (kbd "p") nil)
+              (define-key eaf-mode-map (kbd "n") #'eaf-py-proxy-handle_search_forward)
+              (define-key eaf-mode-map (kbd "p") #'eaf-py-proxy-handle_search_backward)))
+
   (advice-add '+lookup/online
               :override #'(lambda (query provider)
                             (interactive

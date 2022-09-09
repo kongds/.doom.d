@@ -20,23 +20,14 @@
   (org-export-define-derived-backend 'html-inline-images 'html
     :menu-entry '(?h "Export to HTML" ((?m "As MHTML file and open" org-html-export-to-mhtml))))
 
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((dot . t)
-     (python . t)
-     (shell . t)
-     (jupyter . t)
-     (sql . t)))
+  ;; render color for jupyter
+  (defun display-ansi-colors ()
+    (ansi-color-apply-on-region (point-min) (point-max)))
+  (add-hook 'org-babel-after-execute-hook #'display-ansi-colors)
+
   (setq org-hide-emphasis-markers t)
-  (setq org-babel-python-command "/opt/homebrew/bin//python3")
 
-  ;; overide python blocks to jupyter python
-  ;; (org-babel-jupyter-override-src-block "python")
-  ;; no sync
   (setq ob-async-no-async-languages-alist '("python" "jupyter-python"))
-
-  (setq org-babel-default-header-args:jupyter-julia '((:async . "yes")
-                                                      (:session . "py")))
 
   (setq org-emphasis-alist
         (quote (
@@ -44,8 +35,7 @@
                 ("_" underline)
                 ("+" (:strike-through t))
                 ("~" org-verbatim verbatim)
-                ("*" (:foreground "yellow" :background "black"))
-                )))
+                ("*" (:foreground "yellow" :background "black")))))
 
   (setq org-html-text-markup-alist
         '((bold . "<mark style=\"font-style:normal;font-weight:normal\">%s</mark>")
@@ -71,8 +61,7 @@
     (setq org-default-notes-file (concat org-directory "/inbox.org")))
   ;; latex scale
   (setq org-preview-latex-default-process 'dvisvgm)
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4))
-  )
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4)))
 
 
 
@@ -123,8 +112,7 @@
   (setq
    bibtex-completion-notes-path "/Users/royokong/.org/refs"
    bibtex-completion-bibliography "/Users/royokong/mendeley.bib/library.bib"
-   bibtex-completion-pdf-field "file"
-    )
+   bibtex-completion-pdf-field "file")
 (defun bibtex-completion-find-pdf-in-field (key-or-entry)
   "Return the path of the PDF specified in the field `bibtex-completion-pdf-field' if that file exists.
 Returns nil if no file is specified, or if the specified file
@@ -139,16 +127,13 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
       (cond
        ((not value) nil)         ; Field not defined
        ((f-file? value) (list value))   ; A bare full path was found.
-       ((-any 'f-file? (--map (f-join it (f-filename value)) (-flatten bibtex-completion-library-path))) (-filter 'f-file? (--map (f-join it (f-filename value)) (-flatten bibtex-completion-library-path))))
-       ))))
-(helm-add-action-to-source "Open PDF" 'helm-bibtex-open-pdf helm-source-bibtex 0)
-)
+       ((-any 'f-file? (--map (f-join it (f-filename value)) (-flatten bibtex-completion-library-path))) (-filter 'f-file? (--map (f-join it (f-filename value)) (-flatten bibtex-completion-library-path))))))))
+(helm-add-action-to-source "Open PDF" 'helm-bibtex-open-pdf helm-source-bibtex 0))
 
 
 (after! org-noter
   :config
-  (load! "modified-org-noter")
-)
+  (load! "modified-org-noter"))
 
 (after! org-download
   (defun org-screenshot ()
@@ -174,5 +159,73 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
   :config
   (add-hook 'org-mode-hook 'org-fragtog-mode))
 
+
+
+;; babel
+(after! org
+  :config
+  (org-babel-do-load-languages 'org-babel-load-languages '((dot . t)
+                                                           (python . t)
+                                                           (shell . t)
+                                                           (sql . t)))
+
+  (setq org-babel-python-command "/opt/homebrew/bin//python3")
+  (setq org-babel-default-header-args:jupyter-python '((:async . "yes")
+                                                       (:kernel . "python")
+                                                       (:session . "py")))
+
+  (defun org-babel-move-to-end-block ()
+    (let ((blockb "^[ \t]*#\\+BEGIN")
+          (blocke "^[ \t]*#\\+END")
+          (blockr "^[ \t]*#\\+RESULTS")
+          (origin (point)) blockbp  blockep blockrp)
+
+      ;; beginning of block
+      (end-of-line)
+      (if (re-search-forward blockb nil t)
+          (setq blockbp (point))
+        (setq blockbp (point-max)))
+      (goto-char origin)
+
+      ;; end of block
+      (beginning-of-line)
+      (re-search-forward blocke nil t)
+      (setq blockep (point))
+      (goto-char origin)
+
+      (when (> blockbp blockep)
+        ;; in block out block
+        (beginning-of-line)
+        (if (and (re-search-forward blockr nil t)
+                 (not (next-line))
+                 (< (point) blockbp))
+            (while (and
+                    (> (point-max) (1+ (line-beginning-position)))
+                    (equal ":"
+                          (buffer-substring-no-properties
+                           (line-beginning-position)
+                           (1+ (line-beginning-position)))))
+              (next-line))
+          (goto-char blockep)
+          (next-line)))))
+
+  (defun org-babel-new-block ()
+    (interactive)
+    (let ((origin (point))
+          (head nil))
+      (when (re-search-backward "^[ \t]*#\\+BEGIN" nil t)
+        (setq head
+              (buffer-substring-no-properties
+               (line-beginning-position)
+               (line-beginning-position 2)))
+        (goto-char origin)
+        (org-babel-move-to-end-block)
+        (insert (concat "\n" head))
+        (insert "\n\n#+end_src\n")
+        (previous-line 3))))
+
+  (evil-collection-define-key 'normal 'org-mode-map (kbd "C-o") 'org-babel-new-block)
+  (define-key org-mode-map (kbd "C-j") #'org-babel-next-src-block)
+  (define-key org-mode-map (kbd "C-k") #'org-babel-previous-src-block))
 
 (provide 'config-org)

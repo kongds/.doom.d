@@ -9,9 +9,9 @@
    ["#fafafa" "#e45649" "#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42"])
  '(citar-bibliography '("/Users/royokong/mendeley.bib/library.bib"))
  '(citar-notes-paths '("/Users/royokong/.org/notes"))
- '(company-dabbrev-downcase nil)
- '(company-dabbrev-ignore-case nil)
- '(company-dabbrev-other-buffers nil)
+ '(company-dabbrev-downcase nil t)
+ '(company-dabbrev-ignore-case nil t)
+ '(company-dabbrev-other-buffers nil t)
  '(company-global-modes
    '(not erc-mode circe-mode message-mode help-mode gud-mode vterm-mode netease-cloud-music-switch-playlist-mode-map netease-cloud-music-mode netease-cloud-music-change-playlist-mode netease-cloud-music-switch-playlist-mode))
  '(company-idle-delay 0)
@@ -95,14 +95,14 @@
      ("o" . "insert_or_open_browser")
      ("y" . "insert_or_download_youtube_video")
      ("Y" . "insert_or_download_youtube_audio")
-     ("p" . "insert_or_toggle_device")
+     ("p" . "handle_search_backward")
      ("P" . "insert_or_duplicate_page")
      ("1" . "insert_or_save_as_pdf")
      ("2" . "insert_or_save_as_single_file")
      ("3" . "insert_or_save_as_screenshot")
      ("v" . "insert_or_view_source")
      ("e" . "insert_or_edit_url")
-     ("n" . "insert_or_export_text")
+     ("n" . "handle_search_forward")
      ("," . "insert_or_switch_to_reader_mode")
      ("." . "insert_or_translate_text")
      (";" . "insert_or_translate_page")
@@ -158,6 +158,7 @@
      (erlang-mode . "erlang_ls")
      ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode)
       . "texlab")))
+ '(lsp-bridge-org-babel-lang-list '("clojure" "latex" "python" "jupyter-python"))
  '(lsp-enable-file-watchers t)
  '(lsp-enable-imenu nil)
  '(lsp-session-file "/Users/royokong/.emacs.d/.local/etc/lsp-session" t)
@@ -418,4 +419,4 @@ is the buffer position of the start of the containing expression."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(ts-fold-replacement-face ((t (:foreground nil :box nil :inherit font-lock-comment-face :weight light)))))

@@ -19,7 +19,7 @@
     ))
 
 (defun startsync-before-save-hook ()
-  (let* ((project-root (loop for i in projectile-known-projects
+  (let* ((project-root (cl-loop for i in projectile-known-projects
                              if (equal (+workspace-current-name) (doom-project-name i))
                              return i))
          (project-root (if project-root (replace-regexp-in-string "~" "/Users/royokong" project-root) nil))
@@ -80,7 +80,7 @@
               (index 0) out)
           (while (< index (length json-data))
             (push (gethash "src" (aref json-data index) nil) out)
-            (incf index)
+            (cl-incf index)
             )
           (kill-buffer (get-buffer "startSync.json"))
           out))
@@ -106,5 +106,7 @@
 
   ;;(set-process-filter (get-buffer-process "*startSync*") 'startsync-controller-repl-filter)
   )
+
+(start-sync)
 
 (provide 'start-sync)

@@ -4,7 +4,7 @@
   :config
   (require 'consult)
   (defun sort-tab-workspace-buffer-list ()
-    (concatenate 'list
+    (cl-concatenate 'list
     (eaf--get-eaf-buffers)
     (mapcar #'get-buffer (consult--buffer-query :sort 'visibility
                                                 :as #'buffer-name
@@ -106,7 +106,7 @@
            ;; Insert tab.
            (setq tab (sort-tab-get-tab-name buf current-buffer))
            ;; (insert tab)
-           (incf tab-count)
+           (cl-incf tab-count)
            (if (eq buf current-buffer)
                (insert tab)
              (insert

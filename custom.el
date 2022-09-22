@@ -9,9 +9,9 @@
    ["#fafafa" "#e45649" "#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42"])
  '(citar-bibliography '("/Users/royokong/mendeley.bib/library.bib"))
  '(citar-notes-paths '("/Users/royokong/.org/notes"))
- '(company-dabbrev-downcase nil t)
- '(company-dabbrev-ignore-case nil t)
- '(company-dabbrev-other-buffers nil t)
+ '(company-dabbrev-downcase nil)
+ '(company-dabbrev-ignore-case nil)
+ '(company-dabbrev-other-buffers nil)
  '(company-global-modes
    '(not erc-mode circe-mode message-mode help-mode gud-mode vterm-mode netease-cloud-music-switch-playlist-mode-map netease-cloud-music-mode netease-cloud-music-change-playlist-mode netease-cloud-music-switch-playlist-mode))
  '(company-idle-delay 0)
@@ -413,7 +413,8 @@ is the buffer position of the start of the containing expression."
     (cons 340 "#383a42")
     (cons 360 "#383a42")))
  '(vc-annotate-very-old-color nil)
- '(wakatime-python-bin nil))
+ '(wakatime-python-bin nil)
+ '(warning-suppress-types '((jupyter) (jupyter) (defvaralias))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

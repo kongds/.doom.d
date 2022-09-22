@@ -56,7 +56,8 @@
 (package! persistent-scratch)
 (package! posframe)
 ;;(package! liberime)
-(package! telega)
+;;(package! telega)
+;;(package! telega :recipe (:host github :repo "telega.el" :files ("*")) :pin "ac3634e")
 ;;(package! ein)
 (package! window-numbering)
 ;;(package! lsp-pyright)
@@ -72,7 +73,8 @@
 (package! s)
 
 (package! websocket)
-(package! org-roam-ui :recipe (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out")))
+;; high cpu usage
+;;(package! org-roam-ui :recipe (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out")))
 
 (package! evil-matchit)
 

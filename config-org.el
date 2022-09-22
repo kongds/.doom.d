@@ -27,7 +27,25 @@
 
   (setq org-hide-emphasis-markers t)
 
+  (require 'jupyter)
+  (defun jupyter-command (&rest args)
+    "Run a Jupyter shell command synchronously, return its output.
+The shell command run is
+
+    jupyter ARGS...
+
+If the command fails or the jupyter shell command doesn't exist,
+return nil."
+    (with-temp-buffer
+      (when (zerop (apply #'process-file "/opt/homebrew/Caskroom/miniforge/base/bin/jupyter" nil t nil args))
+        (string-trim-right (buffer-string)))))
+  (require 'ob-jupyter)
+
   (setq ob-async-no-async-languages-alist '("python" "jupyter-python"))
+
+
+  (after! lsp-bridge
+    (lsp-org-babel-enable "jupyter-python"))
 
   (setq org-emphasis-alist
         (quote (
@@ -44,7 +62,7 @@
           (strike-through . "<del>%s</del>")
           (underline . "<span class=\"underline\">%s</span>")
           (verbatim . "<code>%s</code>")))
-  (use-package! ob-ipython)
+  ;;(use-package! ob-ipython)
   (use-package! ob-async)
 
   (use-package! org-download
@@ -81,18 +99,18 @@
                                             ;;:unnarrowed t)))
   ;;)
 
-(use-package! org-roam-ui
-    :after org-roam ;; or :after org
-    ;; :hook
-;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
-;;         a hookable mode anymore, you're advised to pick something yourself
-;;         if you don't care about startup time, use
-;;  :hook (after-init . org-roam-ui-mode)
-    :config
-    (setq org-roam-ui-sync-theme t
-          org-roam-ui-follow t
-          org-roam-ui-update-on-save t
-          org-roam-ui-open-on-start t))
+;;(use-package! org-roam-ui
+;;    :after org-roam ;; or :after org
+;;    ;; :hook
+;;;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+;;;;         a hookable mode anymore, you're advised to pick something yourself
+;;;;         if you don't care about startup time, use
+;;;;  :hook (after-init . org-roam-ui-mode)
+;;    :config
+;;    (setq org-roam-ui-sync-theme t
+;;          org-roam-ui-follow t
+;;          org-roam-ui-update-on-save t
+;;          org-roam-ui-open-on-start t))
 
 ;; org roam bibtex configs
 (use-package! org-roam-bibtex
@@ -175,8 +193,8 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
                                                        (:session . "py")))
 
   (defun org-babel-move-to-end-block ()
-    (let ((blockb "^[ \t]*#\\+BEGIN")
-          (blocke "^[ \t]*#\\+END")
+    (let ((blockb "^[ \t]*#\\+BEGIN_")
+          (blocke "^[ \t]*#\\+END_")
           (blockr "^[ \t]*#\\+RESULTS")
           (origin (point)) blockbp  blockep blockrp)
 
@@ -201,10 +219,10 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
                  (< (point) blockbp))
             (while (and
                     (> (point-max) (1+ (line-beginning-position)))
-                    (equal ":"
-                          (buffer-substring-no-properties
-                           (line-beginning-position)
-                           (1+ (line-beginning-position)))))
+                    (cl-search (buffer-substring-no-properties
+                                (line-beginning-position)
+                                (1+ (line-beginning-position)))
+                               ":#"))
               (next-line))
           (goto-char blockep)
           (next-line)))))
@@ -213,7 +231,7 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
     (interactive)
     (let ((origin (point))
           (head nil))
-      (when (re-search-backward "^[ \t]*#\\+BEGIN" nil t)
+      (when (re-search-backward "^[ \t]*#\\+BEGIN_SRC" nil t)
         (setq head
               (buffer-substring-no-properties
                (line-beginning-position)
@@ -224,7 +242,8 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
         (insert "\n\n#+end_src\n")
         (previous-line 3))))
 
-  (evil-collection-define-key 'normal 'org-mode-map (kbd "C-o") 'org-babel-new-block)
+  (after! evil-collection
+    (evil-collection-define-key 'normal 'org-mode-map (kbd "C-o") 'org-babel-new-block))
   (define-key org-mode-map (kbd "C-j") #'org-babel-next-src-block)
   (define-key org-mode-map (kbd "C-k") #'org-babel-previous-src-block))
 

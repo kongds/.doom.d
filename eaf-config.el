@@ -27,6 +27,12 @@
               :override #'(lambda (url &rest args)
                             (eaf-org-open (concat "browser::" url))))
 
+
+  (advice-add 'eaf--atomic-edit
+              :after #'(lambda (buffer-id focus-text)
+                         (evil-insert-state)
+                         (insert "i")))
+
   (org-link-set-parameters "https"
                            :follow #'(lambda (link)
                                        (eaf-org-open (concat "browser::https:" link)))

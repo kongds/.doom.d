@@ -107,6 +107,35 @@
   ;;(set-process-filter (get-buffer-process "*startSync*") 'startsync-controller-repl-filter)
   )
 
+(defun startsync-add-current-project ()
+  (interactive)
+  (let* ((project-root (cl-loop for i in projectile-known-projects
+                             if (equal (+workspace-current-name) (doom-project-name i))
+                             return i))
+         (project-root (if project-root (replace-regexp-in-string "~" "/Users/royokong" project-root) nil))
+         (project-name (if project-root (doom-project-name project-root) nil)))
+    (unless (member project-root startsync-dirs)
+      (with-current-buffer (find-file "/Users/royokong/startSync.json")
+        (beginning-of-buffer)
+        (next-line)
+        (insert (format
+       "     {\n        \"src\": \"%s\",\n        \"des\": [\"jt@172.17.62.88:/home/jt/%s\",\n                \"jt@192.168.1.115:/home/jt/%s\"]\n    },\n"
+       project-root project-name project-name))
+        (save-buffer)
+        (kill-buffer (current-buffer)))
+      (setq startsync-dirs (cons project-root startsync-dirs))
+      (async-shell-command (concat "scp -r "
+                                   (replace-regexp-in-string "/$" "" project-root)
+                                   " jt@172.17.62.88:/home/jt/") (get-buffer-create "*scp-172*"))
+      (async-shell-command (concat "scp -r "
+                                   (replace-regexp-in-string "/$" "" project-root)
+                                   " jt@192.168.1.115:/home/jt/") (get-buffer-create "*scp-192*"))
+
+      ))
+  )
+
+
+
 (start-sync)
 
 (provide 'start-sync)

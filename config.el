@@ -525,6 +525,7 @@ breakpoints, etc.)."
 (after! highlight-symbol
   (set-face-attribute 'highlight-symbol-face nil :inherit 'evil-ex-lazy-highlight))
 
+
 (load! "config-org")
 
 (load! "start-sync")
@@ -553,10 +554,10 @@ breakpoints, etc.)."
 
 (load! "trans")
 
-(load! "doom-sort-tab")
-
 (load! "eaf-config")
 
 (load! "work-remote-tmux")
 
 (load! "get-gpu-status")
+
+(load! "doom-sort-tab")

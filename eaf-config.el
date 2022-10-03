@@ -9,19 +9,15 @@
 
   (setq eaf-python-command "/opt/homebrew/bin/python3")
 
+  ;; fix 无法登录谷歌账号
+  (setq eaf-webengine-pc-user-agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15")
+
   (add-hook 'eaf-browser-hook
             (lambda ()
               (define-key eaf-mode-map (kbd "n") nil)
               (define-key eaf-mode-map (kbd "p") nil)
               (define-key eaf-mode-map (kbd "n") #'eaf-py-proxy-handle_search_forward)
               (define-key eaf-mode-map (kbd "p") #'eaf-py-proxy-handle_search_backward)))
-
-  (advice-add '+lookup/online
-              :override #'(lambda (query provider)
-                            (interactive
-                             (list (if (use-region-p) (doom-thing-at-point-or-region))
-                                   "eaf"))
-                            (eaf-search-it query)))
 
   (advice-add 'browse-url
               :override #'(lambda (url &rest args)
@@ -138,6 +134,12 @@
           (get-buffer-create "*eaf temp*")
           (switch-to-buffer "*eaf temp*" t)))
       (if need-select-current-window (select-window current-window))))
+
+  ;; ensure focus change function has been add
+  (advice-add 'eaf-restart-process :after
+                  (lambda (&rest args)
+                    (remove-function after-focus-change-function #'eaf--mac-focus-change)
+                    (add-function :after after-focus-change-function #'eaf--mac-focus-change)))
 
   (after! vertico-posframe
     (defun eaf-in-eaf-buffer (&rest r)

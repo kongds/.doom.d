@@ -16,7 +16,6 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
 
 
 (map!
- "s-k" #'kill-this-buffer
  "s-a" #'mark-whole-buffer
  "s-v" #'yank
  "s-c" #'kill-ring-save
@@ -43,6 +42,12 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
                               (condition-case nil
                                   (in-project-switch nil nil)
                                 (error (project-find-file))))
+
+  :desc "search Google" :n "s o" #'(lambda(arg)
+                                     (interactive (list (if (use-region-p)
+                                                            (doom-thing-at-point-or-region)
+                                                            (read-string "Search for: "))))
+                                     (+lookup/online arg "Google"))
 
   :desc "music" :n "m m" #'netease-cloud-music
   :desc "eaf browser" :n "m b" #'eaf-open-browser
@@ -190,3 +195,11 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
                   (evil-window-up 1)
                 (error (shell-command "tmux select-pane -u")))))
  )
+
+
+(after! evil-textobj-tree-sitter
+  (evil-define-key 'normal 'tree-sitter-mode
+    "c" nil
+    "cj" +tree-sitter-goto-next-map
+    "ck" +tree-sitter-goto-previous-map)
+)

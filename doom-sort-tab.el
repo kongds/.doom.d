@@ -173,5 +173,9 @@
      'sort-tab-other-tab-face)))
 )
 
+(setq sort-tab-align 'center)
+;;(add-hook 'doom-after-init-hook #'sort-tab-turn-on)
+
+(setq sort-tab-name-max-length 20)
 
 (provide 'doom-sort-tab)

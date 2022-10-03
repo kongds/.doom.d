@@ -88,14 +88,19 @@
 
   (defun evil-ex-ret-maybe-comp ()
     (interactive)
+    (message (prin1-to-string corfu--index))
     (when (>= corfu--index 0)
         (corfu--insert 'finished))
       (exit-minibuffer))
 
+  (defun evil-ex-maybe-comp ()
+    (interactive)
+    (when (>= corfu--index 0)
+        (corfu--insert 'finished)))
+
   (define-key evil-ex-completion-map (kbd "(") 'evil-ex-corfu-bracket)
   (define-key evil-ex-completion-map (kbd "!") 'evil-ex-corfu-excal)
-  (define-key evil-ex-completion-map (kbd "<return>") 'evil-ex-ret-maybe-comp)
-
+  (define-key evil-ex-completion-map (kbd "C-e") 'evil-ex-maybe-comp)
 
   (defun corfu-spc ()
     (interactive)
@@ -192,8 +197,6 @@
 
   (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)
 
-  ;; remove lsp-bridge modeline
-  (delete `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")) mode-line-misc-info)
 
   (setq acm-candidate-match-function 'orderless-flex)
   (setq acm-enable-dabbrev nil)
@@ -222,12 +225,22 @@
                                ))
 
   (add-hook 'python-mode-hook #'(lambda()
+                                  ;; remove lsp-bridge modeline
+                                  (delete `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")) mode-line-misc-info)
+
                                   (setq-local corfu-auto nil)
                                   (setq-local flycheck-checker 'python-pyright)
                                   (lsp-bridge-mode)
                                   (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
                                               +lookup-implementations-functions '(lsp-bridge-find-impl t)
                                               +lookup-references-functions '(lsp-bridge-find-references t))))
+
+  (defun acm-reload-color-after-theme (&rest args)
+      (when (get-buffer acm-buffer)
+        (kill-buffer acm-buffer))
+      (acm-reset-colors))
+  (after! consult
+    (advice-add 'consult-theme :after #'acm-reload-color-after-theme))
   )
 
 

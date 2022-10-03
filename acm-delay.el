@@ -88,7 +88,7 @@
 
 (defvar acm-update-timer nil)
 (defvar acm-doc-timer nil)
-(defvar acm-delay 0.1)
+(defvar acm-delay 0.3)
 
 (defun acm-update ()
   (if acm-update-timer

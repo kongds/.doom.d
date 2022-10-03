@@ -56,8 +56,6 @@
 (package! persistent-scratch)
 (package! posframe)
 ;;(package! liberime)
-;;(package! telega)
-;;(package! telega :recipe (:host github :repo "telega.el" :files ("*")) :pin "ac3634e")
 ;;(package! ein)
 (package! window-numbering)
 ;;(package! lsp-pyright)
@@ -139,3 +137,7 @@
 (package! highlight-symbol)
 
 (package! ef-theme :recipe (:host github :repo "protesilaos/ef-themes" :files ("*")))
+
+(package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "b581ac9")
+
+(package! line-reminder :recipe (:host github :repo "emacs-vs/line-reminder"))

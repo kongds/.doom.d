@@ -1,0 +1,48 @@
+#!/bin/bash
+
+for diff_file in ~/.doom.d/diffs/*; do
+    if [[ $diff_file == *'.bk' ]]; then
+        continue
+    fi
+
+    echo $diff_file
+    cd ~/.emacs.d/.local/straight/repos/$((basename $diff_file) | sed 's/.diff//')
+
+    git diff > ${diff_file}.bk
+    if [ -s ${diff_file}.bk ]; then
+
+        if cmp -s ${diff_file}.bk ${diff_file}; then
+            echo "No changes"
+            rm ${diff_file}.bk
+        else
+            diff ${diff_file}.bk ${diff_file}
+            read -r -p "Apply changes? [y/N] " response
+            if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]];then
+                echo "Applying changes"
+                mv ${diff_file}.bk ${diff_file}
+            else
+                echo "No changes"
+                rm ${diff_file}.bk
+            fi
+        fi
+    else
+        rm ${diff_file}.bk
+    fi
+
+    git stash save --keep-index --include-untracked
+
+    cd -
+
+done
+
+
+
+~/.emacs.d/bin/doom  upgrade
+
+
+for diff_file in ~/.doom.d/diffs/*; do
+    echo $diff_file
+    cd ~/.emacs.d/.local/straight/repos/$((basename $diff_file) | sed 's/.diff//')
+    git apply ${diff_file}
+    cd -
+done

@@ -19,9 +19,10 @@
               (define-key eaf-mode-map (kbd "n") #'eaf-py-proxy-handle_search_forward)
               (define-key eaf-mode-map (kbd "p") #'eaf-py-proxy-handle_search_backward)))
 
-  (advice-add 'browse-url
-              :override #'(lambda (url &rest args)
-                            (eaf-org-open (concat "browser::" url))))
+  (defun eaf-browse-url  (url &rest args)
+    (eaf-org-open (concat "browser::" url)))
+
+  (advice-add 'browse-url :override #'eaf-browse-url)
 
 
   (advice-add 'eaf--atomic-edit

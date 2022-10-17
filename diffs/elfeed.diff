@@ -1,0 +1,53 @@
+diff --git a/elfeed-show.el b/elfeed-show.el
+index 4915cae..e7d22a3 100644
+--- a/elfeed-show.el
++++ b/elfeed-show.el
+@@ -156,6 +156,11 @@ Called without arguments."
+          (type (elfeed-entry-content-type elfeed-show-entry))
+          (feed (elfeed-entry-feed elfeed-show-entry))
+          (feed-title (elfeed-feed-title feed))
++         (comment (elfeed-meta elfeed-show-entry :comment))
++         (categories
++          (if (elfeed-meta elfeed-show-entry :categories)
++              (s-join "," (elfeed-meta elfeed-show-entry :categories))
++            nil))
+          (base (and feed (elfeed-compute-base (elfeed-feed-url feed)))))
+     (erase-buffer)
+     (insert (format (propertize "Title: %s\n" 'face 'message-header-name)
+@@ -176,6 +181,15 @@ Called without arguments."
+     (insert (propertize "Link: " 'face 'message-header-name))
+     (elfeed-insert-link link link)
+     (insert "\n")
++
++    (when comment
++      (insert (format (propertize "Comment: %s\n" 'face 'message-header-name)
++                      (propertize comment 'face 'message-header-other))))
++
++    (when categories
++      (insert (format (propertize "Catergories: %s\n" 'face 'message-header-name)
++                      (propertize categories 'face 'message-header-other))))
++
+     (cl-loop for enclosure in (elfeed-entry-enclosures elfeed-show-entry)
+              do (insert (propertize "Enclosure: " 'face 'message-header-name))
+              do (elfeed-insert-link (car enclosure))
+diff --git a/elfeed.el b/elfeed.el
+index bbfef26..f6dc86a 100644
+--- a/elfeed.el
++++ b/elfeed.el
+@@ -291,6 +291,7 @@ If PROTOCOL is nil, returns URL."
+                                     (elfeed--creators-to-plist
+                                      (xml-query-all* (creator *) entry))))
+                     (categories (xml-query-all* (category :term) entry))
++                    (comment (xml-query* (comment *) entry))
+                     (content (elfeed--atom-content entry))
+                     (id (or (xml-query* (id *) entry) link
+                             (elfeed-generate-id content)))
+@@ -319,6 +320,8 @@ If PROTOCOL is nil, returns URL."
+                                :content-type content-type
+                                :meta `(,@(when authors
+                                            (list :authors authors))
++                                       ,@(when comment
++                                           (list :comment comment))
+                                        ,@(when categories
+                                            (list :categories categories))))))
+                (dolist (hook elfeed-new-entry-parse-hook)

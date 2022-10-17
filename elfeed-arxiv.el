@@ -42,7 +42,7 @@
             (elfeed-search-set-filter (concat elfeed-search-filter
                                               (format-time-string " +add-%Y-%m-%d"))))
 
-  (setq elfeed-feeds '("http://export.arxiv.org/api/query?search_query=cat:cs.CL&start=0&max_results=1000&sortBy=submittedDate&sortOrder=descending"))
+  (setq elfeed-feeds '("http://export.arxiv.org/api/query?search_query=cat:cs.CL&start=0&max_results=300&sortBy=submittedDate&sortOrder=descending"))
 
   (setq elfeed-search-title-max-width 130)
 
@@ -80,6 +80,18 @@
                                                                    title-width
                                                                    elfeed-search-title-max-width)
                                                :left))
+
+           (entry-comment (elfeed-meta entry :comment))
+           (comment-width 40)
+           (comment-column (elfeed-format-column (or entry-comment "") (elfeed-clamp elfeed-search-title-min-width
+                                                                                     comment-width
+                                                                                     elfeed-search-title-max-width)
+                                                 :left))
+
+           (entry-cat
+            (s-join "," (elfeed-meta entry :categories)))
+
+
            (authors-width 80)
            (authors-column (elfeed-format-column entry-authors (elfeed-clamp
                                                                 elfeed-search-title-min-width
@@ -89,21 +101,9 @@
       (insert (propertize title-column 'face title-faces 'kbd-help title) " ")
       (insert (propertize authors-column 'face 'elfeed-search-date-face 'kbd-help entry-authors) " ")
 
-      ;; (when feed-title
-      ;;   (insert (propertize entry-authors
-      ;; 'face 'elfeed-search-feed-face) " "))
+      (insert (propertize comment-column 'face title-faces) " ")
 
-      (if (string-match-p "ArXiv Query: search_query=cat:" feed-title)
-        (setq feed-title
-              (nth 0 (split-string
-                      (string-replace  "ArXiv Query: search_query=cat:" "" feed-title)
-                      "&"))))
-
-      (when entry-authors (insert (propertize feed-title 'face 'elfeed-search-feed-face) " "))
-
-      ;; (when tags
-      ;;   (insert "(" tags-str ")"))
-      ))
+      (insert (propertize entry-cat 'face 'elfeed-search-feed-face) )))
 
 
   (advice-add 'arxiv-get-pdf :before-until (lambda (arxiv-number pdf)

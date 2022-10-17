@@ -24,7 +24,7 @@ index 520d809..362bf0a 100755
              if marker_input_quit:
                  self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index de2a97e..8c347f8 100755
+index de2a97e..a2eb85a 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
 @@ -38,6 +38,7 @@ import base64
@@ -50,7 +50,7 @@ index de2a97e..8c347f8 100755
 +        elif download_data.endswith(".pdf"):
 +            def download_pdf_and_open(download_data):
 +                file_name = download_data.split('/')[-1]
-+                paper_root = '/Users/royokong/papers/'
++                paper_root = '/Users/royokong/arxiv_papers/'
 +                if not os.path.exists(paper_root+file_name):
 +                    message_to_emacs("Downloading: " + download_data + " to pdf")
 +                    command = ['wget',

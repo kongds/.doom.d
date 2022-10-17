@@ -7,7 +7,8 @@
  '(+modeline-height 20)
  '(ansi-color-names-vector
    ["#fafafa" "#e45649" "#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42"])
- '(citar-bibliography '("/Users/royokong/mendeley.bib/library.bib"))
+ '(citar-bibliography
+   '("/Users/royokong/library.bib" "/Users/royokong/mendeley.bib/library.bib"))
  '(citar-notes-paths '("/Users/royokong/.org/notes"))
  '(company-dabbrev-downcase nil t)
  '(company-dabbrev-ignore-case nil t)

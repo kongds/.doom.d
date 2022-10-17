@@ -221,6 +221,7 @@
                                ;;(setq-local acm-enable-english-helper t)
                                ;;(lsp-bridge-mode)
                                (setq-local corfu-auto-delay 0.1)
+                               (setq-local completion-at-point-functions (list (cape-super-capf #'cape-dabbrev #'cape-tex #'cape-dict #'cape-file)))
                                ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
                                ))
 
@@ -250,7 +251,7 @@
   (defun my/lsp-mode-setup-completion ()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))
-    (setq-local completion-at-point-functions (list  (cape-super-capf #'lsp-completion-at-point #'cape-dict))))
+    (setq-local completion-at-point-functions (list  (cape-super-capf #'lsp-completion-at-point #'cape-dict #'cape-file))))
     ;; (setq-local completion-at-point-functions
     ;;             (list  (cape-super-capf #'lsp-completion-at-point
     ;;                                     (cape-company-to-capf (apply-partially #'company--multi-backend-adapter '(company-dabbrev-code company-tabnine))))))

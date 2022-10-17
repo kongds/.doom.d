@@ -141,3 +141,5 @@
 (package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "b581ac9")
 
 (package! line-reminder :recipe (:host github :repo "emacs-vs/line-reminder"))
+
+(package! elfeed)

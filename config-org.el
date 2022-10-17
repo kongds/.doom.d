@@ -120,7 +120,7 @@ return nil."
 (use-package! org-ref
   :after org-roam
   :config
-  (setq org-ref-default-bibliography (list "/Users/royokong/mendeley.bib/library.bib")
+  (setq bibtex-completion-bibliography (list "/Users/royokong/mendeley.bib/library.bib" "/Users/royokong/library.bib")
         org-ref-get-pdf-filename-function #'(lambda (key)
                                             (car (bibtex-completion-find-pdf-in-field key)))
         org-ref-completion-library 'org-ref-ivy-cite))
@@ -129,7 +129,7 @@ return nil."
   :config
   (setq
    bibtex-completion-notes-path "/Users/royokong/.org/refs"
-   bibtex-completion-bibliography "/Users/royokong/mendeley.bib/library.bib"
+   bibtex-completion-bibliography "/Users/royokong/library.bib"
    bibtex-completion-pdf-field "file")
 (defun bibtex-completion-find-pdf-in-field (key-or-entry)
   "Return the path of the PDF specified in the field `bibtex-completion-pdf-field' if that file exists.

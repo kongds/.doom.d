@@ -52,7 +52,8 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   :desc "music" :n "m m" #'netease-cloud-music
   :desc "eaf browser" :n "m b" #'eaf-open-browser
   :desc "eaf browser h" :n "m h" #'eaf-open-browser-with-history
-  :desc "bibtex" :n "n b" #'helm-bibtex
+  :desc "bibtex" :n "n b" #'citar-open-files
+  :desc "bibtex" :n "n B" #'citar-open
   :desc "switch buffer" :n "j" #'switch-to-buffer
   :desc "switch workspace buffer" :n "k" #'+vertico/switch-workspace-buffer
   :desc "kill workspace buffer" :n "K" #'persp-kill-buffer
@@ -125,6 +126,10 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
  (:after telega
   :map telega-chat-mode-map
   "C-c C-r" #'telega-sticker-choose-favorite-or-recent)
+
+ (:after telega
+  :map telega-msg-button-map
+  "SPC" nil)
 
  (:after ein
   :map ein:notebook-mode-map

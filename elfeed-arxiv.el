@@ -35,12 +35,15 @@
   (add-hook! 'elfeed-search-mode-hook 'elfeed-update)
 
   ;; add tags of add time
-  (add-hook 'elfeed-new-entry-hook
-          (elfeed-make-tagger  :add (intern (setq date (format-time-string "add-%Y-%m-%d")))))
 
-  (add-hook 'elfeed-db-update-hook
-            (elfeed-search-set-filter (concat elfeed-search-filter
-                                              (format-time-string " +add-%Y-%m-%d"))))
+  (advice-add 'elfeed-update :before
+              (lambda (&rest _)
+                (setq elfeed-new-entry-hook nil)
+                (add-hook 'elfeed-new-entry-hook
+                          (elfeed-make-tagger  :add (intern (setq date (format-time-string "add-%Y-%m-%d")))))
+                (elfeed-search-clear-filter)
+                (elfeed-search-set-filter (concat elfeed-search-filter
+                                                  (format-time-string " +add-%Y-%m-%d")))))
 
   (setq elfeed-feeds '("http://export.arxiv.org/api/query?search_query=cat:cs.CL&start=0&max_results=300&sortBy=submittedDate&sortOrder=descending"))
 
@@ -81,15 +84,20 @@
                                                                    elfeed-search-title-max-width)
                                                :left))
 
-           (entry-comment (elfeed-meta entry :comment))
-           (comment-width 40)
-           (comment-column (elfeed-format-column (or entry-comment "") (elfeed-clamp elfeed-search-title-min-width
+           (entry-comment  (elfeed-meta entry :comment))
+           (comment-width 30)
+           (comment-column (elfeed-format-column (string-replace "\n" "" (or entry-comment "")) (elfeed-clamp elfeed-search-title-min-width
                                                                                      comment-width
                                                                                      elfeed-search-title-max-width)
                                                  :left))
 
            (entry-cat
             (s-join "," (elfeed-meta entry :categories)))
+           (cat-width 10)
+           (cat-column (elfeed-format-column (or entry-cat "") (elfeed-clamp elfeed-search-title-min-width
+                                                                             cat-width
+                                                                             elfeed-search-title-max-width)
+                                                 :left))
 
 
            (authors-width 80)
@@ -103,7 +111,7 @@
 
       (insert (propertize comment-column 'face title-faces) " ")
 
-      (insert (propertize entry-cat 'face 'elfeed-search-feed-face) )))
+      (insert (propertize cat-column 'face title-faces) " ")))
 
 
   (advice-add 'arxiv-get-pdf :before-until (lambda (arxiv-number pdf)
@@ -127,17 +135,19 @@
             (bibfile (nth 0 citar-bibliography)))
 
         (find-file pdf)
-        (save-window-excursion
-          (find-file bibfile)
-          (goto-char (point-max))
-          (when (not (looking-at "^")) (insert "\n"))
-          (insert (arxiv-get-bibtex-entry-via-arxiv-api arxiv-number))
-          (goto-char (point-max))
-          (when (not (looking-at "^")) (insert "\n"))
-          (bibtex-end-of-entry)
-          (backward-char)
-          (insert (format "  file = {%s}\n  " pdf))
-          (save-buffer))
+        (if (equal status "new")
+            (save-window-excursion
+                (find-file bibfile)
+                (goto-char (point-max))
+                (when (not (looking-at "^")) (insert "\n"))
+                (insert (arxiv-get-bibtex-entry-via-arxiv-api arxiv-number))
+                (goto-char (point-max))
+                (when (not (looking-at "^")) (insert "\n"))
+                (bibtex-end-of-entry)
+                (backward-char)
+                (insert (format "  file = {%s}\n  " pdf))
+                (save-buffer)
+                (kill-buffer)))
         ;;(start-process "*fbib*" "*fbib*" "rebiber" "-i" bibfile)
         )))
 
@@ -158,12 +168,6 @@
    :map elfeed-search-mode-map :n "o" #'elfeed-search-open-pdf)
   (map!
    :map elfeed-show-mode-map :n "o" #'elfeed-show-open-pdf)
-
-
-
-  (add-hook 'elfeed-new-entry-hook
-          (elfeed-make-tagger :feed-url "youtube\\.com"
-                              :add '(video youtube)))
 
 
   ;; make *elfeed-xx* as real buffer

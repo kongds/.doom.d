@@ -1,3 +1,49 @@
+diff --git a/elfeed-search.el b/elfeed-search.el
+index d1d9b57..fb06f8c 100644
+--- a/elfeed-search.el
++++ b/elfeed-search.el
+@@ -504,6 +504,7 @@ This function must *only* be called within the body of
+            (age (- (float-time) date))
+            (title (or (elfeed-meta entry :title) (elfeed-entry-title entry)))
+            (link (elfeed-entry-link entry))
++           (comment (or (elfeed-meta entry :comment) ""))
+            (feed-title
+             (or (elfeed-meta feed :title) (elfeed-feed-title feed) ""))
+            (feed-id (elfeed-feed-id feed)))
+@@ -517,10 +518,12 @@ This function must *only* be called within the body of
+                (cl-every
+                 (lambda (m)
+                   (or (and title      (string-match-p m title))
++                      (and comment    (string-match-p m comment))
+                       (and link       (string-match-p m link))))
+                 matches))
+            (cl-notany (lambda (m)
+                         (or (and title      (string-match-p m title))
++                            (and comment    (string-match-p m comment))
+                             (and link       (string-match-p m link))))
+                       not-matches)
+            (or (null feeds)
+@@ -561,6 +564,7 @@ Executing a filter in bytecode form is generally faster than
+               ,@(when (or matches not-matches)
+                   '((title (or (elfeed-meta entry :title)
+                                (elfeed-entry-title entry)))
++                    (comment (or (elfeed-meta entry :comment) ""))
+                     (link (elfeed-entry-link entry))))
+               ,@(when (or feeds not-feeds)
+                   '((feed-id (elfeed-feed-id feed))
+@@ -578,10 +582,12 @@ Executing a filter in bytecode form is generally faster than
+                          collect `(memq ',forbid tags))
+               ,@(cl-loop for regex in matches collect
+                          `(or (string-match-p ,regex title)
++                              (string-match-p ,regex comment)
+                               (string-match-p ,regex link)))
+               ,@(cl-loop for regex in not-matches collect
+                          `(not
+                            (or (string-match-p ,regex title)
++                               (string-match-p ,regex comment)
+                                (string-match-p ,regex link))))
+               ,@(when feeds
+                   `((or ,@(cl-loop
 diff --git a/elfeed-show.el b/elfeed-show.el
 index 4915cae..e7d22a3 100644
 --- a/elfeed-show.el

@@ -143,3 +143,5 @@
 (package! line-reminder :recipe (:host github :repo "emacs-vs/line-reminder"))
 
 (package! elfeed)
+
+(package! blink-search :recipe (:host github :repo "manateelazycat/blink-search" :files ("*")))

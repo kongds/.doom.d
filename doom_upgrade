@@ -6,43 +6,54 @@ for diff_file in ~/.doom.d/diffs/*; do
     fi
 
     echo $diff_file
-    cd ~/.emacs.d/.local/straight/repos/$((basename $diff_file) | sed 's/.diff//')
+    package=$((basename $diff_file) | sed 's/.diff//')
 
-    git diff > ${diff_file}.bk
-    if [ -s ${diff_file}.bk ]; then
+    if [ -d ~/.emacs.d/.local/straight/repos/${package} ]; then
+        cd ~/.emacs.d/.local/straight/repos/${package}
 
-        if cmp -s ${diff_file}.bk ${diff_file}; then
-            echo "No changes"
-            rm ${diff_file}.bk
-        else
-            diff ${diff_file}.bk ${diff_file}
-            read -r -p "Apply changes? [y/N] " response
-            if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]];then
-                echo "Applying changes"
-                mv ${diff_file}.bk ${diff_file}
-            else
+        git diff > ${diff_file}.bk
+        if [ -s ${diff_file}.bk ]; then
+
+            if cmp -s ${diff_file}.bk ${diff_file}; then
                 echo "No changes"
                 rm ${diff_file}.bk
+            else
+                diff ${diff_file}.bk ${diff_file}
+                read -r -p "Apply changes? [y/N] " response
+                if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]];then
+                    echo "Applying changes"
+                    mv ${diff_file}.bk ${diff_file}
+                else
+                    echo "No changes"
+                    rm ${diff_file}.bk
+                fi
             fi
+        else
+            rm ${diff_file}.bk
         fi
-    else
-        rm ${diff_file}.bk
+        git stash save --keep-index --include-untracked
+
+        cd -
     fi
 
-    git stash save --keep-index --include-untracked
-
-    cd -
 
 done
 
 
-
-~/.emacs.d/bin/doom  upgrade
-
+if [[ $1 == 'not_upgrade' ]]; then
+    echo "Not upgrading packages"
+else
+    echo "Upgrading packages"
+    ~/.emacs.d/bin/doom upgrade
+fi
 
 for diff_file in ~/.doom.d/diffs/*; do
     echo $diff_file
     cd ~/.emacs.d/.local/straight/repos/$((basename $diff_file) | sed 's/.diff//')
+    rm -rf ~/.emacs.d/.local/straight/build-28.2/$((basename $diff_file) | sed 's/.diff//')
     git apply ${diff_file}
     cd -
 done
+
+
+~/.emacs.d/bin/doom sync

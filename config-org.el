@@ -154,13 +154,14 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
   (load! "modified-org-noter"))
 
 (after! org-download
-  (defun org-screenshot ()
-    (interactive)
-    (org-download-screenshot)
-    (search-backward "[[attachment:" nil t)
-    (previous-line)
-    (insert "\n#+attr_html: :width 700px
-#+attr_latex: :width 700px")))
+  (setq org-download-annotate-function
+    #'(lambda (link)
+        (format "#+DOWNLOADED: %s @ %s\n#+attr_html: :width 700px\n#+attr_latex: :width 700px\n"
+                (if (equal link org-download-screenshot-file)
+                    "screenshot"
+                  link)
+                (format-time-string "%Y-%m-%d %H:%M:%S")))))
+
 
 ;;(use-package! org-protocol-capture-html
 ;;  :after org-capture

@@ -28,6 +28,11 @@
        (sort-tab-is-magit-buffer-p buf)
        ))))
 
+  (defun sort-tab-not-focus (&rest args)
+    (if (eq (current-buffer) (sort-tab-get-buffer))
+        (other-window 1)))
+
+
   (advice-add 'sort-tab-get-buffer-list
               :override #'(lambda ()
                             (let ((bufs (sort-tab-workspace-buffer-list)))
@@ -37,6 +42,10 @@
 
   (advice-add 'sort-tab-turn-off
               :after #'(lambda()
+                         (advice-remove 'evil-window-up #'sort-tab-not-focus)
+                         (advice-remove 'evil-window-down #'sort-tab-not-focus)
+                         (advice-remove 'evil-window-left #'sort-tab-not-focus)
+                         (advice-remove 'evil-window-right #'sort-tab-not-focus)
                          (advice-remove '+workspace-switch #'(lambda (&rest r)
                                                                (unless (get-buffer-window (sort-tab-get-buffer))
                                                                  (sort-tab-create-window))))))
@@ -54,6 +63,10 @@
                            :desc "8" :n "8" #'sort-tab-select-visible-tab
                            :desc "9" :n "9" #'sort-tab-select-visible-tab
                            ))
+                         (advice-add 'evil-window-up :after #'sort-tab-not-focus)
+                         (advice-add 'evil-window-down :after #'sort-tab-not-focus)
+                         (advice-add 'evil-window-left :after #'sort-tab-not-focus)
+                         (advice-add 'evil-window-right :after #'sort-tab-not-focus)
                          (advice-add '+workspace-switch
                                      :after #'(lambda (&rest r)
                                                 (unless (get-buffer-window (sort-tab-get-buffer))
@@ -77,7 +90,6 @@
 
 ;;(defvar sort-tab-update-list-updating nil)
 (defun sort-tab-update-list ()
-
   (when (not (equal (window-buffer) (sort-tab-get-buffer)))
   (setq sort-tab-update-list-updating t)
   (let ((current-buffer (window-buffer)))
@@ -100,7 +112,14 @@
         (sort-tab-update-tabs
          ;; Don't sort tabs if using sort-tab commands.
          (when (not (string-prefix-p "sort-tab-" (prin1-to-string last-command)))
-           (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
+           (setq sort-tab-visible-buffers
+                  (sort-tab-get-buffer-list)))
+
+         (setq sort-tab-visible-buffers
+               (-filter
+                (lambda (buf)
+                    ;; filter #<killed buffer>
+                    (buffer-name buf)) sort-tab-visible-buffers))
 
          (dolist (buf sort-tab-visible-buffers)
            ;; Insert tab.

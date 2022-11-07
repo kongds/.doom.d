@@ -124,7 +124,7 @@
         (beginning-of-buffer)
         (next-line)
         (insert (format
-       "     {\n        \"src\": \"%s\",\n        \"des\": [\"jt@172.17.62.88:/home/jt/%s\",\n                \"jt@192.168.1.115:/home/jt/%s\"]\n    },\n"
+       "    {\n        \"src\": \"%s\",\n        \"des\": [\"jt@172.17.62.88:/home/jt/%s\",\n                \"jt@192.168.1.115:/home/jt/%s\"]\n    },\n"
        project-root project-name project-name))
         (save-buffer)
         (kill-buffer (current-buffer)))

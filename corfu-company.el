@@ -242,6 +242,13 @@
       (acm-reset-colors))
   (after! consult
     (advice-add 'consult-theme :after #'acm-reload-color-after-theme))
+
+  (setq lsp-bridge-disable-backup nil)
+
+  (map!
+   (:leader
+    :desc "workspace symbol"
+    :n "s n" #'lsp-bridge-list-workspace-symbols))
   )
 
 

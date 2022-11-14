@@ -64,9 +64,6 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 ;;
-(after! company
-  (setq company-idle-delay 0)
-  (setq company-show-numbers t))
 
 ;;(after! evil-snipe (evil-snipe-mode -1))
 (remove-hook 'doom-first-input-hook #'evil-snipe-mode)
@@ -77,163 +74,8 @@
 ;; not use ESC as prefix key
 (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
 
-(use-package! wakatime-mode
-  :config
-  (setq wakatime-cli-path "/opt/homebrew/bin/wakatime")
-  (global-wakatime-mode))
-
-
-(after! doom-modeline
-  :config
-  (setq doom-modeline-lsp t)
-  (setq doom-modeline-height 10)
-  (set-face-attribute 'mode-line nil :family "Roboto Mono Light" :height 120)
-  (set-face-attribute 'mode-line-inactive nil :family "Roboto Mono Light" :height 120)
-  (setq doom-modeline-project-detection 'project)
-  ;;(load! "modeline-fan")
-  )
-
-
-;; set ttl to nil means vterm will not been killed
-(after! vterm
-  (set-popup-rule! "^vterm" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)
-  (set-popup-rule! "^\*vterm\*" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)
-  (set-popup-rule! "^\*doom:vterm.*" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)
-  (add-to-list 'vterm-eval-cmds '("update-pwd" (lambda (path) (setq default-directory path))))
-    (define-key vterm-mode-map [remap backward-kill-word] #'vterm-send-meta-backspace)
-  (define-key vterm-mode-map (kbd "<insert-state> C-w") nil)
-  (define-key vterm-mode-map (kbd "<insert-state> C-c") 'vterm-send-C-c)
-  (define-key vterm-mode-map (kbd "<insert-state> C-b") 'vterm-send-C-b)
-  (define-key vterm-mode-map (kbd "<insert-state> C-l") 'vterm--self-insert)
-  (define-key vterm-mode-map (kbd "<insert-state> C-w h") 'evil-window-left))
-
 (set-popup-rule! "^\*doom:scra.*" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)
 
-(use-package! imenu-list
-  :config
-  (set-popup-rule! "^\\*Ilist"
-    :side 'right :size 35 :quit nil :select nil :ttl 0)
-  (defface hl-highlight
-  '((((class color) (min-colors 88) (background light))
-     :background "darkseagreen2")
-    (((class color) (min-colors 88) (background dark))
-     :background "darkolivegreen")
-    (((class color) (min-colors 16) (background light))
-     :background "darkseagreen2")
-    (((class color) (min-colors 16) (background dark))
-     :background "darkolivegreen")
-    (((class color) (min-colors 8))
-     :background "green" :foreground "black")
-    (t :inverse-video t))
-  "Basic face for highlighting."
-  :group 'hl-line)
-  (add-hook 'imenu-list-major-mode-hook
-          (lambda ()
-            (hl-line-mode -1)
-            (setq hl-line-overlay
-                  (let ((ol (make-overlay (point) (point))))
-                    (overlay-put ol 'priority -50)           ;(bug#16192)
-                    (overlay-put ol 'face 'hl-highlight)
-                    ol))
-            (hl-line-mode 1))))
-
-(use-package! treemacs
-  :config
-  (set-popup-rule! "^\\*Ilist"
-    :side 'right :size 35 :quit nil :select nil :ttl 0)
-  (defface hl-highlight
-  '((((class color) (min-colors 88) (background light))
-     :background "darkseagreen2")
-    (((class color) (min-colors 88) (background dark))
-     :background "darkolivegreen")
-    (((class color) (min-colors 16) (background light))
-     :background "darkseagreen2")
-    (((class color) (min-colors 16) (background dark))
-     :background "darkolivegreen")
-    (((class color) (min-colors 8))
-     :background "green" :foreground "black")
-    (t :inverse-video t))
-  "Basic face for highlighting."
-  :group 'hl-line)
-  (add-hook 'treemacs-mode-hook
-          (lambda ()
-            (hl-line-mode -1)
-            (setq hl-line-overlay
-                  (let ((ol (make-overlay (point) (point))))
-                    (overlay-put ol 'priority -50)           ;(bug#16192)
-                    (overlay-put ol 'face 'hl-highlight)
-                    ol))
-            (hl-line-mode 1))))
-
-(after! lsp-mode
-  (push "[/\\\\][^/\\\\]*\\.\\(json\\|html\\|jade\\|org\\|ipynb\\)$" lsp-file-watch-ignored)
-  (setq +lsp-company-backends '(company-capf company-dabbrev-code :separate))
-)
-
-
-(after! evil
-  ;; evil move between frame
-  (defun -my-evil-move-window (&optional left)
-    (condition-case nil (if left (windmove-left) (windmove-right))
-      (error
-       (when (> (length (frame-list)) 1)
-         (remove-function after-focus-change-function #'eaf--mac-focus-change)
-         (+evil/next-frame 1)
-         (run-with-timer 0.1 nil
-                         (lambda ()
-                           (add-function :after after-focus-change-function #'eaf--mac-focus-change)))
-         ))))
-
-  (defun my-evil-move-left-window (args)
-    (interactive "p")
-    (-my-evil-move-window t))
-
-  (defun my-evil-move-right-window (args)
-    (interactive "p")
-    (-my-evil-move-window nil))
-
-  (evil-global-set-key 'normal (kbd "C-w h") #'my-evil-move-left-window)
-  (evil-global-set-key 'normal (kbd "C-w l") #'my-evil-move-right-window)
-  (evil-global-set-key 'normal (kbd "C-w C-h") #'my-evil-move-left-window)
-  (evil-global-set-key 'normal (kbd "C-w C-l") #'my-evil-move-right-window)
-
-  (global-unset-key (kbd "C-w"))
-  (global-set-key (kbd "C-w h") #'my-evil-move-left-window)
-  (global-set-key (kbd "C-w l") #'my-evil-move-right-window)
-  (global-set-key (kbd "C-w C-h") #'my-evil-move-left-window)
-  (global-set-key (kbd "C-w C-l") #'my-evil-move-right-window)
-
-  (evil-global-set-key 'normal (kbd "q") #'kill-this-buffer)
-  (evil-global-set-key 'normal (kbd "Q") #'evil-record-macro)
-
-  (map!
-   (:leader
-    :desc "evil window right" :n "w l" #'my-evil-move-right-window
-    :desc "evil window left" :n "w h" #'my-evil-move-left-window
-    ))
-
-  ;; center after jump
-  ;;(let ((after-fn (lambda (&rest _) (recenter nil))))
-   ;; (advice-add 'evil-goto-mark-line :after after-fn))
-  )
-    ;;(advice-add 'evil-ex-search-next :after after-fn)
-    ;;(advice-add 'evil-ex-search-previous :after after-fn))
-;;(defalias 'forward-evil-word 'forward-evil-symbol))
-
-;;(after! goto-chg
-    ;;(let ((after-fn (lambda (&rest _) (recenter nil))))
-    ;;(advice-add 'goto-last-change :after after-fn)))
-
-;;(after! better-jumper
-;;    (let ((after-fn (lambda (&rest _) (recenter nil))))
-;;    (advice-add 'better-jumper-jump-backward :after after-fn)
-;;    (advice-add 'better-jumper-jump-forward :after after-fn)))
-
-(after! dired
-  (setq ranger-show-hidden t))
-
-(after! modeline
-  (setq! +modeline-height 20))
 
 (after! core
   (defvar doom-scratch-buffer-created-hook nil)
@@ -293,76 +135,11 @@
               (setq-local dash-docs-docsets '("PyTorch" "transformers" "Python 3"))
               (setq-local dash-docs-browser-func 'browse-url)
               (which-function-mode 1))))
-              ;;(evil-local-set-key 'normal (kbd "[ [") #'python-nav-backward-block)
-              ;;(evil-local-set-key 'normal (kbd "] ]") #'python-nav-forward-block))))
-
-(after! ivy-posframe
-  ;; remove randomly blink
-  (defvar ivy-posframe--first-show t)
-  (defun ivy-posframe-cleanup ()
-    "Cleanup ivy's posframe."
-    (setq ivy-posframe--first-show t)
-    (when (posframe-workable-p)
-      (posframe-hide ivy-posframe-buffer)))
-  (defun ivy-posframe--display (str &optional poshandler)
-    "Show STR in ivy's posframe with POSHANDLER."
-    (if (not (posframe-workable-p))
-        (ivy-display-function-fallback str)
-      (with-ivy-window
-        (if (not ivy-posframe--first-show)
-            (with-current-buffer ivy-posframe-buffer
-              (erase-buffer)
-              (insert str))
-            (setq ivy-posframe--first-show nil)
-            (apply #'posframe-show
-                   ivy-posframe-buffer
-                   :font ivy-posframe-font
-                   :string str
-                   :position (point)
-                   :poshandler poshandler
-                   :background-color (face-attribute 'ivy-posframe :background nil t)
-                   :foreground-color (face-attribute 'ivy-posframe :foreground nil t)
-                   :internal-border-width ivy-posframe-border-width
-                   :internal-border-color (face-attribute 'ivy-posframe-border :background nil t)
-                   :override-parameters ivy-posframe-parameters
-                   (funcall ivy-posframe-size-function)))
-        (ivy-posframe--add-prompt 'ignore)))
-    (with-current-buffer ivy-posframe-buffer
-      (setq-local truncate-lines ivy-truncate-lines))))
-
-;;(use-package! evil-matchit
- ;;:config
-  ;;(setq evilmi-shortcut "M")
-  ;;(global-evil-matchit-mode 1))
-
-;; fast log file
-(defvar fast-log-file nil)
-(put 'fast-log-file 'safe-local-variable (lambda (_) t))
-(map!
- (:leader
-  :desc "fast log" :n "l" #'(lambda()
-                              (interactive)
-                              (if (+popup-windows)
-                                  (progn
-                                    (+popup/toggle)
-                                    (balance-windows))
-                                (if fast-log-file
-                                    (let ((buffer (find-file-noselect fast-log-file)))
-                                        (set-popup-rule! (buffer-name buffer)
-                                                        :side 'right :autosave t :size 0.5
-                                                        :vslot -4 :select t :quit nil :ttl nil)
-                                        (pop-to-buffer-same-window buffer))
-                                  (doom/open-project-scratch-buffer))))))
 
 ;; enable local and eval in .dir-local
 (setq enable-local-eval t)
 (setq enable-local-variables t)
 
-
-(after! pdf-view
-  (evil-collection-define-key 'normal 'pdf-view-mode-map
-    "N" 'pdf-history-forward
-    "B" 'pdf-history-backward))
 
 ;; word contains underscores
 (after! python
@@ -374,227 +151,13 @@
 (add-hook 'emacs-lisp-mode-hook
         (lambda() (modify-syntax-entry ?- "w")))
 
-
-(after! telega
-  (add-hook 'telega-chat-mode-hook
-            (lambda ()
-              (setq-local doom-real-buffer-p t)))
-  (add-hook 'telega-root-mode-hook
-            (lambda ()
-              (setq-local doom-real-buffer-p t)))
-
-  (setq telega-proxies
-      (list
-       '(:server "127.0.0.1" :port 1087 :enable t
-                 :type (:@type "proxyTypeHttp")))))
-
-
-(after! ein-notebook
-  (ein:notebook--define-key  ein:notebook-mode-map (kbd "C-o o") ein:worksheet-insert-cell-below)
-  (ein:notebook--define-key  ein:notebook-mode-map (kbd "C-o d") ein:worksheet-kill-cell)
-  (ein:notebook--define-key  ein:notebook-mode-map (kbd "C-o O") ein:worksheet-insert-cell-above)
-  (ein:notebook--define-key  ein:notebook-mode-map (kbd "C-j") ein:worksheet-goto-next-input)
-  (ein:notebook--define-key  ein:notebook-mode-map (kbd "C-k") ein:worksheet-goto-prev-input)
-
-  (defun ein-mode-hooks ()
-    (make-local-variable 'evil-motion-state-map)
-    (setq-local evil-motion-state-map (copy-tree evil-motion-state-map))
-    (define-key  evil-motion-state-map (kbd "C-o") nil)
-    (define-key  evil-motion-state-map (kbd "C-j") nil))
-  (add-hook 'ein:notebook-mode-hook 'ein-mode-hooks))
-
-(use-package! rime
-  :config
-  (setq default-input-method "rime")
-  (setq rime-librime-root "~/.emacs.d/librime/dist")
-  (setq rime-show-candidate 'posframe)
-  (setq rime-cursor "˰")
-
-  (defvar in-updating-cursor nil)
-  (defvar rime-init nil)
-  (defvar rime-enable nil)
-
-  (defun rime-evil-escape-advice (orig-fun key)
-    "advice for `rime-input-method' to make it work together with `evil-escape'.
-  Mainly modified from `evil-escape-pre-command-hook'"
-    (if rime--preedit-overlay
-        ;; if `rime--preedit-overlay' is non-nil, then we are editing something, do not abort
-        (apply orig-fun (list key))
-      (when (featurep 'evil-escape)
-        (let* (
-               (fkey (elt evil-escape-key-sequence 0))
-               (skey (elt evil-escape-key-sequence 1))
-               (evt (read-event nil nil evil-escape-delay))
-               )
-          (cond
-           ((and (characterp evt)
-                 (or (and (char-equal key fkey) (char-equal evt skey))
-                     (and evil-escape-unordered-key-sequence
-                          (char-equal key skey) (char-equal evt fkey))))
-            (evil-repeat-stop)
-            (evil-normal-state))
-           ((null evt) (apply orig-fun (list key)))
-           (t
-            (setq unread-command-events (append unread-command-events (list evt)))
-            (apply orig-fun (list key))
-            ))))))
-
-  (advice-add 'rime-input-method :around #'rime-evil-escape-advice)
-
-  (global-set-key (kbd "C-\\") ;;'toggle-input-method)
-                  (lambda ()
-                    (interactive)
-                    (setq evil-default-cursor
-                          (lambda ()
-                            (if (or (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-emacs-color))
-                                    (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-normal-color)))
-                                (evil-set-cursor-color (if rime-enable
-                                                           (get 'cursor 'evil-emacs-color)
-                                                         (get 'cursor 'evil-normal-color)))
-                              (+evil-update-cursor-color-h))))
-                    (unless rime-init
-                      (setq rime-init t)
-                      (add-hook 'input-method-activate-hook (lambda ()
-                                                              (setq-local rime-enable t)
-                                                              (funcall evil-default-cursor)))
-                      (add-hook 'input-method-deactivate-hook (lambda ()
-                                                                (setq-local rime-enable nil)
-                                                                (funcall evil-default-cursor))))
-                    (toggle-input-method))))
-
-(after! realgud
-  (defun realgud:file-loc-from-line-before (args)
-    (mapcar #'(lambda (x)
-        (if (typep x 'string)
-            (replace-regexp-in-string ".mnt.jt" "/Users/royokong/nlp" x) x))
-     args))
-  (advice-add 'realgud:file-loc-from-line
-              :filter-args 'realgud:file-loc-from-line-before)
-  (advice-add 'realgud:file-column-from-string
-              :filter-args 'realgud:file-loc-from-line-before)
-  (advice-add 'realgud:file-line-count
-              :filter-args 'realgud:file-loc-from-line-before)
-
-  (defun realgud-send-command-before (args)
-    (message (prin1-to-string args))
-    (mapcar #'(lambda (x)
-        (if (typep x 'string)
-            (replace-regexp-in-string  ".Users.royokong.nlp" "/mnt/jt" x) x))
-     args))
-  (advice-add 'realgud-send-command
-              :filter-args 'realgud-send-command-before)
-  (defun pdb-reset ()
-  "Pdb cleanup - remove debugger's internal buffers (frame,
-breakpoints, etc.)."
-  (interactive)
-  ;; (pdb-breakpoint-remove-all-icons)
-  (dolist (buffer (buffer-list))
-    (when (string-match "\\*pdb-[a-z]+\\*" (buffer-name buffer))
-      (let ((w (get-buffer-window buffer)))
-        (when w
-          (delete-window w)))))))
-
-
-
-(after! netease-cloud-music
-  :config
-  (require 'netease-cloud-music-ui)
-
-  (setq netease-cloud-music-repeat-mode "playlist")
-
-  (add-to-list 'evil-emacs-state-modes 'netease-cloud-music-mode)
-  (define-key netease-cloud-music-mode-map (kbd "J") 'netease-cloud-music-storage-song)
-  (define-key netease-cloud-music-mode-map (kbd "j") 'next-line)
-  (define-key netease-cloud-music-mode-map (kbd "k") 'previous-line)
-  (define-key netease-cloud-music-mode-map (kbd "G") 'end-of-buffer)
-  (define-key netease-cloud-music-mode-map (kbd "K") 'netease-cloud-music-clear-playlist)
-
-
-  (define-key netease-cloud-music-switch-playlist-mode-map (kbd "j") 'next-line)
-  (define-key netease-cloud-music-switch-playlist-mode-map (kbd "k") 'previous-line)
-
-  (define-key netease-cloud-music-switch-song-mode-map (kbd "j") 'next-line)
-  (define-key netease-cloud-music-switch-song-mode-map (kbd "k") 'previous-line)
-
-  (define-key netease-cloud-music-mode-map (kbd "C-w h") 'my-evil-move-left-window)
-  (define-key netease-cloud-music-mode-map (kbd "C-w l") 'my-evil-move-right-window)
-  (define-key netease-cloud-music-mode-map (kbd "C-w C-h") 'my-evil-move-left-window)
-  (define-key netease-cloud-music-mode-map (kbd "C-w C-l") 'my-evil-move-right-window))
-
-
-
-;; citar open mendely file
-(after! citar
-  (defun citar-file--parser-mendeley (file-field)
-    "Split FILE-FIELD by `;'."
-    (seq-remove
-     #'string-empty-p
-     (mapcar
-      (lambda (x)
-        (let* ((x (string-trim x))
-               (x (replace-regexp-in-string ":pdf" "" x))
-               (x (replace-regexp-in-string ":Users" "/Users" x)))
-          x)
-        )
-      (citar-file--split-escaped-string file-field ?\;))))
-
-  (setq citar-file-parser-functions
-        '(citar-file--parser-mendeley)))
-
-
 (after! highlight-symbol
   (set-face-attribute 'highlight-symbol-face nil :inherit 'evil-ex-lazy-highlight))
 
 (setq +lookup-provider-url-alist (append +lookup-provider-url-alist
                                          '(("Google scholar"     "https://scholar.google.com/scholar?q=%s"))))
 
-(use-package! blink-search
-  :config
-  (setq blink-search-quick-keys '("h" "j" "k" "l" "u"
-                                  "," "." ";" "/" "'"
-                                  "s" "n" "i" "o" "p"
-                                  "7" "8" "9" "0"
-                                  "d" "b" "a" "e" "c"
-                                  "f" "r" "x" "b"
-                                  "1" "2" "3" "4"
-                                  "[" "]"))
-  (dolist (key blink-search-quick-keys)
-    (define-key blink-search-mode-map (kbd (format "s-%s" key)) 'blink-search-quick-do))
-
-  (require 'blink-search-grep-file)
-  (require 'blink-search-current-buffer)
-  (defun blink-search-current-buffer-preview (buffer line column)
-    (blink-search-select-input-window
-     (blink-search-current-buffer-do buffer line column)))
-
-  (defun blink-search-grep-file-preview (file line column)
-    (blink-search-select-input-window
-     (let ((match-file (blink-search-grep-file-get-match-buffer file)))
-       (blink-search-grep-file-do file line column)
-       (unless match-file
-         (add-to-list 'blink-search-grep-file-temp-buffers (current-buffer))
-         ))))
-
-  (defun blink-search-imenu-preview (point)
-    (blink-search-select-input-window
-     (switch-to-buffer blink-search-start-buffer)
-     (blink-search-imenu-do point)))
-
-  (map! :n "t" #'blink-search))
-
-
-(use-package! color-rg
-  :config
-  (add-to-list 'evil-emacs-state-modes 'color-rg-search-mode)
-  (add-to-list 'evil-emacs-state-modes 'color-rg-mode)
-
-  (setq color-rg-recenter-match-line t)
-
-  (evil-define-key 'visual evil-surround-mode-map (kbd "S") nil)
-  (map! :nv "S" #'color-rg-search-input))
-
-
-
+;; theme
 (after! consult
   (defun reload-color-after-theme (&rest args)
     (cond
@@ -611,40 +174,72 @@ breakpoints, etc.)."
 
   (advice-add 'consult-theme :after #'reload-color-after-theme))
 
-(load! "config-org")
-
-(load! "start-sync")
-
-(load! "quick-open")
-
-(load! "get-paper")
-
-(load! "pdf-search")
-
-(load! "run-command-with-notify")
-
-(load! "corfu-company")
-;;(load! "flex-orderless")
-;;(load! "tabnine-capf")
-(load! "copilot-company")
-(load! "acm-delay")
-
-(load! "mu4e-config")
-
-(load! "local")
 
 (load! "+bindings")
 
 (load! "+patches")
 
-(load! "trans")
+(load! "+local")
 
-(load! "eaf-config")
+;; configs
 
-(load! "work-remote-tmux")
+(load! "configs/init-imenu")
 
-(load! "get-gpu-status")
+(load! "configs/init-treemacs")
 
-(load! "doom-sort-tab")
+(load! "configs/init-doom-modeline")
 
-(load! "elfeed-arxiv")
+(load! "configs/init-evil")
+
+(load! "configs/init-wakatime")
+
+(load! "configs/init-vterm")
+
+(load! "configs/init-ivy-posframe")
+
+(load! "configs/init-ein-notebook")
+
+(load! "configs/init-telega")
+
+(load! "configs/init-netease-music")
+
+(load! "configs/init-rime")
+
+(load! "configs/init-realgud")
+
+(load! "configs/init-blink-search")
+
+(load! "configs/init-copilot")
+
+(load! "configs/init-color-rg")
+
+(load! "configs/init-pdf-search")
+
+(load! "configs/init-elfeed")
+
+(load! "configs/init-sort-tab")
+
+(load! "configs/init-org")
+
+(load! "configs/init-org-noter")
+
+(load! "configs/init-eaf")
+
+(load! "configs/init-corfu")
+
+(load! "configs/init-lsp-bridge")
+
+
+
+;;(load! "acm-delay")
+
+;; tools
+(load! "tools/start-sync")
+
+(load! "tools/quick-open")
+
+(load! "tools/trans")
+
+(load! "tools/work-remote-tmux")
+
+(load! "tools/get-gpu-status")

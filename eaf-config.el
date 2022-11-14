@@ -99,7 +99,6 @@
     "Manage Emacs's focus change."
     ;; remove python timer
     (if eaf--mac-switch-to-python-timer (cancel-timer eaf--mac-switch-to-python-timer))
-    (message "focus change")
 
     (if eaf--mac-safe-focus-change
         (if (executable-find "app-frontmost")

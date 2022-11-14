@@ -74,6 +74,9 @@
 (setq avy-all-windows t)
 (setq avy-background t)
 
+;; not use ESC as prefix key
+(define-key key-translation-map (kbd "ESC") (kbd "C-g"))
+
 (use-package! wakatime-mode
   :config
   (setq wakatime-cli-path "/opt/homebrew/bin/wakatime")
@@ -173,8 +176,13 @@
   (defun -my-evil-move-window (&optional left)
     (condition-case nil (if left (windmove-left) (windmove-right))
       (error
-       (if (> (length (frame-list)) 1)
-           (+evil/next-frame 1)))))
+       (when (> (length (frame-list)) 1)
+         (remove-function after-focus-change-function #'eaf--mac-focus-change)
+         (+evil/next-frame 1)
+         (run-with-timer 0.1 nil
+                         (lambda ()
+                           (add-function :after after-focus-change-function #'eaf--mac-focus-change)))
+         ))))
 
   (defun my-evil-move-left-window (args)
     (interactive "p")
@@ -540,11 +548,68 @@ breakpoints, etc.)."
 (setq +lookup-provider-url-alist (append +lookup-provider-url-alist
                                          '(("Google scholar"     "https://scholar.google.com/scholar?q=%s"))))
 
-(after! blink-search
-  (define-key blink-search-mode-map (kbd "ESC ESC ESC") nil)
-  (define-key blink-search-mode-map (kbd "ESC") #'blink-search-quit)
-  (add-to-list 'evil-emacs-state-modes 'blink-search-mode))
+(use-package! blink-search
+  :config
+  (setq blink-search-quick-keys '("h" "j" "k" "l" "u"
+                                  "," "." ";" "/" "'"
+                                  "s" "n" "i" "o" "p"
+                                  "7" "8" "9" "0"
+                                  "d" "b" "a" "e" "c"
+                                  "f" "r" "x" "b"
+                                  "1" "2" "3" "4"
+                                  "[" "]"))
+  (dolist (key blink-search-quick-keys)
+    (define-key blink-search-mode-map (kbd (format "s-%s" key)) 'blink-search-quick-do))
 
+  (require 'blink-search-grep-file)
+  (require 'blink-search-current-buffer)
+  (defun blink-search-current-buffer-preview (buffer line column)
+    (blink-search-select-input-window
+     (blink-search-current-buffer-do buffer line column)))
+
+  (defun blink-search-grep-file-preview (file line column)
+    (blink-search-select-input-window
+     (let ((match-file (blink-search-grep-file-get-match-buffer file)))
+       (blink-search-grep-file-do file line column)
+       (unless match-file
+         (add-to-list 'blink-search-grep-file-temp-buffers (current-buffer))
+         ))))
+
+  (defun blink-search-imenu-preview (point)
+    (blink-search-select-input-window
+     (switch-to-buffer blink-search-start-buffer)
+     (blink-search-imenu-do point)))
+
+  (map! :n "t" #'blink-search))
+
+
+(use-package! color-rg
+  :config
+  (add-to-list 'evil-emacs-state-modes 'color-rg-search-mode)
+  (add-to-list 'evil-emacs-state-modes 'color-rg-mode)
+
+  (setq color-rg-recenter-match-line t)
+
+  (evil-define-key 'visual evil-surround-mode-map (kbd "S") nil)
+  (map! :nv "S" #'color-rg-search-input))
+
+
+
+(after! consult
+  (defun reload-color-after-theme (&rest args)
+    (cond
+     ((equal doom-theme 'ef-summer)
+      (set-face-background 'blink-search-select-face (face-attribute 'highlight :background))
+      (set-face-foreground 'blink-search-select-face (face-attribute 'highlight :foreground))))
+
+    (set-face-background 'acm-default-face (face-attribute 'default :background))
+    (set-face-background 'acm-select-face (face-attribute 'highlight :background))
+    (set-face-foreground 'acm-select-face (face-attribute 'highlight :foreground))
+    (evil-set-cursor-color (face-attribute 'cursor :background))
+
+    (acm-delete-frames))
+
+  (advice-add 'consult-theme :after #'reload-color-after-theme))
 
 (load! "config-org")
 

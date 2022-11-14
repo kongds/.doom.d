@@ -236,12 +236,6 @@
                                               +lookup-implementations-functions '(lsp-bridge-find-impl t)
                                               +lookup-references-functions '(lsp-bridge-find-references t))))
 
-  (defun acm-reload-color-after-theme (&rest args)
-      (when (get-buffer acm-buffer)
-        (kill-buffer acm-buffer))
-      (acm-reset-colors))
-  (after! consult
-    (advice-add 'consult-theme :after #'acm-reload-color-after-theme))
 
   (setq lsp-bridge-disable-backup nil)
 

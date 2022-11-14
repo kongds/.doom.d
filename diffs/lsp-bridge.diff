@@ -1,0 +1,33 @@
+diff --git a/acm/acm.el b/acm/acm.el
+index 88d4588..c941de5 100644
+--- a/acm/acm.el
++++ b/acm/acm.el
+@@ -872,7 +872,15 @@ The key of candidate will change between two LSP results."
+               (insert (if (stringp candidate-doc)
+                           candidate-doc
+                         (format "%S" candidate-doc)))
+-              (visual-line-mode 1))
++              (lsp-bridge-render-markdown-content)
++              (visual-line-mode 1)
++
++              ;; FIXME: `prettify-symbols-mode' make text become smaller in 4k screen.
++              ;; Only scale font for 4k screen here.
++              (when (> (frame-pixel-width) 3000)
++                (text-scale-set 1.5))
++              (setq mode-line-format nil)
++              )
+ 
+             ;; Adjust doc frame position and size.
+             (acm-doc-frame-adjust))
+diff --git a/core/search_elisp_symbols.py b/core/search_elisp_symbols.py
+index 0fa403d..b7173b7 100644
+--- a/core/search_elisp_symbols.py
++++ b/core/search_elisp_symbols.py
+@@ -38,6 +38,7 @@ class SearchElispSymbols:
+         self.symbols = []
+         
+     def update(self, symbols):
++        symbols = filter(lambda symbol: type(symbol) is not sexpdata.Symbol, symbols)
+         self.symbols = sorted(list(map(str, symbols)), key=len)
+         
+     def search(self, prefix: str):

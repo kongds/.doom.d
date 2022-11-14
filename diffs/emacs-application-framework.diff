@@ -23,7 +23,7 @@ index ba34d87..526c87f 100755
                  if marker_input_quit:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index a2a28a4..5909eab 100755
+index 0ddd00c..e6610c8 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
 @@ -38,6 +38,7 @@ import base64
@@ -34,7 +34,7 @@ index a2a28a4..5909eab 100755
  
  MOUSE_LEFT_BUTTON = 1
  MOUSE_WHEEL_BUTTON = 4
-@@ -857,6 +858,7 @@ class BrowserBuffer(Buffer):
+@@ -867,6 +868,7 @@ class BrowserBuffer(Buffer):
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, self.enable_javascript)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptCanAccessClipboard, self.enable_javascript_access_clipboard)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.ShowScrollBars, self.enable_scrollbar)
@@ -42,7 +42,7 @@ index a2a28a4..5909eab 100755
  
              if self.unknown_url_scheme_policy == "DisallowUnknownUrlSchemes":
                  self.settings.setUnknownUrlSchemePolicy(self.settings.UnknownUrlSchemePolicy.DisallowUnknownUrlSchemes)
-@@ -961,6 +963,44 @@ class BrowserBuffer(Buffer):
+@@ -974,6 +976,44 @@ class BrowserBuffer(Buffer):
                  f.write(base64.b64decode(b64bytes))
  
              message_to_emacs("Save image: " + image_path)
@@ -87,7 +87,7 @@ index a2a28a4..5909eab 100755
          else:
              if hasattr(self, "try_start_aria2_daemon"):
                  self.try_start_aria2_daemon()
-@@ -1102,11 +1142,11 @@ class BrowserBuffer(Buffer):
+@@ -1115,11 +1155,11 @@ class BrowserBuffer(Buffer):
          elif callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
              self.buffer_widget.clean_search_and_select()
  

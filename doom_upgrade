@@ -44,6 +44,7 @@ if [[ $1 == 'not_upgrade' ]]; then
     echo "Not upgrading packages"
 else
     echo "Upgrading packages"
+    export http_proxy=http://127.0.0.1:1087;export https_proxy=http://127.0.0.1:1087;export ALL_PROXY=socks5://127.0.0.1:1080
     ~/.emacs.d/bin/doom upgrade
 fi
 

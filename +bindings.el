@@ -37,6 +37,8 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   ;;:desc "switch buffer" :n "j" #'+ivy/switch-buffer
   ;;:desc "switch workspace buffer" :n "k" #'+ivy/switch-workspace-buffer
 
+  :desc "close window" :n "w c" #'+workspace/close-window-or-workspace
+
   :desc "switch" :n "SPC" #'(lambda(arg)
                               (interactive "P")
                               (condition-case nil
@@ -76,16 +78,17 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
                                                 (condition-case nil
                                                     (in-project-switch t nil)
                                                   (error (projectile-find-file-other-window))))
+        :desc "close other window" :n "c" #'(lambda (arg)
+                                              (interactive "P")
+                                              (cl-loop for i in (window-list)
+                                                    unless (or (eq i (selected-window))
+                                                               (eq "*sort-tab*" (buffer-name (window-buffer i))))
+                                                    return (delete-window i)))
         :desc "horizontal split" :n "/" #'split-window-horizontally)
 
   :desc "vertical split" :n "-" #'split-window-vertically
   :desc "ace" :n "w a" #'ace-select-window
   :desc "kill other window" :n "w 0" #'delete-other-windows)
-
-
-
- ;;(:after company
- ;; "M-/" #'company-complete)
 
  (:after cape
   "M-/" #'cape-dabbrev)
@@ -172,6 +175,11 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
               (browse-url (concat (string-replace "abs" "pdf" url) ".pdf"))
             (user-error "This record does not contain a URL")))
   )
+
+ (:after symbol-overlay
+  :n "N" #'symbol-overlay-put
+  :n "J" #'symbol-overlay-jump-next
+  :n "K" #'symbol-overlay-jump-prev)
 
  (:after evil
   :n "!" #'shell-command

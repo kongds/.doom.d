@@ -143,6 +143,8 @@
  '(jdee-db-active-breakpoint-face-colors (cons "#191C25" "#81A1C1"))
  '(jdee-db-requested-breakpoint-face-colors (cons "#191C25" "#A3BE8C"))
  '(jdee-db-spec-breakpoint-face-colors (cons "#191C25" "#434C5E"))
+ '(lsp-bridge-completion-popup-predicates
+   '(lsp-bridge-not-only-blank-before-cursor lsp-bridge-not-match-hide-characters lsp-bridge-not-match-stop-commands lsp-bridge-not-in-string lsp-bridge-not-in-comment lsp-bridge-not-follow-complete lsp-bridge-is-evil-state lsp-bridge-is-meow-state lsp-bridge-not-complete-manually lsp-bridge-not-in-org-table))
  '(lsp-bridge-enable-signature-help nil)
  '(lsp-bridge-lang-server-list
    '(((c-mode c++-mode)

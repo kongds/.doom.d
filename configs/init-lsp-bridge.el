@@ -1,15 +1,6 @@
 ;;; configs/init-lsp-bridge.el -*- lexical-binding: t; -*-
 
 (use-package! lsp-bridge
-  :bind
-  (:map acm-mode-map
-   ("TAB"     . acm-select-next)
-   ("C-n"     . acm-select-next)
-   ([tab]     . acm-select-next)
-   ("S-TAB"   . acm-select-prev)
-   ("C-p"     . acm-select-prev)
-   ([backtab] . acm-select-prev))
-
   :init
   (require 'yasnippet)
   (require 'lsp-bridge)
@@ -67,6 +58,12 @@
 
 (after! acm
   :config
+
+  (define-key acm-mode-map (kbd "TAB") 'acm-select-next)
+  (define-key acm-mode-map (kbd "S-TAB") 'acm-select-prev)
+  (define-key acm-mode-map (kbd "C-n") 'acm-select-next)
+  (define-key acm-mode-map (kbd "C-p") 'acm-select-prev)
+
   (fset 'r-acm-update (symbol-function 'acm-update))
   (fset 'r-acm-doc-try-show (symbol-function 'acm-doc-try-show))
 

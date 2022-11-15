@@ -35,6 +35,10 @@
   (evil-global-set-key 'normal (kbd "q") #'kill-this-buffer)
   (evil-global-set-key 'normal (kbd "Q") #'evil-record-macro)
 
+  ;; disable evil insert C-n C-p
+  (define-key evil-insert-state-map (kbd "C-n") nil)
+  (define-key evil-insert-state-map (kbd "C-p") nil)
+
   (map!
    (:leader
     :desc "evil window right" :n "w l" #'my-evil-move-right-window

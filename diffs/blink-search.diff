@@ -277,8 +277,22 @@ index db9cadb..64cf541 100644
    (when (equal (length (window-list)) 1)
      (split-window (selected-window) (line-pixel-height) 'below t)
      (split-window (selected-window) nil 'right t)
+diff --git a/blink_search.py b/blink_search.py
+index 9502b6a..b56e95a 100755
+--- a/blink_search.py
++++ b/blink_search.py
+@@ -355,7 +355,8 @@ class BlinkSearch:
+                 self.update_render_candidate_items()
+                 self.update_render_index_and_offset()
+                 self.render_items()
+-            
++
++
+     def select_next_backend_item(self):
+         need_update = True
+         
 diff --git a/core/search.py b/core/search.py
-index bbf1ca6..de4ff80 100644
+index e9b1796..280178e 100644
 --- a/core/search.py
 +++ b/core/search.py
 @@ -62,16 +62,29 @@ class Search:

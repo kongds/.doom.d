@@ -132,10 +132,10 @@
   (set-repl-handler! 'python-mode #'+python/open-ipython-repl)
   (add-hook 'python-mode-hook
             (lambda()
-              (smartparens-mode -1)
+              ;;(smartparens-mode -1)
               (setq-local dash-docs-docsets '("PyTorch" "transformers" "Python 3"))
               (setq-local dash-docs-browser-func 'browse-url)
-              (which-function-mode -1))))
+              (which-function-mode 1))))
 
 ;; enable local and eval in .dir-local
 (setq enable-local-eval t)

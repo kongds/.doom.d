@@ -58,17 +58,19 @@
 
 (after! acm
   :config
-
+  ;; bindings
   (define-key acm-mode-map (kbd "TAB") 'acm-select-next)
   (define-key acm-mode-map (kbd "S-TAB") 'acm-select-prev)
   (define-key acm-mode-map (kbd "C-n") 'acm-select-next)
   (define-key acm-mode-map (kbd "C-p") 'acm-select-prev)
 
-  (fset 'r-acm-update (symbol-function 'acm-update))
-  (fset 'r-acm-doc-try-show (symbol-function 'acm-doc-try-show))
-
+  ;; custom
   (setq acm-enable-tabnine nil
         acm-enable-yas nil)
+
+  ;; timer doc
+  (fset 'r-acm-update (symbol-function 'acm-update))
+  (fset 'r-acm-doc-try-show (symbol-function 'acm-doc-try-show))
 
   (defvar acm-update-timer nil)
   (defvar acm-doc-timer nil)

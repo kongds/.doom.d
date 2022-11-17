@@ -77,56 +77,15 @@
 (set-popup-rule! "^\*doom:scra.*" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)
 
 
-(after! core
-  (defvar doom-scratch-buffer-created-hook nil)
+(add-hook 'doom-after-init-hook
+          (lambda ()
+            (global-company-mode -1)
 
-  (defun doom-persist-scratch-buffer-h-with-cache ()
-    "Save the current buffer to `doom-scratch-dir'."
-    (member (current-buffer) doom-scratch-buffers)
-    (let ((content (buffer-substring-no-properties (point-min) (point-max)))
-          (point (point))
-          (mode major-mode)
-          (scratch (expand-file-name (concat (or doom-scratch-current-project
-                                                 doom-scratch-default-file)
-                                             ".el")
-                                     doom-scratch-dir)))
-      (copy-file scratch
-                 (concat scratch "." (format-time-string "%H:%M:%S-%m-%d-%Y" (current-time))))
-      (with-temp-file scratch
-        (prin1 (list content
-                     point
-                     mode)
-               (current-buffer)))))
+            ;;sort tab
+            (sort-tab-turn-on)
 
-  (setq doom-scratch-buffers nil)
-  (defun doom-persist-scratch-buffers-h-with-cache ()
-    "Save all scratch buffers to `doom-scratch-dir'."
-    (setq doom-scratch-buffers
-          (cl-delete-if-not #'buffer-live-p doom-scratch-buffers))
-    (dolist (buffer doom-scratch-buffers)
-      (with-current-buffer buffer
-        (doom-persist-scratch-buffer-h-with-cache))))
-
-  ;; show modeline in buffer
-  (advice-add 'doom/open-scratch-buffer :after #'(lambda (&rest r)
-                                                 (+modeline-mode 1)))
-
-  ;;(fmakunbound 'doom-persist-scratch-buffer-h)
-  ;;(defalias 'doom-persist-scratch-buffer-h #'doom-persist-scratch-buffer-h-with-cache)
-  (remove-hook 'kill-emacs-hook #'doom-persist-scratch-buffers-h)
-  (add-hook 'kill-emacs-hook #'doom-persist-scratch-buffers-h-with-cache)
-  (add-hook 'doom-scratch-buffer-created-hook
-            (lambda ()
-              (setq buffer-undo-list nil)
-              (remove-hook 'kill-buffer-hook #'doom-persist-scratch-buffer-h 'local)
-              (add-hook 'kill-buffer-hook #'doom-persist-scratch-buffer-h-with-cache nil 'local)
-              (local-set-key (kbd "C-x s") #'(lambda ()
-                                               (interactive)
-                                               (when (member (current-buffer) doom-scratch-buffers)
-                                                 (doom-persist-scratch-buffer-h-with-cache)
-                                                 (set-buffer-modified-p nil))))
-              (local-set-key (kbd "s-s") (kbd "C-x s"))
-              (local-set-key (kbd "C-x C-s") (kbd "C-x s")))))
+            ;; vimish fold mode
+            (vimish-fold-global-mode 1)))
 
 (after! python
   (set-repl-handler! 'python-mode #'+python/open-ipython-repl)

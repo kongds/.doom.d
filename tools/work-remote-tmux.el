@@ -88,6 +88,74 @@
       (select-window swindow))))
 
 
+(defun work-remote-tmux-get-jobs ()
+  (interactive)
+  (let ((data (json-read-file "/Users/royokong/running_job.json"))
+        (jobs '()))
+    (dolist (job data)
+      (let* ((jd (cdr job))
+            (cmd (cdr (assoc 'cmd jd)))
+            (pid (cdr (assoc 'pid jd)))
+            (start_time (cdr (assoc 'start_time jd)))
+            (running (cdr (assoc 'running jd)))
+            (server (cdr (assoc 'server jd))))
+        (if (eq running t)
+            (push (list cmd pid start_time server pid) jobs))))
+    jobs))
+
+
+
+(defun work-remote-tmux-get-jobs ()
+  (let* ((data (json-read-file "/Users/royokong/running_job.json"))
+         (completions (make-hash-table :test 'equal :size (length data))))
+    ;; convert vector to list
+    (dolist (jd (append data nil))
+      (let* ((cmd (cdr (assoc 'cmd jd)))
+             (pid (cdr (assoc 'pid jd)))
+             (run_name (cdr (assoc 'run_name jd)))
+             (gpuid (cdr (assoc 'gpuid jd)))
+             (start_time (cdr (assoc 'start_time jd)))
+             (server (cdr (assoc 'server jd))))
+        (puthash
+         (concat
+          (format "%s\t%s\t%s-%s\t%s\t"
+                  pid start_time
+                  (substring server 3 6) gpuid
+                  run_name)
+          cmd )
+         jd completions)
+      ))
+    completions))
+
+
+(defun work-remote-tmux--restart-job (pid gpuid cmd)
+  (if (< (vterm--get-cursor-point) 200)
+      (run-with-timer 0.5 nil #'work-remote-tmux--restart-job pid gpuid cmd)
+    (vterm-send-key "b" nil nil t)
+    (sleep-for 0.1)
+    (vterm-send-key "c")
+    (sleep-for 0.1)
+    (vterm-send-string "conda activate")
+    (vterm-send-return)
+    (sleep-for 0.1)
+    ;;(vterm-send-string (format "kill -9 %s" pid))
+    ;;(vterm-send-return)
+    (sleep-for 0.1)
+    (vterm-send-string (format "CUDA_VISIBLE_DEVICES=%s %s" gpuid cmd))))
+    ;;(vterm-send-return)))
+
+(defun work-remote-tmux-restart-job (job)
+  (interactive (list (completing-read "Job: " (work-remote-tmux-get-jobs))))
+  (if  (y-or-n-p (format "Restart job %s" job))
+      (let* ((jd (gethash job (work-remote-tmux-get-jobs)))
+             (pid (cdr (assoc 'pid jd)))
+             (cmd (cdr (assoc 'cmd jd)))
+             (gpuid (cdr (assoc 'gpuid jd)))
+             (server (cdr (assoc 'server jd)))
+             (ip (nth 1 (split-string server "@"))))
+        (work-remote-tmux-start-open ip)
+        (work-remote-tmux--restart-job pid gpuid cmd))))
+
 (map!
   "s-i" #'(lambda (args)
             (interactive "P")
@@ -102,6 +170,8 @@
 
 
   "s-r" #'work-remote-tmux-rerun
+
+  "s-R" #'work-remote-tmux-restart-job
 
   "s-j" #'(lambda (args)
             (interactive "P")

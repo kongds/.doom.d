@@ -1,7 +1,7 @@
 ;;; elfeed-arxiv.el -*- lexical-binding: t; -*-
 
 (use-package! citar
-  :hook (doom-after-init-modules . citar-refresh)
+  :hook (doom-after-modules-init . citar-refresh)
   :config
   ;; This will add watches for the global bib files and in addition add a hook to LaTeX-mode-hook and org-mode-hook to add watches for local bibliographic files.
   (require 'citar-org)

@@ -79,10 +79,13 @@
 
 (add-hook 'doom-after-init-hook
           (lambda ()
-            (global-company-mode -1)
+            ;;(global-company-mode -1)
 
-            ;;sort tab
-            (sort-tab-turn-on)
+            ;; sort tab
+            ;; avoid recursive load of workspace
+            (run-with-timer 0.1 nil #'(lambda ()
+                                        (delete-other-windows (selected-window))
+                                        (sort-tab-turn-on)))
 
             ;; vimish fold mode
             (vimish-fold-global-mode 1)))
@@ -100,6 +103,12 @@
 (setq enable-local-eval t)
 (setq enable-local-variables t)
 
+(after! highlight-symbol
+  (set-face-attribute 'highlight-symbol-face nil :inherit 'evil-ex-lazy-highlight))
+
+(setq +lookup-provider-url-alist (append +lookup-provider-url-alist
+                                         '(("Google scholar"     "https://scholar.google.com/scholar?q=%s"))))
+
 
 ;; word contains underscores
 (after! python
@@ -110,12 +119,6 @@
             (lambda() (modify-syntax-entry ?_ "w"))))
 (add-hook 'emacs-lisp-mode-hook
         (lambda() (modify-syntax-entry ?- "w")))
-
-(after! highlight-symbol
-  (set-face-attribute 'highlight-symbol-face nil :inherit 'evil-ex-lazy-highlight))
-
-(setq +lookup-provider-url-alist (append +lookup-provider-url-alist
-                                         '(("Google scholar"     "https://scholar.google.com/scholar?q=%s"))))
 
 ;; theme
 (after! consult
@@ -189,9 +192,6 @@
 
 (load! "configs/init-lsp-bridge")
 
-
-
-;;(load! "acm-delay")
 
 ;; tools
 (load! "tools/start-sync")

@@ -128,8 +128,61 @@
     completions))
 
 
+(defvar work-remote-tmux-update-job-timer nil)
+(defvar work-remote-tmux-current-pids nil)
+(defvar work-remote-tmux-current-jobs nil)
+
+(defun work-remote-tmux-update-job ()
+  (start-process "*update_jobs*" "*update_jobs*" "python" "/Users/royokong/.doom.d/tools/get-running-job.py")
+  (set-process-sentinel
+   (get-buffer-process "*update_jobs*")
+   (lambda (p e)
+     ;;(message "update job done")
+     (when (= 0 (process-exit-status p))
+       (let ((buf (process-buffer p)))
+         (kill-buffer buf))
+
+       (let* ((data (append (json-read-file "/Users/royokong/running_job.json") nil))
+              (pids
+               (cl-loop for job in data
+                        collect  (cdr (assoc 'pid job))))
+              (jobs (make-hash-table :test 'equal :size (length pids) )))
+
+         (dolist (job data)
+           (puthash (cdr (assoc 'pid job)) job jobs))
+
+         (dolist (pid pids)
+                 (unless (member pid work-remote-tmux-current-pids)
+                     (message "start job %s %s-%s %s" pid
+                              (substring (cdr (assoc 'server (gethash pid jobs))) 3 6)
+                              (cdr (assoc 'gpuid (gethash pid jobs)))
+                              (if (> (length (cdr (assoc 'run_name (gethash pid jobs)))) 0)
+                                  (cdr (assoc 'run_name (gethash pid jobs)))
+                                (cdr (assoc 'cmd (gethash pid jobs)))))))
+
+         (if work-remote-tmux-current-pids
+             (dolist (pid work-remote-tmux-current-pids)
+                     (unless (member pid pids)
+                       (message "finish job %s %s-%s %s" pid
+                                (substring (cdr (assoc 'server (gethash pid work-remote-tmux-current-jobs))) 3 6)
+                                (cdr (assoc 'gpuid (gethash pid work-remote-tmux-current-jobs)))
+                                (if (> (length (cdr (assoc 'run_name (gethash pid work-remote-tmux-current-jobs)))) 0)
+                                    (cdr (assoc 'run_name (gethash pid work-remote-tmux-current-jobs)))
+                                  (cdr (assoc 'cmd (gethash pid work-remote-tmux-current-jobs))))))))
+
+         (setq work-remote-tmux-current-pids pids
+               work-remote-tmux-current-jobs jobs))
+         ))))
+
+(defun work-remote-tmux-update-job-start ()
+  (interactive)
+  (when work-remote-tmux-update-job-timer
+    (cancel-timer work-remote-tmux-update-job-timer))
+  (setq work-remote-tmux-update-job-timer
+        (run-with-timer 30 t #'work-remote-tmux-update-job)))
+
 (defun work-remote-tmux--restart-job (pid gpuid cmd)
-  (if (< (vterm--get-cursor-point) 200)
+  (if (< (vterm--get-cursor-point) 500)
       (run-with-timer 0.5 nil #'work-remote-tmux--restart-job pid gpuid cmd)
     (vterm-send-key "b" nil nil t)
     (sleep-for 0.1)
@@ -138,15 +191,18 @@
     (vterm-send-string "conda activate")
     (vterm-send-return)
     (sleep-for 0.1)
-    ;;(vterm-send-string (format "kill -9 %s" pid))
-    ;;(vterm-send-return)
+    (vterm-send-string (format "kill -9 %s" pid))
+    (vterm-send-return)
     (sleep-for 0.1)
-    (vterm-send-string (format "CUDA_VISIBLE_DEVICES=%s %s" gpuid cmd))))
-    ;;(vterm-send-return)))
+    (vterm-send-string (format "CUDA_VISIBLE_DEVICES=%s %s" gpuid cmd))
+    (vterm-send-return))
+
+  (run-with-timer 0.1 nil #'work-remote-tmux-update-job)
+)
 
 (defun work-remote-tmux-restart-job (job)
   (interactive (list (completing-read "Job: " (work-remote-tmux-get-jobs))))
-  (if  (y-or-n-p (format "Restart job %s" job))
+  (when  (y-or-n-p (format "Restart job %s" job))
       (let* ((jd (gethash job (work-remote-tmux-get-jobs)))
              (pid (cdr (assoc 'pid jd)))
              (cmd (cdr (assoc 'cmd jd)))
@@ -155,6 +211,20 @@
              (ip (nth 1 (split-string server "@"))))
         (work-remote-tmux-start-open ip)
         (work-remote-tmux--restart-job pid gpuid cmd))))
+
+
+(defun work-remote-tmux-restart-job-with-other-cmd (job)
+  (interactive (list (completing-read "Job: " (work-remote-tmux-get-jobs))))
+  (when (y-or-n-p (format "Restart job %s" job))
+    (let* ((jd (gethash job (work-remote-tmux-get-jobs)))
+           (pid (cdr (assoc 'pid jd)))
+           (cmd (read-string "CMD: "))
+           (gpuid (cdr (assoc 'gpuid jd)))
+           (server (cdr (assoc 'server jd)))
+           (ip (nth 1 (split-string server "@"))))
+      (work-remote-tmux-start-open ip)
+      (work-remote-tmux--restart-job pid gpuid cmd))))
+
 
 (map!
   "s-i" #'(lambda (args)
@@ -200,5 +270,8 @@
     (kbd "C-w l") #'my-evil-move-right-window
     (kbd "C-w C-h") #'my-evil-move-left-window
     (kbd "C-w C-l") #'my-evil-move-right-window))
+
+;; start timer to update jobs
+(work-remote-tmux-update-job-start)
 
 (provide 'work-remote-tmux)

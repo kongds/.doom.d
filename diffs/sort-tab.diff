@@ -1,8 +1,18 @@
 diff --git a/sort-tab.el b/sort-tab.el
-index ecc1e75..7195b60 100644
+index ecc1e75..1b7fff3 100644
 --- a/sort-tab.el
 +++ b/sort-tab.el
-@@ -279,11 +279,14 @@
+@@ -227,7 +227,8 @@
+ 
+ (defun sort-tab-stop-count-freq ()
+   "Stop counting buffer used frequency."
+-  (cancel-timer sort-tab-buffer-freq-count-timer)
++  (if (timerp sort-tab-buffer-freq-count-timer)
++      (cancel-timer sort-tab-buffer-freq-count-timer))
+   (setq sort-tab-buffer-freq-count-timer nil))
+ 
+ (defun sort-tab-buffer-freq (buf)
+@@ -279,11 +280,14 @@
  
  (defun sort-tab-buffer-need-hide-p (buf)
    (let* ((name (buffer-name buf)))
@@ -18,7 +28,7 @@ index ecc1e75..7195b60 100644
  
  (defun sort-tab-is-normal-buffer-p (current-buffer)
    (and
-@@ -311,26 +314,28 @@
+@@ -311,26 +315,28 @@
       ,@body
  
       (when (eq sort-tab-align 'center)
@@ -58,7 +68,7 @@ index ecc1e75..7195b60 100644
        ;; Debug usage.
        ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
        ;;   (goto-char (point-max))
-@@ -340,23 +345,41 @@
+@@ -340,23 +346,41 @@
  
        (let* ((current-tab-start-column 0)
               (current-tab-end-column 0)
@@ -107,7 +117,7 @@ index ecc1e75..7195b60 100644
             (insert sort-tab-propertized-separator)
  
             ;; Calculate the current tab column.
-@@ -373,7 +396,16 @@
+@@ -373,7 +397,16 @@
                      (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
                     ((< current-tab-start-column (window-hscroll))
                      (set-window-hscroll tab-window current-tab-start-column))
@@ -125,7 +135,7 @@ index ecc1e75..7195b60 100644
  
  (defun sort-tab-get-tab-name (buf current-buffer)
    (propertize
-@@ -384,6 +416,12 @@
+@@ -384,6 +417,12 @@
               (when (sort-tab-is-eaf-browser-buffer-p buf)
                 (setq bufname (replace-regexp-in-string "\\s-" "" bufname)))
  
@@ -138,7 +148,7 @@ index ecc1e75..7195b60 100644
               (if (> (length bufname) sort-tab-name-max-length)
                   (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
                 bufname)))
-@@ -503,7 +541,25 @@
+@@ -503,7 +542,25 @@
  
  (defun sort-tab-select-visible-nth-tab (&optional tab-index)
    (interactive "p")

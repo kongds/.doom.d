@@ -82,10 +82,8 @@
             ;;(global-company-mode -1)
 
             ;; sort tab
-            ;; avoid recursive load of workspace
-            (run-with-timer 0.1 nil #'(lambda ()
-                                        (delete-other-windows (selected-window))
-                                        (sort-tab-turn-on)))
+            (delete-other-windows (selected-window))
+            (sort-tab-turn-on)
 
             ;; vimish fold mode
             (vimish-fold-global-mode 1)))

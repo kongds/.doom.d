@@ -2,8 +2,9 @@
 
 (use-package! sort-tab
   :config
-
   (require 'consult)
+  (require 'persp-mode)
+
   (defun sort-tab-workspace-buffer-list ()
     (cl-concatenate 'list
     (eaf--get-eaf-buffers)
@@ -12,12 +13,12 @@
                                    :as #'buffer-name
                                    :predicate
                                    #'(lambda (buf)
-                                       (let* ((workspace
-                                               (and t
-                                                    (+workspace-get (+workspace-current-name) t))))
-                                         (if workspace
-                                             (+workspace-contains-buffer-p
-                                              buf workspace) nil)))))))
+                                       ;; don't use +workspace here to avoid Recursive load of workspace.el
+                                       (when-let ((workspace (persp-get-by-name
+                                                              (safe-persp-name (get-current-persp)))))
+                                         (persp-contain-buffer-p
+                                              buf workspace)))))))
+
   (advice-add 'sort-tab-get-buffer-list
               :override #'(lambda ()
                             (let ((bufs (sort-tab-workspace-buffer-list)))
@@ -69,6 +70,3 @@
   (setq sort-tab-name-max-length 20)
 )
 
-
-
-(provide 'doom-sort-tab)

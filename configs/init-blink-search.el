@@ -2,7 +2,7 @@
 
 (use-package! blink-search
   :config
-  (setq blink-search-quick-keys '("h" "j" "k" "l" "u"
+  (setq blink-search-quick-keys '("g" "j" "k" "l" "u"
                                   "," "." ";" "/" "'"
                                   "s" "n" "i" "o" "p"
                                   "7" "8" "9" "0"

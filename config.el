@@ -82,8 +82,9 @@
             ;;(global-company-mode -1)
 
             ;; sort tab
-            (delete-other-windows (selected-window))
-            (sort-tab-turn-on)
+            (run-with-timer 0.1 nil (lambda ()
+                                      (delete-other-windows (selected-window))
+                                      (sort-tab-turn-on)))
 
             ;; vimish fold mode
             (vimish-fold-global-mode 1)))
@@ -189,6 +190,8 @@
 (load! "configs/init-corfu")
 
 (load! "configs/init-lsp-bridge")
+
+(load! "configs/init-elisp")
 
 
 ;; tools

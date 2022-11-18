@@ -1,18 +1,26 @@
 ;;; configs/init-lsp-bridge.el -*- lexical-binding: t; -*-
 
 (use-package! lsp-bridge
+  :custom
+  (acm-enable-quick-access t)
+  (acm-quick-access-modifier 'super)
+  (acm-quick-access-keys '("j" "l" "f" "s" "." "g" "d" "b" "a" ","))
+  (acm-enable-tabnine nil)
+  (acm-enable-yas nil)
+  (acm-candidate-match-function 'orderless-flex)
+  (acm-enable-dabbrev nil)
+
   :init
   (require 'yasnippet)
   (require 'lsp-bridge)
 
   (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)
 
-
-  (setq acm-candidate-match-function 'orderless-flex)
-  (setq acm-enable-dabbrev nil)
-
   (yas-global-mode 1)
   ;;(global-lsp-bridge-mode)
+
+  (add-hook 'lsp-bridge-mode-hook #'(lambda ()
+                                      (delete `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")) mode-line-misc-info)))
 
   (remove-hook 'python-mode-local-vars-hook #'lsp!) ;; disable lsp
   (remove-hook 'python-mode-local-vars-hook #'+python-init-anaconda-mode-maybe-h)
@@ -35,9 +43,13 @@
                                ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
                                ))
 
+  (add-hook 'emacs-lisp-mode-hook #'(lambda()
+                                      (setq-local corfu-auto nil)
+                                      (lsp-bridge-mode)
+                                      ))
+
   (add-hook 'python-mode-hook #'(lambda()
                                   ;; remove lsp-bridge modeline
-                                  (delete `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")) mode-line-misc-info)
 
                                   (setq-local corfu-auto nil)
                                   (setq-local flycheck-checker 'python-pyright)
@@ -57,6 +69,7 @@
 
 
 (after! acm
+
   :config
   ;; bindings
   (define-key acm-mode-map (kbd "TAB") 'acm-select-next)
@@ -64,22 +77,22 @@
   (define-key acm-mode-map (kbd "C-n") 'acm-select-next)
   (define-key acm-mode-map (kbd "C-p") 'acm-select-prev)
 
-  ;; custom
-  (setq acm-enable-tabnine nil
-        acm-enable-yas nil)
-
   ;; timer doc
   (fset 'r-acm-update (symbol-function 'acm-update))
   (fset 'r-acm-doc-try-show (symbol-function 'acm-doc-try-show))
 
   (defvar acm-update-timer nil)
   (defvar acm-doc-timer nil)
-  (defvar acm-delay 0.3)
+  (defvar acm-delay 0.5)
 
   ;;(defun acm-update ()
   ;;  (if acm-update-timer
   ;;      (cancel-timer acm-update-timer))
   ;;  (setq acm-update-timer (run-with-idle-timer acm-delay nil #'r-acm-update)))
+
+  (advice-add 'acm-doc-hide :before #'(lambda ()
+                                        (if acm-doc-timer
+                                            (cancel-timer acm-doc-timer))))
 
   (defun acm-doc-try-show ()
     (if acm-doc-timer

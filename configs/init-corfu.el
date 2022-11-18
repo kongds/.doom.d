@@ -8,8 +8,6 @@
    ([tab] . corfu-next)
    ("S-TAB" . corfu-previous)
    ([backtab] . corfu-previous)
-   ;; ("SPC" . corfu-insert-separator) use flex orderless
-   ;; ("SPC" . corfu-spc)
    )
 
   :custom
@@ -28,19 +26,7 @@
   (add-hook 'corfu-mode-hook (lambda ()
                                (global-company-mode -1)))
 
-  ;; (defun corfu-spec-pre-command ()
-  ;;   (message (prin1-to-string completion-in-region-mode))
-  ;;   (when completion-in-region-mode
-  ;;     (let ((evt (read-event nil nil 0.15)))
-  ;;       (when (and (characterp evt) (char-equal evt ? ))
-  ;;         (message "insert SPC")
-  ;;         (corfu-quit)
-  ;;         (run-with-timer 0.05 nil #'(lambda() (insert " ")))
-  ;;         (setq this-command 'self-insert-command)
-  ;;         (setq this-orginial-command 'self-insert-command)
-  ;;         ))))
-  ;; (add-hook 'pre-command-hook #'corfu-spec-pre-command)
-
+  ;; use corfu in minibuffer
   (defun corfu-enable-in-minibuffer ()
     "Enable Corfu in the minibuffer if `completion-at-point' is bound."
     (when (where-is-internal #'completion-at-point (list (current-local-map)))
@@ -60,12 +46,12 @@
                       tags-completion-at-point-function)))
     (insert "("))
 
-(defun ex-sh-completion-at-point-function ()
-  (save-excursion
-    (skip-chars-forward "[:alnum:]_")
-    (let ((end (point))
-          (_ (skip-chars-backward "[:alnum:]_"))
-          (start (point)))
+  (defun ex-sh-completion-at-point-function ()
+    (save-excursion
+      (skip-chars-forward "[:alnum:]_")
+      (let ((end (point))
+            (_ (skip-chars-backward "[:alnum:]_"))
+            (start (point)))
         (list start end #'sh--cmd-completion-table
               :company-kind
               (lambda (s)
@@ -88,54 +74,21 @@
 
   (defun evil-ex-ret-maybe-comp ()
     (interactive)
-    (message (prin1-to-string corfu--index))
-    (when (>= corfu--index 0)
-        (corfu--insert 'finished))
-      (exit-minibuffer))
-
-  (defun evil-ex-maybe-comp ()
-    (interactive)
-    (when (>= corfu--index 0)
-        (corfu--insert 'finished)))
+    (if (>= corfu--index 0)
+        (corfu--insert 'finished)
+      (exit-minibuffer)))
 
   (define-key evil-ex-completion-map (kbd "(") 'evil-ex-corfu-bracket)
   (define-key evil-ex-completion-map (kbd "!") 'evil-ex-corfu-excal)
-  (define-key evil-ex-completion-map (kbd "C-e") 'evil-ex-maybe-comp)
+  (define-key evil-ex-completion-map (kbd "C-e") 'evil-ex-ret-maybe-comp)
+  (define-key evil-ex-completion-map (kbd "<return>") #'evil-ex-ret-maybe-comp))
 
-  (defun corfu-spc ()
-    (interactive)
-    (pcase-let ((`(,beg ,end ,table ,pred) completion-in-region--data))
-      (let ((newstr (buffer-substring-no-properties beg end)))
-        (cond ((equal newstr "")
-               (corfu-quit)
-               (insert " "))
-              (t
-               (corfu-complete)
-               (setq-local corfu-spc-last-beg beg
-                           corfu-spc-last-end end
-                           corfu-spc-last-str newstr)
-               (if (equal newstr (buffer-substring-no-properties beg (point)))
-                   (insert " ")))))))
-
-
-  (setq evil-complete-next-func #'(lambda (arg)
-                                    (corfu-next 1)))
-  (setq evil-complete-previous-func #'(lambda (arg)
-                                        (corfu-next -1)))
-  (defun corfu--match-symbol-p (pattern sym)
-    "Return non-nil if SYM is matching an element of the PATTERN list."
-    (and (symbolp sym)
-         (or (cl-loop for x in pattern
-                      thereis (if (symbolp x)
-                                  (eq sym x)
-                                (string-match-p x (symbol-name sym))))
-             (string-match-p "evil-complete-" (symbol-name sym))))))
 
 ;; Use dabbrev with Corfu!
 (use-package! dabbrev
 ;; Swap M-/ and C-M-/
-:bind (("M-/" . dabbrev-completion)
-        ("C-M-/" . dabbrev-expand)))
+  :bind (("M-/" . dabbrev-completion)
+         ("C-M-/" . dabbrev-expand)))
 
 (use-package! kind-icon
   ;;:ensure t
@@ -169,11 +122,4 @@
   (add-to-list 'completion-at-point-functions #'cape-tex)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-keyword)
-  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
-  ;;(add-to-list 'completion-at-point-functions #'cape-ispell)
-  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;;(add-to-list 'completion-at-point-functions #'cape-line)
 )

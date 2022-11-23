@@ -1,5 +1,7 @@
 ;;; configs/init-lsp-bridge.el -*- lexical-binding: t; -*-
 
+;;(add-to-list 'load-path "/Users/royokong/lsp-bridge")
+
 (use-package! lsp-bridge
   :custom
   (acm-enable-quick-access t)

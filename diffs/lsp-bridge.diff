@@ -1,8 +1,8 @@
 diff --git a/acm/acm.el b/acm/acm.el
-index 88d4588..c941de5 100644
+index e213755..e2e0177 100644
 --- a/acm/acm.el
 +++ b/acm/acm.el
-@@ -872,7 +872,15 @@ The key of candidate will change between two LSP results."
+@@ -908,7 +908,15 @@ The key of candidate will change between two LSP results."
                (insert (if (stringp candidate-doc)
                            candidate-doc
                          (format "%S" candidate-doc)))

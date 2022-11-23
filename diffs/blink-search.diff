@@ -166,10 +166,10 @@ index e6b31fd..176ba19 100644
  
  ;; Struct: blink-search-deferred-object
 diff --git a/blink-search.el b/blink-search.el
-index db9cadb..64cf541 100644
+index 2b72599..9f36b6b 100644
 --- a/blink-search.el
 +++ b/blink-search.el
-@@ -423,7 +423,7 @@ you need customize option if some 'M + key' conflict with your command.")
+@@ -424,7 +424,7 @@ you need customize option if some 'M + key' conflict with your command.")
      (define-key map (kbd "M-w") 'blink-search-copy)
  
      (dolist (key blink-search-quick-keys)
@@ -178,7 +178,7 @@ index db9cadb..64cf541 100644
      map)
    "Keymap used by `blink-search-mode'.")
  
-@@ -439,7 +439,13 @@ you need customize option if some 'M + key' conflict with your command.")
+@@ -440,7 +440,13 @@ you need customize option if some 'M + key' conflict with your command.")
      (evil-set-initial-state 'blink-search-mode 'emacs))
    )
  
@@ -193,7 +193,7 @@ index db9cadb..64cf541 100644
  (defun blink-search-quit ()
    (interactive)
    (blink-search-call-async "clean")
-@@ -458,8 +464,9 @@ you need customize option if some 'M + key' conflict with your command.")
+@@ -459,8 +465,9 @@ you need customize option if some 'M + key' conflict with your command.")
        (when (and (eq system-type 'darwin) (featurep 'eaf)
                   (eaf-emacs-not-use-reparent-technology)
                   eaf--mac-safe-focus-change)
@@ -205,16 +205,24 @@ index db9cadb..64cf541 100644
  
      (setq blink-search-start-buffer nil)))
  
-@@ -591,6 +598,8 @@ blink-search will search current symbol if you call this function with `C-u' pre
-              (blink-search-call-async "search" (substring input 1) (blink-search-get-row-number) (list "Current Buffer")))
-             ((string-prefix-p "!" input)
+@@ -594,6 +601,8 @@ blink-search will search current symbol if you call this function with `C-u' pre
               (blink-search-call-async "search" (substring input 1) (blink-search-get-row-number) (list "Grep File")))
+             ((string-prefix-p ";" input)
+              (blink-search-call-async "search" (substring input 1) (blink-search-get-row-number) (list "Grep PDF")))
 +            ((string-prefix-p "," input)
 +             (blink-search-call-async "search" (substring input 1) (blink-search-get-row-number) (list "IMenu")))
              (t
               (blink-search-call-async "search" input (blink-search-get-row-number) blink-search-search-backends))))))
  
-@@ -707,6 +716,18 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -657,6 +666,7 @@ blink-search will search current symbol if you call this function with `C-u' pre
+   (unless (stringp candidate-info)
+     (plist-get candidate-info :matches)))
+ 
++(setq blink-search-candidate-old-select-index -1)
+ (defun blink-search-render ()
+   (let ((candidate-items blink-search-candidate-items)
+         (candidate-select-index blink-search-candidate-select-index)
+@@ -712,6 +722,18 @@ blink-search will search current symbol if you call this function with `C-u' pre
                         candidate-prefix
                         candidate-prefix-length
                         candidate-line)
@@ -233,7 +241,7 @@ index db9cadb..64cf541 100644
  
                    (setq candidate-prefix
                          (concat
-@@ -752,7 +773,10 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -757,7 +779,10 @@ blink-search will search current symbol if you call this function with `C-u' pre
                                   (backward-char 1)
                                   (setq match-end-point (+ (point) candidate-prefix-length))
                                   (list match-start-point match-end-point)))))
@@ -245,7 +253,7 @@ index db9cadb..64cf541 100644
                          )))
  
                    (when (equal candidate-index candidate-select-index)
-@@ -789,7 +813,11 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -794,7 +819,17 @@ blink-search will search current symbol if you call this function with `C-u' pre
                        (insert backend-line)
  
                        (setq backend-index (1+ backend-index))))))))
@@ -253,12 +261,18 @@ index db9cadb..64cf541 100644
 +          )))
 +
 +    ;; Preview candidate when idle, avoid `find-file' slow down candidate select
-+     (run-with-idle-timer 0.1 nil #'(lambda () (blink-search-call-async "select_candidate_item")))
++    (if (equal backend-name "Grep PDF")
++        (unless (eq blink-search-candidate-select-index blink-search-candidate-old-select-index)
++          ;; update when move
++          (setq blink-search-candidate-old-select-index blink-search-candidate-select-index)
++          (run-with-idle-timer 0.1 nil #'(lambda () (blink-search-call-async "select_candidate_item"))))
++      (run-with-idle-timer 0.1 nil #'(lambda () (blink-search-call-async "select_candidate_item"))))
++     ;;(run-with-idle-timer 0.1 nil #'(lambda () (blink-search-call-async "select_candidate_item")))
 +     ))
  
  (defun blink-search-update-items (candidate-items
                                    candidate-select-index
-@@ -1003,8 +1031,18 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
+@@ -1008,8 +1043,18 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
    (setq blink-search-posframe-emacs-frame (selected-frame))
    (setq blink-search-posframe-frame (blink-search-posframe-show blink-search-input-buffer))
  
@@ -278,10 +292,10 @@ index db9cadb..64cf541 100644
      (split-window (selected-window) (line-pixel-height) 'below t)
      (split-window (selected-window) nil 'right t)
 diff --git a/blink_search.py b/blink_search.py
-index e73a4be..225441c 100755
+index 4deeb76..4db52a7 100755
 --- a/blink_search.py
 +++ b/blink_search.py
-@@ -366,7 +366,8 @@ class BlinkSearch:
+@@ -372,7 +372,8 @@ class BlinkSearch:
                  self.update_render_candidate_items()
                  self.update_render_index_and_offset()
                  self.render_items()

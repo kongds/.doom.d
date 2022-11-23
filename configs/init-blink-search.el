@@ -1,7 +1,11 @@
 ;;; configs/init-blink-search.el -*- lexical-binding: t; -*-
 
+;;(add-to-list 'load-path "/Users/royokong/blink-search")
+
 (use-package! blink-search
   :config
+  (setq blink-search-grep-pdf-search-paths '("/Users/royokong/arxiv_papers" "/Users/royokong/papers"))
+  (setq blink-search-grep-pdf-search-paths nil)
   (setq blink-search-quick-keys '("g" "j" "k" "l" "u"
                                   "," "." ";" "/" "'"
                                   "s" "n" "i" "o" "p"
@@ -31,5 +35,12 @@
     (blink-search-select-input-window
      (switch-to-buffer blink-search-start-buffer)
      (blink-search-imenu-do point)))
+
+  (defun blink-search-grep-pdf-real-preview (file page submatches)
+    (blink-search-select-input-window
+     (let ((match-file (blink-search-grep-file-get-match-buffer file)))
+       (blink-search-grep-pdf-do file page submatches)
+       (unless match-file
+         (add-to-list 'blink-search-grep-file-temp-buffers (current-buffer))))))
 
   (map! :n "t" #'blink-search))

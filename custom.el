@@ -12,9 +12,9 @@
  '(citar-bibliography
    '("/Users/royokong/library.bib" "/Users/royokong/mendeley.bib/library.bib"))
  '(citar-notes-paths '("/Users/royokong/.org/notes"))
- '(company-dabbrev-downcase nil)
- '(company-dabbrev-ignore-case nil)
- '(company-dabbrev-other-buffers nil)
+ '(company-dabbrev-downcase nil t)
+ '(company-dabbrev-ignore-case nil t)
+ '(company-dabbrev-other-buffers nil t)
  '(company-global-modes
    '(not erc-mode circe-mode message-mode help-mode gud-mode vterm-mode netease-cloud-music-switch-playlist-mode-map netease-cloud-music-mode netease-cloud-music-change-playlist-mode netease-cloud-music-switch-playlist-mode))
  '(company-idle-delay 0)
@@ -167,7 +167,7 @@
  '(lsp-bridge-org-babel-lang-list '("clojure" "latex" "python" "jupyter-python"))
  '(lsp-enable-file-watchers t)
  '(lsp-enable-imenu nil)
- '(lsp-session-file "/Users/royokong/.emacs.d/.local/etc/lsp-session" t)
+ '(lsp-session-file "/Users/royokong/.emacs.d/.local/etc/lsp-session")
  '(objed-cursor-color "#BF616A")
  '(org-agenda-files '("~/.org/" "~/.org/roam/"))
  '(org-agenda-inhibit-startup t)
@@ -187,12 +187,17 @@
  '(package-selected-packages '(epc forge))
  '(pdf-view-midnight-colors (cons "#ECEFF4" "#2E3440"))
  '(persistent-scratch-scratch-buffer-p-function '(lambda nil (string= (buffer-name) "*doom:scratch*")))
+ '(projectile-globally-ignored-directories
+   '("/Users/royokong/org/.attach/" "^\\.idea$" "^\\.vscode$" "^\\.ensime_cache$" "^\\.eunit$" "^\\.git$" "^\\.hg$" "^\\.fslckout$" "^_FOSSIL_$" "^\\.bzr$" "^_darcs$" "^\\.pijul$" "^\\.tox$" "^\\.svn$" "^\\.stack-work$" "^\\.ccls-cache$" "^\\.cache$" "^\\.clangd$"))
  '(realgud:pdb-command-name "bash debug_remote_pdb.sh")
  '(rime-deactivate-when-exit-minibuffer nil)
  '(rustic-ansi-faces
    ["#2E3440" "#BF616A" "#A3BE8C" "#EBCB8B" "#81A1C1" "#B48EAD" "#88C0D0" "#ECEFF4"])
  '(safe-local-variable-values
-   '((eval progn
+   '((vc-prepare-patches-separately)
+     (diff-add-log-use-relative-names . t)
+     (vc-git-annotate-switches . "-w")
+     (eval progn
       (pp-buffer)
       (indent-buffer))
      (lsp--override-calculate-lisp-indent\? . t)

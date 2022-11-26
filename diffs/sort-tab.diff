@@ -1,5 +1,5 @@
 diff --git a/sort-tab.el b/sort-tab.el
-index ecc1e75..1b7fff3 100644
+index 9813ef1..7492274 100644
 --- a/sort-tab.el
 +++ b/sort-tab.el
 @@ -227,7 +227,8 @@
@@ -148,7 +148,7 @@ index ecc1e75..1b7fff3 100644
               (if (> (length bufname) sort-tab-name-max-length)
                   (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
                 bufname)))
-@@ -503,7 +542,25 @@
+@@ -508,7 +547,25 @@
  
  (defun sort-tab-select-visible-nth-tab (&optional tab-index)
    (interactive "p")

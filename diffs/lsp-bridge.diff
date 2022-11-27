@@ -1,5 +1,5 @@
 diff --git a/acm/acm.el b/acm/acm.el
-index e213755..e2e0177 100644
+index 45657b8..61f7fa7 100644
 --- a/acm/acm.el
 +++ b/acm/acm.el
 @@ -908,7 +908,15 @@ The key of candidate will change between two LSP results."

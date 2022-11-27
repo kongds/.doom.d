@@ -48,6 +48,8 @@ else
     ~/.emacs.d/bin/doom upgrade
 fi
 
+rm -rf ~/.emacs.d/.local/straight/build-28.2/eaf
+
 for diff_file in ~/.doom.d/diffs/*; do
     echo $diff_file
     cd ~/.emacs.d/.local/straight/repos/$((basename $diff_file) | sed 's/.diff//')

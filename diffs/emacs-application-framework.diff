@@ -101,3 +101,74 @@ index 0ddd00c..e6610c8 100755
          if callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
              self.buffer_widget._search_text(self.buffer_widget.search_term, True)
  
+diff --git a/eaf.el b/eaf.el
+index 12423ac..be7d26d 100644
+--- a/eaf.el
++++ b/eaf.el
+@@ -1039,26 +1039,46 @@ provide at least one way to let everyone experience EAF. ;)"
+       (defvar eaf--mac-switch-to-python nil
+         "Record if Emacs should switch to Python process.")
+ 
++      (defvar eaf--mac-switch-to-python-timer nil)
++
++      (defvar eaf--mac-has-focus t)
++
++      (defun eaf--mac-switch-to-python-timer-fun ()
++        (if eaf--mac-switch-to-python
++            (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
++              (unless (member front (list "Python\n" "python3\n" "Emacs\n"))
++                (cancel-timer eaf--mac-switch-to-python-timer)
++                (setq eaf--mac-has-focus t)
++                (setq eaf--mac-switch-to-python nil)
++                (eaf--mac-focus-out)))))
++
+       (defun eaf--mac-focus-change ()
+         "Manage Emacs's focus change."
+-        (let ((front (shell-command-to-string "app-frontmost --name")))
++        (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
+           (cond
+            ((member front (list "Python\n" "python3\n"))
+-            (setq eaf--mac-switch-to-python t))
+-           ((string= "Emacs\n" front)
+-            (if eaf--mac-switch-to-python
+-                (setq eaf--mac-switch-to-python nil)
+-              (run-with-timer 0.1 nil #'eaf--mac-focus-update)))
+-           (t (eaf--mac-focus-out)))))
+-
+-      (defun eaf--mac-focus-update ()
++            (setq eaf--mac-switch-to-python t)
++           (setq eaf--mac-switch-to-python-timer (run-with-timer 0.3 1
++                                                                 'eaf--mac-switch-to-python-timer-fun)))
++          ((string= "Emacs\n" front)
++           (cond
++            (eaf--mac-switch-to-python
++             (setq eaf--mac-switch-to-python nil))
++            ((not eaf--mac-has-focus)
++             (run-with-timer 0.1 nil #'eaf--mac-focus-in))
++            (eaf--mac-has-focus
++             (eaf--mac-focus-out))))
++          (t (eaf--mac-focus-out)))))
++
++      (defun eaf--mac-focus-in ()
+         "Hide all eaf buffers, and then display new eaf buffers at front."
+         (eaf--mac-focus-out)
+         (when (frame-focus-state)
+           (dolist (window (window-list (selected-frame)))
+             (with-current-buffer (window-buffer window)
+               (when (derived-mode-p 'eaf-mode)
+-                (eaf-call-async "show_buffer_view" eaf--buffer-id))))))
++                (eaf-call-async "show_buffer_view" eaf--buffer-id)))))
++        (setq eaf--mac-has-focus t))
+ 
+       (defun eaf--mac-focus-out ()
+         "Prepare the screenshot and hide all eaf buffers."
+@@ -1067,7 +1087,8 @@ provide at least one way to let everyone experience EAF. ;)"
+             (with-current-buffer (window-buffer window)
+               (when (derived-mode-p 'eaf-mode)
+                 (eaf--clip-image window)
+-                (eaf-call-sync "hide_buffer_view" eaf--buffer-id))))))
++                (eaf-call-sync "hide_buffer_view" eaf--buffer-id)))))
++        (setq eaf--mac-has-focus nil))
+ 
+       (add-to-list 'move-frame-functions #'eaf-monitor-configuration-change)
+ 

@@ -138,7 +138,8 @@
 
 (package! ef-theme :recipe (:host github :repo "protesilaos/ef-themes" :files ("*")))
 
-(package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "b581ac9")
+;;(package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "b581ac9")
+(package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "ac3634e")
 
 (package! line-reminder :recipe (:host github :repo "emacs-vs/line-reminder"))
 

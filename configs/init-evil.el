@@ -6,11 +6,11 @@
     (condition-case nil (if left (windmove-left) (windmove-right))
       (error
        (when (> (length (frame-list)) 1)
-         (remove-function after-focus-change-function #'eaf--mac-focus-change)
+         (remove-function after-focus-change-function #'eaf--topmost-focus-change)
          (+evil/next-frame 1)
          (run-with-timer 0.1 nil
                          (lambda ()
-                           (add-function :after after-focus-change-function #'eaf--mac-focus-change)))
+                           (add-function :after after-focus-change-function #'eaf--topmost-focus-change)))
          ))))
 
   (defun my-evil-move-left-window (args)

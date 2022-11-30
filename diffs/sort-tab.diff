@@ -1,5 +1,5 @@
 diff --git a/sort-tab.el b/sort-tab.el
-index 9813ef1..7492274 100644
+index 9813ef1..328a389 100644
 --- a/sort-tab.el
 +++ b/sort-tab.el
 @@ -227,7 +227,8 @@
@@ -166,11 +166,11 @@ index 9813ef1..7492274 100644
 +                                        swindow window)))))
 +    (if (eq sframe nil)
 +        (switch-to-buffer s-buffer)
-+      (remove-function after-focus-change-function #'eaf--mac-focus-change)
++      (remove-function after-focus-change-function #'eaf--topmost-focus-change)
 +      (select-frame-set-input-focus sframe)
 +      (run-with-timer 0.1 nil
 +                      (lambda ()
-+                        (add-function :after after-focus-change-function #'eaf--mac-focus-change)))
++                        (add-function :after after-focus-change-function #'eaf--topmost-focus-change)))
 +      (select-window swindow))))
  
  (defun sort-tab-select-visible-tab ()

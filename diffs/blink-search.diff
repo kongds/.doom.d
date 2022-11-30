@@ -166,10 +166,10 @@ index e6b31fd..176ba19 100644
  
  ;; Struct: blink-search-deferred-object
 diff --git a/blink-search.el b/blink-search.el
-index 2bc57b6..47128a3 100644
+index 0166b3c..3a00ef0 100644
 --- a/blink-search.el
 +++ b/blink-search.el
-@@ -424,7 +424,7 @@ you need customize option if some 'M + key' conflict with your command.")
+@@ -430,7 +430,7 @@ you need customize option if some 'M + key' conflict with your command.")
      (define-key map (kbd "M-w") 'blink-search-copy)
  
      (dolist (key blink-search-quick-keys)
@@ -178,7 +178,7 @@ index 2bc57b6..47128a3 100644
      map)
    "Keymap used by `blink-search-mode'.")
  
-@@ -440,7 +440,13 @@ you need customize option if some 'M + key' conflict with your command.")
+@@ -446,7 +446,13 @@ you need customize option if some 'M + key' conflict with your command.")
      (evil-set-initial-state 'blink-search-mode 'emacs))
    )
  
@@ -193,7 +193,7 @@ index 2bc57b6..47128a3 100644
  (defun blink-search-quit ()
    (interactive)
    (blink-search-call-async "clean")
-@@ -459,8 +465,9 @@ you need customize option if some 'M + key' conflict with your command.")
+@@ -465,8 +471,9 @@ you need customize option if some 'M + key' conflict with your command.")
        (when (and (eq system-type 'darwin) (featurep 'eaf)
                   (eaf-emacs-not-use-reparent-technology)
                   eaf--mac-safe-focus-change)
@@ -205,7 +205,7 @@ index 2bc57b6..47128a3 100644
  
      (setq blink-search-start-buffer nil)))
  
-@@ -597,6 +604,8 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -603,6 +610,8 @@ blink-search will search current symbol if you call this function with `C-u' pre
              ((or (string-prefix-p ";" input)
                   (string-prefix-p "；" input))
               (blink-search-call-async "search" (substring input 1) (blink-search-get-row-number) (list "Grep PDF")))
@@ -214,7 +214,7 @@ index 2bc57b6..47128a3 100644
              (t
               (blink-search-call-async "search" input (blink-search-get-row-number) blink-search-search-backends))))))
  
-@@ -660,6 +669,7 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -666,6 +675,7 @@ blink-search will search current symbol if you call this function with `C-u' pre
    (unless (stringp candidate-info)
      (plist-get candidate-info :matches)))
  
@@ -222,7 +222,7 @@ index 2bc57b6..47128a3 100644
  (defun blink-search-render ()
    (let ((candidate-items blink-search-candidate-items)
          (candidate-select-index blink-search-candidate-select-index)
-@@ -715,6 +725,18 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -721,6 +731,18 @@ blink-search will search current symbol if you call this function with `C-u' pre
                         candidate-prefix
                         candidate-prefix-length
                         candidate-line)
@@ -241,7 +241,7 @@ index 2bc57b6..47128a3 100644
  
                    (setq candidate-prefix
                          (concat
-@@ -760,7 +782,10 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -766,7 +788,10 @@ blink-search will search current symbol if you call this function with `C-u' pre
                                   (backward-char 1)
                                   (setq match-end-point (+ (point) candidate-prefix-length))
                                   (list match-start-point match-end-point)))))
@@ -253,7 +253,7 @@ index 2bc57b6..47128a3 100644
                          )))
  
                    (when (equal candidate-index candidate-select-index)
-@@ -797,7 +822,17 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -803,7 +828,17 @@ blink-search will search current symbol if you call this function with `C-u' pre
                        (insert backend-line)
  
                        (setq backend-index (1+ backend-index))))))))
@@ -272,7 +272,7 @@ index 2bc57b6..47128a3 100644
  
  (defun blink-search-update-items (candidate-items
                                    candidate-select-index
-@@ -1011,8 +1046,18 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
+@@ -1021,8 +1056,18 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
    (setq blink-search-posframe-emacs-frame (selected-frame))
    (setq blink-search-posframe-frame (blink-search-posframe-show blink-search-input-buffer))
  

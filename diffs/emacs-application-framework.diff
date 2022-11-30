@@ -23,7 +23,7 @@ index ba34d87..526c87f 100755
                  if marker_input_quit:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index 0ddd00c..e6610c8 100755
+index 0ddd00c..3bf6888 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
 @@ -38,6 +38,7 @@ import base64
@@ -58,12 +58,12 @@ index 0ddd00c..e6610c8 100755
 +                paper_root = '/Users/royokong/papers/'
 +                if not os.path.exists(paper_root+file_name):
 +                    message_to_emacs("Downloading: " + download_data + " to pdf")
-+                    command = ['wget',
-+                            '-U',
-+                            '\'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1 Safari/605.1.15\'',
-+                            download_data,
-+                            '-O',
-+                            '/tmp/downloading_pdf']
++                    command = ['/usr/local/bin/wget',
++                               '-U',
++                               '\'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1 Safari/605.1.15\'',
++                               download_data,
++                               '-O',
++                               '/tmp/downloading_pdf']
 +                    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 +                    import time
 +                    while True:
@@ -102,73 +102,74 @@ index 0ddd00c..e6610c8 100755
              self.buffer_widget._search_text(self.buffer_widget.search_term, True)
  
 diff --git a/eaf.el b/eaf.el
-index 12423ac..be7d26d 100644
+index fee0e11..55248c9 100644
 --- a/eaf.el
 +++ b/eaf.el
-@@ -1039,26 +1039,46 @@ provide at least one way to let everyone experience EAF. ;)"
-       (defvar eaf--mac-switch-to-python nil
-         "Record if Emacs should switch to Python process.")
+@@ -1016,29 +1016,45 @@ provide at least one way to let everyone experience EAF. ;)"
+     (defvar eaf--topmost-switch-to-python nil
+       "Record if Emacs should switch to Python process.")
  
-+      (defvar eaf--mac-switch-to-python-timer nil)
++    (defvar eaf--topmost-switch-to-python-timer nil)
++    (defvar eaf--topmost-has-focus t)
 +
-+      (defvar eaf--mac-has-focus t)
++    (defun eaf--topmost-switch-to-python-timer-fun ()
++      (if eaf--topmost-switch-to-python
++          (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
++            (unless (member front (list "Python\n" "python3\n" "Emacs\n"))
++              (cancel-timer eaf--topmost-switch-to-python-timer)
++              (setq eaf--topmost-has-focus t)
++              (setq eaf--topmost-switch-to-python nil)
++              (eaf--topmost-focus-out)))))
 +
-+      (defun eaf--mac-switch-to-python-timer-fun ()
-+        (if eaf--mac-switch-to-python
-+            (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
-+              (unless (member front (list "Python\n" "python3\n" "Emacs\n"))
-+                (cancel-timer eaf--mac-switch-to-python-timer)
-+                (setq eaf--mac-has-focus t)
-+                (setq eaf--mac-switch-to-python nil)
-+                (eaf--mac-focus-out)))))
-+
-       (defun eaf--mac-focus-change ()
-         "Manage Emacs's focus change."
--        (let ((front (shell-command-to-string "app-frontmost --name")))
-+        (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
-           (cond
-            ((member front (list "Python\n" "python3\n"))
--            (setq eaf--mac-switch-to-python t))
--           ((string= "Emacs\n" front)
--            (if eaf--mac-switch-to-python
--                (setq eaf--mac-switch-to-python nil)
--              (run-with-timer 0.1 nil #'eaf--mac-focus-update)))
--           (t (eaf--mac-focus-out)))))
--
--      (defun eaf--mac-focus-update ()
-+            (setq eaf--mac-switch-to-python t)
-+           (setq eaf--mac-switch-to-python-timer (run-with-timer 0.3 1
-+                                                                 'eaf--mac-switch-to-python-timer-fun)))
-+          ((string= "Emacs\n" front)
-+           (cond
-+            (eaf--mac-switch-to-python
-+             (setq eaf--mac-switch-to-python nil))
-+            ((not eaf--mac-has-focus)
-+             (run-with-timer 0.1 nil #'eaf--mac-focus-in))
-+            (eaf--mac-has-focus
-+             (eaf--mac-focus-out))))
-+          (t (eaf--mac-focus-out)))))
-+
-+      (defun eaf--mac-focus-in ()
-         "Hide all eaf buffers, and then display new eaf buffers at front."
-         (eaf--mac-focus-out)
-         (when (frame-focus-state)
-           (dolist (window (window-list (selected-frame)))
-             (with-current-buffer (window-buffer window)
-               (when (derived-mode-p 'eaf-mode)
--                (eaf-call-async "show_buffer_view" eaf--buffer-id))))))
-+                (eaf-call-async "show_buffer_view" eaf--buffer-id)))))
-+        (setq eaf--mac-has-focus t))
+     (defun eaf--topmost-focus-change ()
+       "Manage Emacs's focus change."
+-      (let ((front (cond ((eq system-type 'darwin)
+-                          (shell-command-to-string "app-frontmost --name"))
+-                         (t
+-                          (dbus-call-method :session "org.gnome.Shell" "/org/eaf/wayland" "org.eaf.wayland" "get_active_window" :timeout 1000)))))
++      (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
+         (cond
+-         ((member front (list "Python\n" "python3\n" "python3"))
+-          (setq eaf--topmost-switch-to-python t))
+-         ((member front (list "Emacs\n" "emacs"))
+-          (if eaf--topmost-switch-to-python
+-              (setq eaf--topmost-switch-to-python nil)
+-            (run-with-timer 0.1 nil #'eaf--topmost-focus-update)))
++         ((member front (list "Python\n" "python3\n"))
++          (setq eaf--topmost-switch-to-python t)
++          (setq eaf--topmost-switch-to-python-timer (run-with-timer 0.3 1
++                                                                'eaf--topmost-switch-to-python-timer-fun)))
++         ((string= "Emacs\n" front)
++          (cond
++           (eaf--topmost-switch-to-python
++            (setq eaf--topmost-switch-to-python nil))
++           ((not eaf--topmost-has-focus)
++            (run-with-timer 0.1 nil #'eaf--topmost-focus-in))
++           (eaf--topmost-has-focus
++            (eaf--topmost-focus-out))))
+          (t (eaf--topmost-focus-out)))))
  
-       (defun eaf--mac-focus-out ()
-         "Prepare the screenshot and hide all eaf buffers."
-@@ -1067,7 +1087,8 @@ provide at least one way to let everyone experience EAF. ;)"
-             (with-current-buffer (window-buffer window)
-               (when (derived-mode-p 'eaf-mode)
-                 (eaf--clip-image window)
--                (eaf-call-sync "hide_buffer_view" eaf--buffer-id))))))
-+                (eaf-call-sync "hide_buffer_view" eaf--buffer-id)))))
-+        (setq eaf--mac-has-focus nil))
+-    (defun eaf--topmost-focus-update ()
++    (defun eaf--topmost-focus-in ()
+       "Hide all eaf buffers, and then display new eaf buffers at front."
+       (eaf--topmost-focus-out)
+       (when (frame-focus-state)
+         (dolist (window (window-list (selected-frame)))
+           (with-current-buffer (window-buffer window)
+             (when (derived-mode-p 'eaf-mode)
+-              (eaf-call-async "show_buffer_view" eaf--buffer-id))))))
++              (eaf-call-async "show_buffer_view" eaf--buffer-id)))))
++        (setq eaf--topmost-has-focus t))
  
-       (add-to-list 'move-frame-functions #'eaf-monitor-configuration-change)
+     (defun eaf--topmost-focus-out ()
+       "Prepare the screenshot and hide all eaf buffers."
+@@ -1047,7 +1063,8 @@ provide at least one way to let everyone experience EAF. ;)"
+           (with-current-buffer (window-buffer window)
+             (when (derived-mode-p 'eaf-mode)
+               (eaf--clip-image window)
+-              (eaf-call-sync "hide_buffer_view" eaf--buffer-id))))))
++              (eaf-call-sync "hide_buffer_view" eaf--buffer-id)))))
++        (setq eaf--topmost-has-focus nil))
+ 
+     (add-to-list 'move-frame-functions #'eaf-monitor-configuration-change)
  

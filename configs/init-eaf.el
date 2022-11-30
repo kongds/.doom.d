@@ -16,6 +16,12 @@
             (lambda ()
               (define-key eaf-mode-map (kbd "n") nil)
               (define-key eaf-mode-map (kbd "p") nil)
+              (define-key eaf-mode-map (kbd "s-c") #'(lambda()
+                                                       (interactive)
+                                                       (kill-new eaf--buffer-url)))
+              (define-key eaf-mode-map (kbd "s-s") #'(lambda()
+                                                       (interactive)
+                                                       (shell-command (format "open \"%s\"" eaf--buffer-url))))
               (define-key eaf-mode-map (kbd "n") #'eaf-py-proxy-handle_search_forward)
               (define-key eaf-mode-map (kbd "p") #'eaf-py-proxy-handle_search_backward)))
 
@@ -73,8 +79,8 @@
   ;; ensure focus change function has been add
   (advice-add 'eaf-restart-process :after
                   (lambda (&rest args)
-                    (remove-function after-focus-change-function #'eaf--mac-focus-change)
-                    (add-function :after after-focus-change-function #'eaf--mac-focus-change)))
+                    (remove-function after-focus-change-function #'eaf--topmost-focus-change)
+                    (add-function :after after-focus-change-function #'eaf--topmost-focus-change)))
 
   (after! vertico-posframe
     (defun eaf-in-eaf-buffer (&rest r)

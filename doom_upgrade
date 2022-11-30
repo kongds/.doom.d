@@ -10,6 +10,7 @@ for diff_file in ~/.doom.d/diffs/*; do
 
     if [ -d ~/.emacs.d/.local/straight/repos/${package} ]; then
         cd ~/.emacs.d/.local/straight/repos/${package}
+        echo ~/.emacs.d/.local/straight/repos/${package}
 
         git diff > ${diff_file}.bk
         if [ -s ${diff_file}.bk ]; then

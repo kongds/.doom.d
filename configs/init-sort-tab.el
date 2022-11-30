@@ -16,8 +16,11 @@
                                        ;; don't use +workspace here to avoid Recursive load of workspace.el
                                        (when-let ((workspace (persp-get-by-name
                                                               (safe-persp-name (get-current-persp)))))
-                                         (persp-contain-buffer-p
-                                              buf workspace)))))))
+                                         (and (not (eq (string-match "◀" (buffer-name buf)) 0))   ;; remove telega buffers
+                                              (not (eq (string-match "192-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
+                                              (not (eq (string-match "172-" (buffer-name buf)) 0))
+                                              (persp-contain-buffer-p
+                                               buf workspace))))))))
 
   (advice-add 'sort-tab-get-buffer-list
               :override #'(lambda ()

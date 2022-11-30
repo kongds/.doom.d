@@ -1,5 +1,4 @@
 ;;; work-remote-tmux.el -*- lexical-binding: t; -*-
-
 (defun work-remote-tmux-start-sesstion (ip dir)
   (let ((vterm-session-name (format "%s-%s"
                                     (nth 0 (split-string ip "\\."))
@@ -16,10 +15,12 @@
       (select-window vterm-in-window))
 
      ((get-buffer vterm-session-name)
-           (switch-to-buffer vterm-session-name))
+      (switch-to-buffer vterm-session-name))
 
      (t
       (vterm vterm-session-name)
+      (with-current-buffer vterm-session-name
+        (setq-local truncate-lines nil))
       (vterm-send-string
        (format "bash /Users/royokong/work_remote_tmux.sh %s %s;exit" ip dir))
       (vterm-send-return)))))
@@ -27,8 +28,8 @@
 
 (defun work-remote-tmux-start-open (ip)
   (let* ((full-dir (cl-loop for i in projectile-known-projects
-                             if (equal (+workspace-current-name) (doom-project-name i))
-                             return i))
+                            if (equal (+workspace-current-name) (doom-project-name i))
+                            return i))
          (dir (nth 0 (last (split-string
                            (string-trim full-dir "\\/" "\\/")
                            "\\/")))))
@@ -36,11 +37,11 @@
 
 (defun work-remote-tmux-start-open-172 ()
   (interactive)
-  (work-remote-tmux-start-open "172.17.62.88"))
+  (work-remote-tmux-start-open work-remote-server-172))
 
 (defun work-remote-tmux-start-open-192 ()
   (interactive)
-  (work-remote-tmux-start-open "192.168.1.115"))
+  (work-remote-tmux-start-open work-remote-server-192))
 
 (defvar work-remote-tumx-last-buffer nil)
 
@@ -60,32 +61,104 @@
              (setq-local work-remote-tumx-last-buffer buffer-name))
            (evil-insert 0)))))
 
+(defvar work-remote-tmux-rerun--start-point nil)
+(defvar work-remote-tmux-rerun--prompt-command nil)
+(defvar work-remote-tmux-rerun--prompt nil)
+(defvar work-remote-tmux-rerun--buffer nil)
+(defvar work-remote-tmux-rerun--wait-timer-count nil)
+(defvar work-remote-tmux-rerun--wait-timer-count nil)
+
+
+(defun vterm-remote-tmux-rerun--check-end ()
+  (let ((current-line
+         (if (buffer-live-p work-remote-tmux-rerun--buffer)
+             (with-current-buffer work-remote-tmux-rerun--buffer
+               (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line)))
+           nil))
+        (cbuffer (compilation-buffer-name "compilation" nil nil)))
+    (cond ((eq (string-match work-remote-tmux-rerun--prompt current-line) 0)
+           ;; end
+           (with-current-buffer (get-buffer-create cbuffer)
+             (read-only-mode -1)
+             (erase-buffer)
+             (insert
+              (string-replace "/home/jt" "/Users/royokong/nlp"
+                              (with-current-buffer work-remote-tmux-rerun--buffer
+                                (buffer-substring-no-properties (point-min) (point-max)))))
+
+             (goto-char (point-min))
+             (when (search-forward work-remote-tmux-rerun--prompt-command nil t)
+               (delete-region (point-min) (point)))
+             (goto-char (point-max))
+             (while (search-backward-regexp work-remote-tmux-rerun--prompt nil t))
+             (delete-region (point) (point-max))
+             (read-only-mode 1)
+             (compilation-mode))
+           (+popup-buffer (get-buffer cbuffer)))
+          ;; wait
+          ((and (> work-remote-tmux-rerun--wait-timer-count 0) current-line)
+           (message "%s(%ss): %s"
+                    (buffer-name work-remote-tmux-rerun--buffer)
+                    (* (- 600 work-remote-tmux-rerun--wait-timer-count) 0.5)
+                    (if (eq 0 (length current-line))
+                        (with-current-buffer work-remote-tmux-rerun--buffer
+                          (save-excursion
+                            (when (eq 0 (length (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line))))
+                                (previous-line))
+                            (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line))))
+                      current-line))
+           (cl-decf work-remote-tmux-rerun--wait-timer-count)
+           (run-with-timer 0.5 nil #'vterm-remote-tmux-rerun--check-end)))
+      ))
+
+
 (defun work-remote-tmux-rerun  (args)
   (interactive "P")
   (save-buffer)
   (if startsync-running (run-with-timer 0.1 nil 'work-remote-tmux-rerun args)
-    (let ((swindow (selected-window))
-          (l-vterm-window nil))
+    (let ((l-vterm-window nil)
+          (window-conf (current-window-configuration)))
+
       (dolist (window (window-list))
         (when  (or (cl-search "172-" (buffer-name (window-buffer window)))
                    (cl-search "192-" (buffer-name (window-buffer window))))
           (setq l-vterm-window window)))
-      (when l-vterm-window
-        (other-window 1)
-        (while (equal (buffer-name) "*sort-tab*")
-          (other-window 1)))
-      (unless l-vterm-window
-        (work-remote-tmux-toggle "172.17.62.88"))
-      ;;(if (cl-search "172-" (buffer-name))
-      ;;    (work-remote-tmux-toggle "172.17.62.88")
-      ;;  (work-remote-tmux-toggle "192.168.1.115"))
+
+      (cond
+       (l-vterm-window
+        (select-window  l-vterm-window))
+       ((or (not work-remote-tmux-rerun--buffer)
+            (cl-search "172-" (buffer-name work-remote-tmux-rerun--buffer)))
+        (work-remote-tmux-toggle work-remote-server-172))
+       ((or (not work-remote-tmux-rerun--buffer)
+            (cl-search "192-" (buffer-name work-remote-tmux-rerun--buffer)))
+        (work-remote-tmux-toggle work-remote-server-192)))
+
+      ;; kill current buffer
       (vterm-send-key "c" nil nil t)
-      (sleep-for 0.1)
+      (sleep-for 0.05)
       (vterm-send-key "d" nil nil t)
-      (sleep-for 0.1)
-      (vterm-send-key "p" nil nil t)
+      (sleep-for 0.05)
       (vterm-send-return)
-      (select-window swindow))))
+      (sleep-for 0.1)
+
+      (setq work-remote-tmux-rerun--start-point (point))
+      (setq work-remote-tmux-rerun--buffer (current-buffer))
+      (setq work-remote-tmux-rerun--wait-timer-count 600)
+
+      (setq work-remote-tmux-rerun--prompt "^.* ➜ .* ✗ $")
+
+      (vterm-send-key "p" nil nil t)
+      (sleep-for 0.1)
+
+      (setq work-remote-tmux-rerun--prompt-command
+            (string-trim-right
+             (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line))))
+
+      (vterm-send-return)
+
+      (run-with-timer 0.5 nil #'vterm-remote-tmux-rerun--check-end)
+      (set-window-configuration window-conf))))
 
 
 (defun work-remote-tmux-get-jobs ()
@@ -231,14 +304,14 @@
 (map!
   "s-i" #'(lambda (args)
             (interactive "P")
-            (work-remote-tmux-toggle "172.17.62.88"))
+            (work-remote-tmux-toggle work-remote-server-172))
 
   "s-I" #'(lambda (args)
             (interactive "P")
             (other-window 1)
             (while (equal (buffer-name) "*sort-tab*")
               (other-window 1))
-            (work-remote-tmux-toggle "172.17.62.88"))
+            (work-remote-tmux-toggle work-remote-server-172))
 
 
   "s-r" #'work-remote-tmux-rerun
@@ -247,14 +320,14 @@
 
   "s-j" #'(lambda (args)
             (interactive "P")
-            (work-remote-tmux-toggle "192.168.1.115"))
+            (work-remote-tmux-toggle work-remote-server-192))
 
   "s-J" #'(lambda (args)
             (interactive "P")
             (other-window 1)
             (while (equal (buffer-name) "*sort-tab*")
               (other-window 1))
-            (work-remote-tmux-toggle "192.168.1.115")))
+            (work-remote-tmux-toggle work-remote-server-192)))
 
 
 

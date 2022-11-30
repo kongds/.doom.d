@@ -38,23 +38,24 @@
 
   (advice-add 'rime-input-method :around #'rime-evil-escape-advice)
 
-  (global-set-key (kbd "C-\\") ;;'toggle-input-method)
-                  (lambda ()
-                    (interactive)
-                    (setq evil-default-cursor
-                          (lambda ()
-                            (if (or (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-emacs-color))
-                                    (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-normal-color)))
-                                (evil-set-cursor-color (if rime-enable
-                                                           (get 'cursor 'evil-emacs-color)
-                                                         (get 'cursor 'evil-normal-color)))
-                              (+evil-update-cursor-color-h))))
-                    (unless rime-init
-                      (setq rime-init t)
-                      (add-hook 'input-method-activate-hook (lambda ()
-                                                              (setq-local rime-enable t)
-                                                              (funcall evil-default-cursor)))
-                      (add-hook 'input-method-deactivate-hook (lambda ()
-                                                                (setq-local rime-enable nil)
-                                                                (funcall evil-default-cursor))))
-                    (toggle-input-method))))
+  (defun rime-toggle-input-method ()
+    (interactive)
+    (setq evil-default-cursor
+          (lambda ()
+            (if (or (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-emacs-color))
+                    (equal (frame-parameter nil 'cursor-color) (get 'cursor 'evil-normal-color)))
+                (evil-set-cursor-color (if rime-enable
+                                           (get 'cursor 'evil-emacs-color)
+                                         (get 'cursor 'evil-normal-color)))
+              (+evil-update-cursor-color-h))))
+    (unless rime-init
+      (setq rime-init t)
+      (add-hook 'input-method-activate-hook (lambda ()
+                                              (setq-local rime-enable t)
+                                              (funcall evil-default-cursor)))
+      (add-hook 'input-method-deactivate-hook (lambda ()
+                                                (setq-local rime-enable nil)
+                                                (funcall evil-default-cursor))))
+                    (toggle-input-method))
+
+  (global-set-key (kbd "C-\\")  #'rime-toggle-input-method))

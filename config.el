@@ -28,9 +28,9 @@
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
 (setq doom-theme 'doom-nord)
-(setq doom-font (font-spec :family "Roboto Mono" :size 14))
+(setq doom-font (font-spec :family "Roboto Mono" :size 14)
+      doom-unicode-font (font-spec :family "苹方-简" :size 14))
 ;;(setq doom-font (font-spec :family "Monego" :size 14))
-
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
@@ -161,11 +161,11 @@
 
 (load! "configs/init-ein-notebook")
 
-(load! "configs/init-telega")
-
 (load! "configs/init-netease-music")
 
 (load! "configs/init-rime")
+
+(load! "configs/init-telega")
 
 (load! "configs/init-realgud")
 

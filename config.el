@@ -137,6 +137,15 @@
   (advice-add 'consult-theme :after #'reload-color-after-theme))
 
 
+;; vertico support pyim
+(after! vertico
+  (require 'pyim)
+  (pyim-default-scheme 'pyim-shuangpin)
+  (defun my-orderless-regexp (orig-func component)
+    (let ((result (funcall orig-func component)))
+      (pyim-cregexp-build result)))
+  (advice-add 'orderless-regexp :around #'my-orderless-regexp))
+
 (load! "+bindings")
 
 (load! "+patches")

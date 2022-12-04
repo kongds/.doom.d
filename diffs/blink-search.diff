@@ -166,7 +166,7 @@ index e6b31fd..176ba19 100644
  
  ;; Struct: blink-search-deferred-object
 diff --git a/blink-search.el b/blink-search.el
-index 0166b3c..3a00ef0 100644
+index 0166b3c..fe3551a 100644
 --- a/blink-search.el
 +++ b/blink-search.el
 @@ -430,7 +430,7 @@ you need customize option if some 'M + key' conflict with your command.")
@@ -188,24 +188,28 @@ index 0166b3c..3a00ef0 100644
 +        (set-window-configuration (frame-parameter (selected-frame) 'eaf--mac-frame)))
 +    (set-frame-parameter  blink-search-posframe-emacs-frame
 +                          'eaf--mac-frame nil)
-+    (advice-remove 'eaf--mac-focus-change :after ))
++    (advice-remove 'eaf--topmost-focus-change :after ))
 +
  (defun blink-search-quit ()
    (interactive)
    (blink-search-call-async "clean")
-@@ -465,8 +471,9 @@ you need customize option if some 'M + key' conflict with your command.")
-       (when (and (eq system-type 'darwin) (featurep 'eaf)
-                  (eaf-emacs-not-use-reparent-technology)
-                  eaf--mac-safe-focus-change)
+@@ -462,11 +468,10 @@ you need customize option if some 'M + key' conflict with your command.")
+       ;; popup will call 'eaf--mac-focus-change'
+       ;; which causes switched buffer
+       ;; switch back with (set-window-configuration (frame-parameter (selected-frame) 'eaf--mac-frame))
+-      (when (and (eq system-type 'darwin) (featurep 'eaf)
+-                 (eaf-emacs-not-use-reparent-technology)
+-                 eaf--mac-safe-focus-change)
 -        (set-frame-parameter  blink-search-posframe-emacs-frame
 -                              'eaf--mac-frame nil)))
-+        (advice-add 'eaf--mac-focus-change :after #'blink-search-set-eaf--mac-frame))
++      (when (and (eq system-type 'darwin) (featurep 'eaf))
++        (advice-add 'eaf--topmost-focus-change :after #'blink-search-set-eaf--mac-frame))
 +
 +        (set-cursor-color (get 'cursor 'evil-normal-color)))
  
      (setq blink-search-start-buffer nil)))
  
-@@ -603,6 +610,8 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -603,6 +608,8 @@ blink-search will search current symbol if you call this function with `C-u' pre
              ((or (string-prefix-p ";" input)
                   (string-prefix-p "；" input))
               (blink-search-call-async "search" (substring input 1) (blink-search-get-row-number) (list "Grep PDF")))
@@ -214,7 +218,7 @@ index 0166b3c..3a00ef0 100644
              (t
               (blink-search-call-async "search" input (blink-search-get-row-number) blink-search-search-backends))))))
  
-@@ -666,6 +675,7 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -666,6 +673,7 @@ blink-search will search current symbol if you call this function with `C-u' pre
    (unless (stringp candidate-info)
      (plist-get candidate-info :matches)))
  
@@ -222,7 +226,7 @@ index 0166b3c..3a00ef0 100644
  (defun blink-search-render ()
    (let ((candidate-items blink-search-candidate-items)
          (candidate-select-index blink-search-candidate-select-index)
-@@ -721,6 +731,18 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -721,6 +729,18 @@ blink-search will search current symbol if you call this function with `C-u' pre
                         candidate-prefix
                         candidate-prefix-length
                         candidate-line)
@@ -241,7 +245,7 @@ index 0166b3c..3a00ef0 100644
  
                    (setq candidate-prefix
                          (concat
-@@ -766,7 +788,10 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -766,7 +786,10 @@ blink-search will search current symbol if you call this function with `C-u' pre
                                   (backward-char 1)
                                   (setq match-end-point (+ (point) candidate-prefix-length))
                                   (list match-start-point match-end-point)))))
@@ -253,7 +257,7 @@ index 0166b3c..3a00ef0 100644
                          )))
  
                    (when (equal candidate-index candidate-select-index)
-@@ -803,7 +828,17 @@ blink-search will search current symbol if you call this function with `C-u' pre
+@@ -803,7 +826,17 @@ blink-search will search current symbol if you call this function with `C-u' pre
                        (insert backend-line)
  
                        (setq backend-index (1+ backend-index))))))))
@@ -272,16 +276,14 @@ index 0166b3c..3a00ef0 100644
  
  (defun blink-search-update-items (candidate-items
                                    candidate-select-index
-@@ -1021,8 +1056,18 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
+@@ -1021,8 +1054,16 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
    (setq blink-search-posframe-emacs-frame (selected-frame))
    (setq blink-search-posframe-frame (blink-search-posframe-show blink-search-input-buffer))
  
-+  (when (and (eq system-type 'darwin) (featurep 'eaf)
-+             (eaf-emacs-not-use-reparent-technology)
-+             eaf--mac-safe-focus-change)
++  (when (and (eq system-type 'darwin) (featurep 'eaf))
 +    (set-frame-parameter (selected-frame)
 +                         'eaf--mac-frame (current-window-configuration))
-+    (eaf--mac-replace-eaf-buffers))
++    (eaf--topmost-focus-in))
 +
    (select-frame-set-input-focus blink-search-posframe-frame)
  

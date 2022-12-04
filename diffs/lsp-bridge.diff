@@ -1,24 +1,27 @@
 diff --git a/acm/acm.el b/acm/acm.el
-index 1cd7907..fadf74e 100644
+index 338a391..ec96037 100644
 --- a/acm/acm.el
 +++ b/acm/acm.el
-@@ -895,7 +895,15 @@ The key of candidate will change between two LSP results."
-               (insert (if (stringp candidate-doc)
-                           candidate-doc
-                         (format "%S" candidate-doc)))
+@@ -902,8 +902,17 @@ The key of candidate will change between two LSP results."
+             ;; Insert documentation and turn on wrap line.
+             (with-current-buffer (get-buffer-create acm-doc-buffer)
+               (erase-buffer)
+-              (insert doc)
 -              (visual-line-mode 1))
-+              (lsp-bridge-render-markdown-content)
++              (insert (if (stringp candidate-doc)
++                          candidate-doc
++                        (format "%S" candidate-doc)))
 +              (visual-line-mode 1)
 +
 +              ;; FIXME: `prettify-symbols-mode' make text become smaller in 4k screen.
 +              ;; Only scale font for 4k screen here.
-+              (when (> (frame-pixel-width) 3000)
-+                (text-scale-set 1.5))
++              ;;(when (> (frame-pixel-width) 3000)
++              ;;  (text-scale-set 1.5))
 +              (setq mode-line-format nil)
 +              )
  
-             ;; Adjust doc frame position and size.
-             (acm-doc-frame-adjust))
+             ;; Only render markdown styling when idle 200ms, because markdown render is expensive.
+             (when (string-equal backend "lsp")
 diff --git a/core/search_elisp_symbols.py b/core/search_elisp_symbols.py
 index 0fa403d..b7173b7 100644
 --- a/core/search_elisp_symbols.py

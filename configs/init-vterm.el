@@ -96,6 +96,11 @@
         (with-current-buffer buffer
           (evil-insert 0)))))
 
-  (map! "s-f" #'vterm-pop-posframe-toggle
-        "s-;" #'vterm-pop-posframe-toggle)
+  (after! evil-escape
+    (delq! 'vterm-mode evil-escape-excluded-major-modes))
+
+  (map!
+   (:leader
+    :desc "open term" :n "o t" #'vterm-pop-posframe-toggle)
+   "s-;" #'vterm-pop-posframe-toggle)
 )

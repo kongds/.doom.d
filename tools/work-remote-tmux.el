@@ -349,4 +349,14 @@
 ;; start timer to update jobs
 (work-remote-tmux-update-job-start)
 
+(defun work-remote-tmux-or-vterm-quit ()
+  (interactive)
+  (let ((bname (buffer-name)))
+    (cond
+     ((string-match-p "172-" bname) (work-remote-tmux-toggle work-remote-server-172))
+     ((string-match-p "192-" bname) (work-remote-tmux-toggle work-remote-server-192))
+     (t (vterm-pop-posframe-toggle)))))
+
+(evil-collection-define-key 'normal  'vterm-mode-map "q" #'work-remote-tmux-or-vterm-quit)
+
 (provide 'work-remote-tmux)

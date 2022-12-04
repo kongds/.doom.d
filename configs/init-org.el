@@ -127,13 +127,12 @@ does not exist, or if `bibtex-completion-pdf-field' is nil."
 
 
 (after! org-download
+  (defcustom org-download-screenshot-figure-size 700
+    "Figure size for screenshot.")
   (setq org-download-annotate-function
     #'(lambda (link)
-        (format "#+DOWNLOADED: %s @ %s\n#+attr_html: :width 700px\n#+attr_latex: :width 700px\n"
-                (if (equal link org-download-screenshot-file)
-                    "screenshot"
-                  link)
-                (format-time-string "%Y-%m-%d %H:%M:%S")))))
+        (format "#+attr_html: :width %spx\n"
+                org-download-screenshot-figure-size))))
 
 
 (use-package! org-fragtog

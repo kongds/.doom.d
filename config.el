@@ -29,7 +29,7 @@
 ;; `load-theme' function. This is the default:
 (setq doom-theme 'doom-nord)
 (setq doom-font (font-spec :family "Roboto Mono" :size 14)
-      doom-unicode-font (font-spec :family "苹方-简" :size 14))
+      doom-unicode-font (font-spec :family "苹方-简"))
 ;;(setq doom-font (font-spec :family "Monego" :size 14))
 
 ;; If you use `org' and don't want your org files in the default location below,

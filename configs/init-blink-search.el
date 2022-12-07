@@ -42,6 +42,4 @@
      (let ((match-file (blink-search-grep-file-get-match-buffer file)))
        (blink-search-grep-pdf-do file page submatches)
        (unless match-file
-         (add-to-list 'blink-search-grep-file-temp-buffers (current-buffer))))))
-
-  (map! :n "t" #'blink-search))
+         (add-to-list 'blink-search-grep-file-temp-buffers (current-buffer)))))))

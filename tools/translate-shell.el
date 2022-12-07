@@ -235,10 +235,4 @@
              (kill-buffer buf)
              (translate-shell-show trans-results))))))))
 
-(map!
- (:leader
-  :desc "translate" :n "c t" #'translate-shell
-  :desc "translate rewrite" :n "c w" #'translate-rewrite
-  ))
-
 (provide 'translate-shell)

@@ -28,14 +28,20 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
  "s-s" #'save-buffer
  "s-n" #'make-frame
  "s-q" #'save-buffers-kill-emacs
+ "s-;" #'vterm-pop-posframe-toggle
 
  "C-0" #'toggle-frame-fullscreen
 
-
  "C-x w" #'winner-undo
+
  (:leader
   ;;:desc "switch buffer" :n "j" #'+ivy/switch-buffer
   ;;:desc "switch workspace buffer" :n "k" #'+ivy/switch-workspace-buffer
+
+  :desc "open term" :n "o t" #'vterm-pop-posframe-toggle
+
+  :desc "translate" :n "c t" #'translate-shell
+  :desc "translate rewrite" :n "c w" #'translate-rewrite
 
   :desc "close window" :n "w c" #'+workspace/close-window-or-workspace
 
@@ -90,6 +96,9 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   :desc "ace" :n "w a" #'ace-select-window
   :desc "kill other window" :n "w 0" #'delete-other-windows)
 
+ :n "t" #'blink-search
+ :nv "S" #'color-rg-search-input
+
  (:after cape
   "M-/" #'cape-dabbrev)
 
@@ -108,23 +117,6 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
  (:after avy
   "C-j" #'avy-goto-char;;-timer
   :n "s" #'avy-goto-char)
-
- "s-;" #'(lambda (args)
-           (interactive "P")
-           (if (eq major-mode 'vterm-mode)
-                   (+vterm/toggle args)
-                (+vterm/toggle args)
-                (unless (eq major-mode 'vterm-mode) (+vterm/toggle args)))
-           (when (s-contains?  "vterm" (buffer-name))
-             (evil-insert 0)))
-  ;;"s-i" #'(lambda ()
-  ;;        (interactive)
-  ;;        (if (eq major-mode 'vterm-mode)
-  ;;        (+workspace/close-window-or-workspace)
-  ;;        (if (get-buffer "vterm")
-  ;;                (pop-to-buffer-same-window "vterm")
-  ;;        (vterm))
-  ;;        (evil-insert 0)))
 
  (:after telega
   :map telega-chat-mode-map
@@ -173,8 +165,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
           (-if-let* ((url (biblio-get-url (biblio--selection-metadata-at-point))))
               ;; https://arxiv.org/abs/1908.10084v1 -> https://arxiv.org/pdf/1908.10084v1.pdf
               (browse-url (concat (string-replace "abs" "pdf" url) ".pdf"))
-            (user-error "This record does not contain a URL")))
-  )
+            (user-error "This record does not contain a URL"))))
 
  (:after symbol-overlay
   :n "N" #'symbol-overlay-put

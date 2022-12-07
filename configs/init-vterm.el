@@ -84,10 +84,6 @@
       (with-current-buffer buffer
         (evil-insert 0)))))
 
-(map!
- (:leader :desc "open term" :n "o t" #'vterm-pop-posframe-toggle)
- "s-;" #'vterm-pop-posframe-toggle)
-
 (after! vterm
   (set-popup-rule! "^vterm" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)
   (set-popup-rule! "^\*vterm\*" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)

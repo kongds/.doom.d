@@ -204,12 +204,23 @@
 
 
 ;; tools
-(load! "tools/start-sync")
+(add-to-list 'load-path "/Users/royokong/.doom.d/tools/")
 
-(load! "tools/quick-open")
+(use-package! start-sync :after (:any vterm python sh-script))
 
-(load! "tools/trans")
+(use-package! work-remote-tmux :after (:any vterm python sh-script))
 
-(load! "tools/work-remote-tmux")
+(use-package! quick-open :after dired)
 
-(load! "tools/get-gpu-status")
+(use-package! translate-shell :commands (translate-shell translate-rewrite))
+
+(use-package! get-gpu-status :commands get-gpu-status)
+;;(load! "tools/start-sync")
+;;
+;;(load! "tools/quick-open")
+;;
+;;(load! "tools/trans")
+;;
+;;(load! "tools/work-remote-tmux")
+;;
+;;(load! "tools/get-gpu-status")

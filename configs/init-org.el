@@ -1,52 +1,28 @@
 ;;; config-org.el -*- lexical-binding: t; -*-
-(use-package! org-tempo)
-
 (after! org
   :config
-  (require 'ox)
-  (defun format-image-inline (source attributes info)
-    (format "<img src=\"data:image/%s;base64,%s\"%s />"
-            (or (file-name-extension source) "")
-            (base64-encode-string
-             (with-temp-buffer
-               (insert-file-contents-literally source)
-               (buffer-string)))
-            (file-name-nondirectory source)))
+  (after! ox
+    (defun format-image-inline (source attributes info)
+      (format "<img src=\"data:image/%s;base64,%s\"%s />"
+              (or (file-name-extension source) "")
+              (base64-encode-string
+               (with-temp-buffer
+                 (insert-file-contents-literally source)
+                 (buffer-string)))
+              (file-name-nondirectory source)))
 
-  (defun org-html-export-to-mhtml (async subtree visible body)
-    (cl-letf (((symbol-function 'org-html--format-image) 'format-image-inline))
-      (org-html-export-to-html nil subtree visible body)))
+    (defun org-html-export-to-mhtml (async subtree visible body)
+      (cl-letf (((symbol-function 'org-html--format-image) 'format-image-inline))
+        (org-html-export-to-html nil subtree visible body)))
 
-  (org-export-define-derived-backend 'html-inline-images 'html
-    :menu-entry '(?h "Export to HTML" ((?m "As MHTML file and open" org-html-export-to-mhtml))))
-
-  ;; render color for jupyter
-  (defun display-ansi-colors ()
-    (ansi-color-apply-on-region (point-min) (point-max)))
-  (add-hook 'org-babel-after-execute-hook #'display-ansi-colors)
-
-  (setq org-hide-emphasis-markers t)
-
-  (require 'jupyter)
-  (defun jupyter-command (&rest args)
-    "Run a Jupyter shell command synchronously, return its output.
-The shell command run is
-
-    jupyter ARGS...
-
-If the command fails or the jupyter shell command doesn't exist,
-return nil."
-    (with-temp-buffer
-      (when (zerop (apply #'process-file "/opt/homebrew/Caskroom/miniforge/base/bin/jupyter" nil t nil args))
-        (string-trim-right (buffer-string)))))
-  (require 'ob-jupyter)
-
-  (setq ob-async-no-async-languages-alist '("python" "jupyter-python"))
-
+    (org-export-define-derived-backend 'html-inline-images 'html
+      :menu-entry '(?h "Export to HTML" ((?m "As MHTML file and open" org-html-export-to-mhtml)))))
 
   (after! lsp-bridge
     (lsp-org-babel-enable "jupyter-python"))
 
+  (setq org-hide-emphasis-markers t)
+  (setq ob-async-no-async-languages-alist '("python" "jupyter-python"))
   (setq org-emphasis-alist
         (quote (
                 ("/" italic)
@@ -54,7 +30,6 @@ return nil."
                 ("+" (:strike-through t))
                 ("~" org-verbatim verbatim)
                 ("*" (:foreground "yellow" :background "black")))))
-
   (setq org-html-text-markup-alist
         '((bold . "<mark style=\"font-style:normal;font-weight:normal\">%s</mark>")
           (code . "<code>%s</code>")
@@ -62,9 +37,23 @@ return nil."
           (strike-through . "<del>%s</del>")
           (underline . "<span class=\"underline\">%s</span>")
           (verbatim . "<code>%s</code>")))
-  ;;(use-package! ob-ipython)
-  (use-package! ob-async)
+  ;; latex scale
+  (setq org-preview-latex-default-process 'dvisvgm)
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4))
 
+  (use-package! ob-async)
+  (use-package! org-tempo)
+  (use-package! jupyter
+    :config
+    ;; render color for jupyter
+    (defun display-ansi-colors ()
+      (ansi-color-apply-on-region (point-min) (point-max)))
+    (add-hook 'org-babel-after-execute-hook #'display-ansi-colors)
+    (defun jupyter-command (&rest args)
+      (with-temp-buffer
+        (when (zerop (apply #'process-file "/opt/homebrew/Caskroom/miniforge/base/bin/jupyter" nil t nil args))
+          (string-trim-right (buffer-string))))))
+  (use-package! ob-jupyter)
   (use-package! org-download
     :config
     (add-hook 'dired-mode-hook 'org-download-enable)
@@ -77,9 +66,7 @@ return nil."
     :config
     (setq org-directory "~/.org")
     (setq org-default-notes-file (concat org-directory "/inbox.org")))
-  ;; latex scale
-  (setq org-preview-latex-default-process 'dvisvgm)
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4)))
+  )
 
 
 
@@ -101,30 +88,6 @@ return nil."
         org-ref-get-pdf-filename-function #'(lambda (key)
                                             (car (bibtex-completion-find-pdf-in-field key)))
         org-ref-completion-library 'org-ref-ivy-cite))
-
-(after! helm-bibtex
-  :config
-  (setq
-   bibtex-completion-notes-path "/Users/royokong/.org/refs"
-   bibtex-completion-bibliography "/Users/royokong/library.bib"
-   bibtex-completion-pdf-field "file")
-(defun bibtex-completion-find-pdf-in-field (key-or-entry)
-  "Return the path of the PDF specified in the field `bibtex-completion-pdf-field' if that file exists.
-Returns nil if no file is specified, or if the specified file
-does not exist, or if `bibtex-completion-pdf-field' is nil."
-  (when bibtex-completion-pdf-field
-    (let* ((entry (if (stringp key-or-entry)
-                      (bibtex-completion-get-entry1 key-or-entry t)
-                    key-or-entry))
-           (value (bibtex-completion-get-value bibtex-completion-pdf-field entry)))
-      (setq value (replace-regexp-in-string ":pdf" "" (concat "/" value)))
-      (setq value (replace-regexp-in-string ":" "" value))
-      (cond
-       ((not value) nil)         ; Field not defined
-       ((f-file? value) (list value))   ; A bare full path was found.
-       ((-any 'f-file? (--map (f-join it (f-filename value)) (-flatten bibtex-completion-library-path))) (-filter 'f-file? (--map (f-join it (f-filename value)) (-flatten bibtex-completion-library-path))))))))
-(helm-add-action-to-source "Open PDF" 'helm-bibtex-open-pdf helm-source-bibtex 0))
-
 
 (after! org-download
   (defcustom org-download-screenshot-figure-size 700

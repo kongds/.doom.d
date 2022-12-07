@@ -1,6 +1,7 @@
 ;;; configs/ini-netease-music.el -*- lexical-binding: t; -*-
 
-(after! netease-cloud-music
+(use-package! netease-cloud-music
+  :commands netease-cloud-music
   :config
   (require 'netease-cloud-music-ui)
 

@@ -20,7 +20,7 @@
   (global-corfu-mode)
   (corfu-history-mode t)
 
-  (require 'corfu-doc)
+  (use-package! corfu-doc)
   (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
 
   (add-hook 'corfu-mode-hook (lambda ()
@@ -101,6 +101,7 @@
 ;; Add extensions
 (use-package! cape
   ;; Bind dedicated completion commands
+  :after corfu
   :bind (("C-c p p" . completion-at-point) ;; capf
          ("C-c p t" . complete-tag)        ;; etags
          ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion

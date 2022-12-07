@@ -2,19 +2,43 @@
 
 ;;(add-to-list 'load-path "/Users/royokong/lsp-bridge")
 
-(use-package! lsp-bridge
-  :custom
-  (acm-enable-quick-access t)
-  (acm-quick-access-modifier 'super)
-  (acm-quick-access-keys '("j" "l" "f" "s" "." "g" "d" "b" "a" ","))
-  (acm-enable-tabnine nil)
-  (acm-enable-yas nil)
-  (acm-candidate-match-function 'orderless-flex)
-  (acm-enable-dabbrev nil)
+(add-hook 'org-mode-hook #'(lambda()
+                             (setq-local corfu-auto t)
+                             ;;(setq-local acm-enable-english-helper t)
+                             ;;(lsp-bridge-mode)
+                             (setq-local completion-at-point-functions (list  (cape-super-capf  #'cape-dict #'cape-dabbrev)))
+                             ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
+                             ))
 
-  :init
+(add-hook 'tex-mode-hook #'(lambda()
+                             (setq-local corfu-auto t)
+                             ;;(setq-local acm-enable-english-helper t)
+                             ;;(lsp-bridge-mode)
+                             (setq-local corfu-auto-delay 0.1)
+                             (setq-local completion-at-point-functions (list (cape-super-capf #'cape-dabbrev #'cape-tex #'cape-dict #'cape-file)))
+                             ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
+                             ))
+
+(add-hook 'emacs-lisp-mode-hook #'(lambda()
+                                    (setq-local corfu-auto nil)
+                                    (lsp-bridge-mode)
+                                    ))
+
+(add-hook 'python-mode-hook #'(lambda()
+                                ;; remove lsp-bridge modeline
+
+                                (setq-local corfu-auto nil)
+                                (setq-local flycheck-checker 'python-pyright)
+                                (lsp-bridge-mode)
+                                (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
+                                            +lookup-implementations-functions '(lsp-bridge-find-impl t)
+                                            +lookup-references-functions '(lsp-bridge-find-references t))))
+
+
+(use-package! lsp-bridge
+  :commands lsp-bridge-mode
+  :config
   (require 'yasnippet)
-  (require 'lsp-bridge)
 
   (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)
 
@@ -28,56 +52,30 @@
   (remove-hook 'python-mode-local-vars-hook #'+python-init-anaconda-mode-maybe-h)
   (remove-hook 'python-mode-hook #'+python-use-correct-flycheck-executables-h)
 
-  (add-hook 'org-mode-hook #'(lambda()
-                               (setq-local corfu-auto t)
-                               ;;(setq-local acm-enable-english-helper t)
-                               ;;(lsp-bridge-mode)
-                               (setq-local completion-at-point-functions (list  (cape-super-capf  #'cape-dict #'cape-dabbrev)))
-                               ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
-                               ))
-
-  (add-hook 'tex-mode-hook #'(lambda()
-                               (setq-local corfu-auto t)
-                               ;;(setq-local acm-enable-english-helper t)
-                               ;;(lsp-bridge-mode)
-                               (setq-local corfu-auto-delay 0.1)
-                               (setq-local completion-at-point-functions (list (cape-super-capf #'cape-dabbrev #'cape-tex #'cape-dict #'cape-file)))
-                               ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
-                               ))
-
-  (add-hook 'emacs-lisp-mode-hook #'(lambda()
-                                      (setq-local corfu-auto nil)
-                                      (lsp-bridge-mode)
-                                      ))
-
-  (add-hook 'python-mode-hook #'(lambda()
-                                  ;; remove lsp-bridge modeline
-
-                                  (setq-local corfu-auto nil)
-                                  (setq-local flycheck-checker 'python-pyright)
-                                  (lsp-bridge-mode)
-                                  (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
-                                              +lookup-implementations-functions '(lsp-bridge-find-impl t)
-                                              +lookup-references-functions '(lsp-bridge-find-references t))))
-
-
   (setq lsp-bridge-disable-backup nil)
 
   (map!
    (:leader
     :desc "workspace symbol"
-    :n "s n" #'lsp-bridge-list-workspace-symbols))
-  )
+    :n "s n" #'lsp-bridge-list-workspace-symbols)))
 
 
-(after! acm
-
+(use-package! acm
+  :after lsp-bridge
   :config
   ;; bindings
   (define-key acm-mode-map (kbd "TAB") 'acm-select-next)
   (define-key acm-mode-map (kbd "S-TAB") 'acm-select-prev)
   (define-key acm-mode-map (kbd "C-n") 'acm-select-next)
   (define-key acm-mode-map (kbd "C-p") 'acm-select-prev)
+
+  (setq acm-enable-quick-access t)
+  (setq acm-quick-access-modifier 'super)
+  (setq acm-quick-access-keys '("j" "l" "f" "s" "." "g" "d" "b" "a" ","))
+  (setq acm-enable-tabnine nil)
+  (setq acm-enable-yas nil)
+  (setq acm-candidate-match-function 'orderless-flex)
+  (setq acm-enable-dabbrev nil)
 
   ;; timer doc
   (fset 'r-acm-update (symbol-function 'acm-update))
@@ -102,6 +100,7 @@
     (setq acm-doc-timer (run-with-idle-timer acm-delay nil #'r-acm-doc-try-show))))
 
 (use-package! lsp-mode
+  :commands lsp-mode
   :custom (lsp-completion-provider :none) ;; we use Corfu!
   :init (setq lsp-completion-enable t)
   (defun my/lsp-mode-setup-completion ()

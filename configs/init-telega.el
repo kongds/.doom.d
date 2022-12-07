@@ -1,7 +1,8 @@
 ;;; configs/init-telega.el -*- lexical-binding: t; -*-
 
-(after! telega
-
+(use-package! telega
+  :commands telega
+  :config
   (set-fontset-font t 'unicode "Apple Color Emoji" nil 'append)
 
   (add-hook 'telega-chat-mode-hook

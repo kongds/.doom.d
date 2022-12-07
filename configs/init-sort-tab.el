@@ -7,20 +7,21 @@
 
   (defun sort-tab-workspace-buffer-list ()
     (cl-concatenate 'list
-    (eaf--get-eaf-buffers)
-    (mapcar #'get-buffer
-            (consult--buffer-query :sort 'visibility
-                                   :as #'buffer-name
-                                   :predicate
-                                   #'(lambda (buf)
-                                       ;; don't use +workspace here to avoid Recursive load of workspace.el
-                                       (when-let ((workspace (persp-get-by-name
-                                                              (safe-persp-name (get-current-persp)))))
-                                         (and (not (eq (string-match "◀" (buffer-name buf)) 0))   ;; remove telega buffers
-                                              (not (eq (string-match "192-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
-                                              (not (eq (string-match "172-" (buffer-name buf)) 0))
-                                              (persp-contain-buffer-p
-                                               buf workspace))))))))
+                    (if (featurep! eaf)
+                        (eaf--get-eaf-buffers))
+                    (mapcar #'get-buffer
+                            (consult--buffer-query :sort 'visibility
+                                                   :as #'buffer-name
+                                                   :predicate
+                                                   #'(lambda (buf)
+                                                       ;; don't use +workspace here to avoid Recursive load of workspace.el
+                                                       (when-let ((workspace (persp-get-by-name
+                                                                              (safe-persp-name (get-current-persp)))))
+                                                         (and (not (eq (string-match "◀" (buffer-name buf)) 0))   ;; remove telega buffers
+                                                              (not (eq (string-match "192-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
+                                                              (not (eq (string-match "172-" (buffer-name buf)) 0))
+                                                              (persp-contain-buffer-p
+                                                               buf workspace))))))))
 
   (advice-add 'sort-tab-get-buffer-list
               :override #'(lambda ()
@@ -67,7 +68,6 @@
                                      :after #'(lambda (&rest r)
                                                 (unless (get-buffer-window (sort-tab-get-buffer))
                                                   (sort-tab-create-window))))))
-
 
   (setq sort-tab-align 'center)
   (setq sort-tab-name-max-length 20)

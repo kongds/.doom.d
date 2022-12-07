@@ -1,6 +1,7 @@
 ;;; configs/init-treemacs.el -*- lexical-binding: t; -*-
 
-(after! treemacs
+(use-package! treemacs
+  :commands treemacs
   :config
   (set-popup-rule! "^\\*Ilist"
     :side 'right :size 35 :quit nil :select nil :ttl 0)

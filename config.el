@@ -79,15 +79,15 @@
 
 (add-hook 'doom-after-init-hook
           (lambda ()
-            ;;(global-company-mode -1)
-
-            ;; sort tab
-            (run-with-timer 0.1 nil (lambda ()
-                                      (delete-other-windows (selected-window))
-                                      (sort-tab-turn-on)))
-
             ;; vimish fold mode
             (vimish-fold-global-mode 1)))
+
+(add-hook 'doom-first-buffer-hook
+          (lambda ()
+            ;; sort tab on
+            (sort-tab-turn-on)
+            ;; face
+            (set-fontset-font t 'han (font-spec :family "苹方-简"))))
 
 (after! python
   (set-repl-handler! 'python-mode #'+python/open-ipython-repl)
@@ -123,7 +123,7 @@
 (after! consult
   (defun reload-color-after-theme (&rest args)
     (cond
-     ((equal doom-theme 'ef-summer)
+     ((and (equal doom-theme 'ef-summer) (featurep 'blink-search))
       (set-face-background 'blink-search-select-face (face-attribute 'highlight :background))
       (set-face-foreground 'blink-search-select-face (face-attribute 'highlight :foreground))))
 
@@ -155,51 +155,51 @@
 ;; configs
 
 (load! "configs/init-imenu")
-
+;;
 (load! "configs/init-treemacs")
-
+;;
 (load! "configs/init-doom-modeline")
-
+;;
 (load! "configs/init-evil")
-
+;;
 (load! "configs/init-wakatime")
-
+;;
 (load! "configs/init-vterm")
-
+;;
 (load! "configs/init-ivy-posframe")
-
+;;
 (load! "configs/init-ein-notebook")
-
+;;
 (load! "configs/init-netease-music")
-
+;;
 (load! "configs/init-rime")
-
+;;
 (load! "configs/init-telega")
-
+;;
 (load! "configs/init-realgud")
-
+;;
 (load! "configs/init-blink-search")
-
+;;
 (load! "configs/init-copilot")
-
+;;
 (load! "configs/init-color-rg")
-
+;;
 (load! "configs/init-pdf-search")
-
+;;
 (load! "configs/init-elfeed")
-
+;;
 (load! "configs/init-sort-tab")
-
+;;
 (load! "configs/init-org")
-
+;;
 (load! "configs/init-org-noter")
-
+;;
 (load! "configs/init-eaf")
-
+;;
 (load! "configs/init-corfu")
-
+;;
 (load! "configs/init-lsp-bridge")
-
+;;
 (load! "configs/init-elisp")
 
 

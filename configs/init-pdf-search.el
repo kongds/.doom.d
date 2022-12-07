@@ -1,6 +1,6 @@
 ;;; pdf-search.el -*- lexical-binding: t; -*-
 
-(with-eval-after-load 'pdf-tools
+(after! pdf-tools
   (defun my/isearch-failed? ()
     (or (not isearch-success) isearch-error))
 

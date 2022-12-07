@@ -1,10 +1,13 @@
 ;;; elfeed-arxiv.el -*- lexical-binding: t; -*-
 
 (use-package! citar
+  ;; load after citar-open-files
+  :commands citar-open-files
+
   :hook (doom-after-modules-init . citar-refresh)
+
   :config
   ;; This will add watches for the global bib files and in addition add a hook to LaTeX-mode-hook and org-mode-hook to add watches for local bibliographic files.
-  (require 'citar-org)
 
   ;; citar for mendeley
   (defun citar-file--parser-mendeley (file-field)
@@ -47,9 +50,10 @@
   ;; use consult-completing-read for enhanced interface
   (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple))
 
-(after! elfeed
-  :config
+(use-package! elfeed
+  :commands elfeed
 
+  :config
   (add-hook! 'elfeed-search-mode-hook 'elfeed-update)
 
   ;; add tags of add time
@@ -198,6 +202,7 @@
 )
 
 (use-package! org-roam-bibtex
+  :after citar
   :config
   (setq org-roam-capture-templates
         '(("d" "default" plain "%?"
@@ -228,6 +233,7 @@
         orb-file-field-extensions '("pdf")))
 
 (use-package! oc
+  :after citar
   :config
   (require 'oc-biblatex)
   (require 'oc-csl)
@@ -240,5 +246,3 @@
                                      (t csl))))
 
 
-
-(provide 'elfeed-arxiv)

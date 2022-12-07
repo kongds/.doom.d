@@ -1,6 +1,7 @@
 ;;; eaf-config.el -*- lexical-binding: t; -*-
 
 (use-package! eaf
+  :commands (eaf-open eaf-open-browser eaf-open-browser-with-history)
   :config
   (require 'eaf-org)
   (require 'eaf-browser)

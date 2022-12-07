@@ -1,6 +1,7 @@
 ;;; configs/init-imenu.el -*- lexical-binding: t; -*-
 
-(after! imenu-list
+(use-package! imenu-list
+  :commands imenu
   :config
   (set-popup-rule! "^\\*Ilist"
     :side 'right :size 35 :quit nil :select nil :ttl 0)

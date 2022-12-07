@@ -3,6 +3,7 @@
 ;;(add-to-list 'load-path "/Users/royokong/blink-search")
 
 (use-package! blink-search
+  :commands blink-search
   :config
   (setq blink-search-grep-pdf-search-paths '("/Users/royokong/arxiv_papers" "/Users/royokong/papers"))
   (setq blink-search-grep-pdf-search-paths nil)

@@ -37,12 +37,17 @@
 
 (use-package! lsp-bridge
   :commands lsp-bridge-mode
+  :init
+  (setq acm-enable-quick-access t)
+  (setq acm-quick-access-modifier 'super)
+  (setq acm-quick-access-keys '("j" "l" "f" "s" "." "g" "d" "b" "x" ","))
+  (setq acm-enable-tabnine nil)
+  (setq acm-enable-yas nil)
+  (setq acm-candidate-match-function 'orderless-flex)
+  (setq acm-enable-dabbrev nil)
   :config
-  (require 'yasnippet)
-
   (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)
 
-  (yas-global-mode 1)
   ;;(global-lsp-bridge-mode)
 
   (add-hook 'lsp-bridge-mode-hook #'(lambda ()
@@ -68,14 +73,6 @@
   (define-key acm-mode-map (kbd "S-TAB") 'acm-select-prev)
   (define-key acm-mode-map (kbd "C-n") 'acm-select-next)
   (define-key acm-mode-map (kbd "C-p") 'acm-select-prev)
-
-  (setq acm-enable-quick-access t)
-  (setq acm-quick-access-modifier 'super)
-  (setq acm-quick-access-keys '("j" "l" "f" "s" "." "g" "d" "b" "a" ","))
-  (setq acm-enable-tabnine nil)
-  (setq acm-enable-yas nil)
-  (setq acm-candidate-match-function 'orderless-flex)
-  (setq acm-enable-dabbrev nil)
 
   ;; timer doc
   (fset 'r-acm-update (symbol-function 'acm-update))

@@ -7,7 +7,7 @@
 
   (defun sort-tab-workspace-buffer-list ()
     (cl-concatenate 'list
-                    (if (featurep! eaf)
+                    (if (featurep 'eaf)
                         (eaf--get-eaf-buffers))
                     (mapcar #'get-buffer
                             (consult--buffer-query :sort 'visibility

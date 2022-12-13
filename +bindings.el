@@ -14,6 +14,15 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
       (funcall ff (expand-file-name file project-root))
       (run-hooks 'projectile-find-file-hook))))
 
+(defun toggle-frame-maximized-or-fullframe ()
+  (interactive)
+  (if (equal (shell-command-to-string "m1ddc display list") "")
+      (let ((ffu (frame-parameter nil 'fullscreen)))
+        (if (memq ffu '(fullscreen fullboth))
+          (toggle-frame-fullscreen))
+        (toggle-frame-maximized))
+    (toggle-frame-fullscreen)))
+
 
 (map!
  "s-a" #'mark-whole-buffer
@@ -30,7 +39,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
  "s-q" #'save-buffers-kill-emacs
  "s-;" #'vterm-pop-posframe-toggle
 
- "C-0" #'toggle-frame-fullscreen
+ "C-0" #'toggle-frame-maximized-or-fullframe
 
  "C-x w" #'winner-undo
 

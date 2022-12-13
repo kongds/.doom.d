@@ -5,7 +5,7 @@
   (defun -my-evil-move-window (&optional left)
     (condition-case nil (if left (windmove-left) (windmove-right))
       (error
-       (when (and (> (length (frame-list)) 1) (featurep 'eaf))
+       (when (and (not (eq (next-frame) (selected-frame))) (featurep 'eaf))
          (remove-function after-focus-change-function #'eaf--topmost-focus-change)
          (+evil/next-frame 1)
          (run-with-timer 0.1 nil

@@ -1,5 +1,5 @@
 diff --git a/sort-tab.el b/sort-tab.el
-index 9813ef1..328a389 100644
+index 61f7a64..c879560 100644
 --- a/sort-tab.el
 +++ b/sort-tab.el
 @@ -227,7 +227,8 @@

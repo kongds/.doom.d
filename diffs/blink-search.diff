@@ -166,7 +166,7 @@ index e6b31fd..176ba19 100644
  
  ;; Struct: blink-search-deferred-object
 diff --git a/blink-search.el b/blink-search.el
-index 0166b3c..fe3551a 100644
+index e1920ed..8059776 100644
 --- a/blink-search.el
 +++ b/blink-search.el
 @@ -430,7 +430,7 @@ you need customize option if some 'M + key' conflict with your command.")
@@ -276,9 +276,9 @@ index 0166b3c..fe3551a 100644
  
  (defun blink-search-update-items (candidate-items
                                    candidate-select-index
-@@ -1021,8 +1054,16 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
-   (setq blink-search-posframe-emacs-frame (selected-frame))
-   (setq blink-search-posframe-frame (blink-search-posframe-show blink-search-input-buffer))
+@@ -1026,8 +1059,16 @@ Function `move-to-column' can't handle mixed string of Chinese and English corre
+     (set-frame-font (with-selected-frame blink-search-posframe-emacs-frame
+                       (face-attribute 'default :font))))
  
 +  (when (and (eq system-type 'darwin) (featurep 'eaf))
 +    (set-frame-parameter (selected-frame)

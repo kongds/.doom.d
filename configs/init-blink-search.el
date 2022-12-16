@@ -4,9 +4,10 @@
 
 (use-package! blink-search
   :commands blink-search
-  :config
+  :init
+  (require 'eaf)
+  (require 'pdf-tools)
   (setq blink-search-grep-pdf-search-paths '("/Users/royokong/arxiv_papers" "/Users/royokong/papers"))
-  (setq blink-search-grep-pdf-search-paths nil)
   (setq blink-search-quick-keys '("g" "j" "k" "l" "u"
                                   "," "." ";" "/" "'"
                                   "s" "n" "i" "o" "p"
@@ -15,6 +16,8 @@
                                   "f" "r" "x" "b"
                                   "1" "2" "3" "4"
                                   "[" "]"))
+
+  :config
   (dolist (key blink-search-quick-keys)
     (define-key blink-search-mode-map (kbd (format "s-%s" key)) 'blink-search-quick-do))
 

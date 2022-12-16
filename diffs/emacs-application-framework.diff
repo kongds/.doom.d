@@ -102,10 +102,10 @@ index 96dbf83..bfe8d7f 100755
              self.buffer_widget._search_text(self.buffer_widget.search_term, True)
  
 diff --git a/eaf.el b/eaf.el
-index 35bda67..e85d26d 100644
+index fe2afed..73719c8 100644
 --- a/eaf.el
 +++ b/eaf.el
-@@ -1016,29 +1016,45 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1016,30 +1016,45 @@ provide at least one way to let everyone experience EAF. ;)"
      (defvar eaf--topmost-switch-to-python nil
        "Record if Emacs should switch to Python process.")
  
@@ -126,6 +126,7 @@ index 35bda67..e85d26d 100644
 -      (let ((front (cond ((eq system-type 'darwin)
 -                          (shell-command-to-string "app-frontmost --name"))
 -                         (t
+-                          (require 'dbus)
 -                          (dbus-call-method :session "org.gnome.Shell" "/org/eaf/wayland" "org.eaf.wayland" "get_active_window" :timeout 1000)))))
 +      (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
          (cond
@@ -163,7 +164,7 @@ index 35bda67..e85d26d 100644
  
      (defun eaf--topmost-focus-out ()
        "Prepare the screenshot and hide all eaf buffers."
-@@ -1047,7 +1063,8 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1048,7 +1063,8 @@ provide at least one way to let everyone experience EAF. ;)"
            (with-current-buffer (window-buffer window)
              (when (derived-mode-p 'eaf-mode)
                (eaf--clip-image window)

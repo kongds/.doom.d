@@ -149,13 +149,14 @@
   (defun arxiv-get-pdf-controller-repl-filter (proc string)
     (setq string (string-replace "\n" "" string))
     (message string)
-    (when (string-match "Opening: " string)
-      (let* ((status (nth 2 (split-string string " ")))
+    (when-let ((str-index (string-match "Opening: " string)))
+      (require 'citar)
+      (let* ((string (substring string str-index))
+             (status (nth 2 (split-string string " ")))
              (pdf (nth 1 (split-string string " ")))
-            (arxiv-number (string-replace ".pdf" ""
-                                          (nth 0 (last (split-string pdf "/")))))
-            (bibfile (nth 0 citar-bibliography)))
-
+             (arxiv-number (string-replace ".pdf" ""
+                                           (nth 0 (last (split-string pdf "/")))))
+             (bibfile (nth 0 citar-bibliography)))
         (find-file pdf)
         (if (equal status "new")
             (save-window-excursion

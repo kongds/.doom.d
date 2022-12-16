@@ -25,8 +25,9 @@
  '(company-tooltip-limit 10)
  '(compilation-scroll-output t)
  '(conda-anaconda-home "/opt/homebrew/Caskroom/miniforge/base/")
+ '(consult-locate-args "mdfind")
  '(custom-safe-themes
-   '("bb5bf089d245bfed9a6d123694895c29b2bd921337150b47499f62d86d3248ca" "246a9596178bb806c5f41e5b571546bb6e0f4bd41a9da0df5dfbca7ec6e2250c" "1704976a1797342a1b4ea7a75bdbb3be1569f4619134341bd5a4c1cfb16abad4" "88f59acbeacefb4998f45126d4d8ae8b2184f2a48753db362a349fd55321c7e1" "dbade2e946597b9cda3e61978b5fcc14fa3afa2d3c4391d477bdaeff8f5638c5" "fce3524887a0994f8b9b047aef9cc4cc017c5a93a5fb1f84d300391fba313743" "f4876796ef5ee9c82b125a096a590c9891cec31320569fc6ff602ff99ed73dca" "99ea831ca79a916f1bd789de366b639d09811501e8c092c85b2cb7d697777f93" "e074be1c799b509f52870ee596a5977b519f6d269455b84ed998666cf6fc802a" "bf387180109d222aee6bb089db48ed38403a1e330c9ec69fe1f52460a8936b66" default))
+   '("1a1ac598737d0fcdc4dfab3af3d6f46ab2d5048b8e72bc22f50271fd6d393a00" "bb5bf089d245bfed9a6d123694895c29b2bd921337150b47499f62d86d3248ca" "246a9596178bb806c5f41e5b571546bb6e0f4bd41a9da0df5dfbca7ec6e2250c" "1704976a1797342a1b4ea7a75bdbb3be1569f4619134341bd5a4c1cfb16abad4" "88f59acbeacefb4998f45126d4d8ae8b2184f2a48753db362a349fd55321c7e1" "dbade2e946597b9cda3e61978b5fcc14fa3afa2d3c4391d477bdaeff8f5638c5" "fce3524887a0994f8b9b047aef9cc4cc017c5a93a5fb1f84d300391fba313743" "f4876796ef5ee9c82b125a096a590c9891cec31320569fc6ff602ff99ed73dca" "99ea831ca79a916f1bd789de366b639d09811501e8c092c85b2cb7d697777f93" "e074be1c799b509f52870ee596a5977b519f6d269455b84ed998666cf6fc802a" "bf387180109d222aee6bb089db48ed38403a1e330c9ec69fe1f52460a8936b66" default))
  '(dash-docs-browser-func 'eaf-browse-url)
  '(display-time-format "")
  '(doom-big-font-mode t t)
@@ -195,13 +196,16 @@
  '(rustic-ansi-faces
    ["#2E3440" "#BF616A" "#A3BE8C" "#EBCB8B" "#81A1C1" "#B48EAD" "#88C0D0" "#ECEFF4"])
  '(safe-local-variable-values
-   '((vc-prepare-patches-separately)
+   '((c-file-offsets
+      (arglist-intro . +))
+     (org-download-screenshot-figure-size . 400)
+     (vc-prepare-patches-separately)
      (diff-add-log-use-relative-names . t)
      (vc-git-annotate-switches . "-w")
      (eval progn
       (pp-buffer)
       (indent-buffer))
-     (lsp--override-calculate-lisp-indent\? . t)
+     (lsp--override-calculate-lisp-indent? . t)
      (flycheck-disabled-checkers quote
       (emacs-lisp-checkdoc))
      (eval progn
@@ -215,27 +219,12 @@
              "\\)")))
         (add-to-list 'imenu-generic-expression
                      (list "Functions" dirloc-lsp-defun-regexp 1)))
-      (defvar lsp--override-calculate-lisp-indent\? nil "Whether to override `lisp-indent-function' with
-              the updated `calculate-lisp-indent' definition from
-              Emacs 28.")
+      (defvar lsp--override-calculate-lisp-indent? nil "Whether to override `lisp-indent-function' with\12              the updated `calculate-lisp-indent' definition from\12              Emacs 28.")
       (defun wrap-calculate-lisp-indent
           (func &optional parse-start)
-        "Return appropriate indentation for current line as Lisp code.
-In usual case returns an integer: the column to indent to.
-If the value is nil, that means don't change the indentation
-because the line starts inside a string.
-
-PARSE-START may be a buffer position to start parsing from, or a
-parse state as returned by calling `parse-partial-sexp' up to the
-beginning of the current line.
-
-The value can also be a list of the form (COLUMN CONTAINING-SEXP-START).
-This means that following lines at the same level of indentation
-should not necessarily be indented the same as this line.
-Then COLUMN is the column to indent to, and CONTAINING-SEXP-START
-is the buffer position of the start of the containing expression."
+        "Return appropriate indentation for current line as Lisp code.\12In usual case returns an integer: the column to indent to.\12If the value is nil, that means don't change the indentation\12because the line starts inside a string.\12\12PARSE-START may be a buffer position to start parsing from, or a\12parse state as returned by calling `parse-partial-sexp' up to the\12beginning of the current line.\12\12The value can also be a list of the form (COLUMN CONTAINING-SEXP-START).\12This means that following lines at the same level of indentation\12should not necessarily be indented the same as this line.\12Then COLUMN is the column to indent to, and CONTAINING-SEXP-START\12is the buffer position of the start of the containing expression."
         (if
-            (not lsp--override-calculate-lisp-indent\?)
+            (not lsp--override-calculate-lisp-indent?)
             (funcall func parse-start)
           (save-excursion
             (beginning-of-line)
@@ -349,7 +338,7 @@ is the buffer position of the start of the containing expression."
                    (and
                     (save-excursion
                       (goto-char indent-point)
-                      (skip-chars-forward " 	")
+                      (skip-chars-forward " \11")
                       (looking-at ":"))
                     (save-excursion
                       (goto-char calculate-lisp-indent-last-sexp)
@@ -357,7 +346,7 @@ is the buffer position of the start of the containing expression."
                       (while
                           (not
                            (or
-                            (looking-back "^[ 	]*\\|([ 	]+"
+                            (looking-back "^[ \11]*\\|([ \11]+"
                                           (line-beginning-position))
                             (and containing-sexp
                                  (>=
@@ -404,6 +393,7 @@ is the buffer position of the start of the containing expression."
      (ffip-project-root . "/Users/royokong/")))
  '(telega-server-libs-prefix "/opt/homebrew/Cellar/tdlib/1.8.0")
  '(twittering-proxy-use t)
+ '(unicode-fonts-skip-font-groups '(decorative low-quality-glyphs))
  '(vc-annotate-background "#fafafa")
  '(vc-annotate-color-map
    (list
@@ -426,6 +416,7 @@ is the buffer position of the start of the containing expression."
     (cons 340 "#383a42")
     (cons 360 "#383a42")))
  '(vc-annotate-very-old-color nil)
+ '(vterm-shell "/opt/homebrew/bin/fish")
  '(wakatime-python-bin nil)
  '(warning-suppress-types '((jupyter) (jupyter) (defvaralias))))
 (custom-set-faces

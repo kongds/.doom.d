@@ -26,9 +26,10 @@
 
 (add-hook 'python-mode-hook #'(lambda()
                                 ;; remove lsp-bridge modeline
-
                                 (setq-local corfu-auto nil)
-                                (setq-local flycheck-checker 'python-pyright)
+                                (flycheck-mode -1)
+                                (setq-local lsp-bridge-enable-hover-diagnostic t)
+
                                 (lsp-bridge-mode)
                                 (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
                                             +lookup-implementations-functions '(lsp-bridge-find-impl t)

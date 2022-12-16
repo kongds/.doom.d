@@ -16,13 +16,13 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
 
 (defun toggle-frame-maximized-or-fullframe ()
   (interactive)
-  (if (equal (shell-command-to-string "m1ddc display list") "")
-      (let ((ffu (frame-parameter nil 'fullscreen)))
-        (if (memq ffu '(fullscreen fullboth))
-          (toggle-frame-fullscreen))
-        (toggle-frame-maximized))
-    (toggle-frame-fullscreen)))
-
+  (let ((bias (if (equal (shell-command-to-string "m1ddc display list") "")
+                  37 0)))
+    (set-frame-position (selected-frame) 0 bias)
+    (set-frame-size (selected-frame)
+                    (- (display-pixel-width) 20)
+                    (- (display-pixel-height) bias)
+                    t)))
 
 (map!
  "s-a" #'mark-whole-buffer

@@ -8,6 +8,10 @@
   ;; (require 'eaf-pdf-viewer)
   (require 'eaf-evil)
 
+  (defun eaf--activate-emacs-mac-window()
+    "Activate Emacs macOS window."
+    (shell-command-to-string "open -a /Applications/Emacs.app"))
+
   (setq eaf-python-command "/opt/homebrew/bin/python3")
 
   ;; fix 无法登录谷歌账号

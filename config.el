@@ -122,17 +122,15 @@
 ;; theme
 (after! consult
   (defun reload-color-after-theme (&rest args)
-    (cond
-     ((and (equal doom-theme 'ef-summer) (featurep 'blink-search))
+
+    (when (and (equal doom-theme 'ef-summer) (featurep 'blink-search)
       (set-face-background 'blink-search-select-face (face-attribute 'highlight :background))
       (set-face-foreground 'blink-search-select-face (face-attribute 'highlight :foreground))))
 
-    (set-face-background 'acm-default-face (face-attribute 'default :background))
-    (set-face-background 'acm-select-face (face-attribute 'highlight :background))
-    (set-face-foreground 'acm-select-face (face-attribute 'highlight :foreground))
-    (evil-set-cursor-color (face-attribute 'cursor :background))
-
-    (acm-delete-frames))
+    (when (featurep 'lsp-bridge)
+      (set-face-background 'acm-frame-default-face (face-attribute 'default :background))
+      (set-face-background 'acm-frame-select-face (face-attribute 'highlight :background))
+      (set-face-foreground 'acm-frame-select-face (face-attribute 'highlight :foreground))))
 
   (advice-add 'consult-theme :after #'reload-color-after-theme))
 

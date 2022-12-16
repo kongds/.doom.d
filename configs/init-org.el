@@ -41,10 +41,29 @@
   (setq org-preview-latex-default-process 'dvisvgm)
   (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.4))
 
+  (use-package! evil-org
+    :config
+    (add-hook 'org-mode-hook 'evil-org-mode))
+
   (use-package! ob-async)
   (use-package! org-tempo)
   (use-package! jupyter
     :config
+    (defun ansi-color--find-face (codes)
+      "Return the face corresponding to CODES."
+      ;; Sort the codes in ascending order to guarantee that "bold" comes before
+      ;; any of the colors.  This ensures that `ansi-color-bold-is-bright' is
+      ;; applied correctly.
+      (let (faces bright (codes (sort (copy-sequence codes) #'<)))
+        (while codes
+          (when-let ((face (ansi-color-get-face-1 (pop codes) bright)))
+            (when (and ansi-color-bold-is-bright (eq face 'ansi-color-bold))
+              (setq bright t))
+            (push face faces)))
+        ;; Avoid some long-lived conses in the common case.
+        (if (cdr faces)
+	    (nreverse faces)
+          (car faces))))
     ;; render color for jupyter
     (defun display-ansi-colors ()
       (ansi-color-apply-on-region (point-min) (point-max)))
@@ -66,15 +85,17 @@
     :config
     (setq org-directory "~/.org")
     (setq org-default-notes-file (concat org-directory "/inbox.org")))
+
+  (use-package! org-roam
+    :init
+    (when (version<= "29" emacs-version)
+      (require 'emacsql-sqlite-builtin)
+      (setq org-roam-database-connector 'sqlite-builtin))
+    :config
+    (use-package! websocket
+      :after org-roam)
+    (setq +org-roam-open-buffer-on-find-file nil))
   )
-
-
-
-(after! org-roam
-  :config
-  (use-package! websocket
-    :after org-roam)
-  (setq +org-roam-open-buffer-on-find-file nil))
 
 ;; org roam bibtex configs
 (use-package! org-roam-bibtex

@@ -49,12 +49,13 @@ else
     ~/.emacs.d/bin/doom upgrade
 fi
 
-rm -rf ~/.emacs.d/.local/straight/build-28.2/eaf
+VER=`emacs --version | head -n 1 | awk '{print $3}'`
+rm -rf ~/.emacs.d/.local/straight/build-${VER}/eaf
 
 for diff_file in ~/.doom.d/diffs/*; do
     echo $diff_file
     cd ~/.emacs.d/.local/straight/repos/$((basename $diff_file) | sed 's/.diff//')
-    rm -rf ~/.emacs.d/.local/straight/build-28.2/$((basename $diff_file) | sed 's/.diff//')
+    rm -rf ~/.emacs.d/.local/straight/build-${VER}/$((basename $diff_file) | sed 's/.diff//')
     git apply ${diff_file}
     cd -
 done

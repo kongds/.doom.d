@@ -1,6 +1,18 @@
 ;;; configs/init-corfu.el -*- lexical-binding: t; -*-
 
+;; use corfu in minibuffer
+(defun corfu-enable-in-minibuffer ()
+  "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+  (when (where-is-internal #'completion-at-point (list (current-local-map)))
+    ;; (setq-local corfu-auto nil) Enable/disable auto completion
+    (corfu-mode 1)))
+(add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
+;; make completion work on  evil-ex
+(add-hook 'org-mode-hook #'corfu-mode)
+(add-hook 'tex-mode-hook #'corfu-mode)
+
 (use-package! corfu
+  :commands corfu-mode
   :bind
   ;;(:map corfu-map ("C-n" . corfu-next))
   (:map corfu-map
@@ -16,24 +28,14 @@
   (corfu-cycle t)
   (corfu-auto-delay 0.1)
 
-  :init
-  (global-corfu-mode)
+  :config
+  ;;(global-corfu-mode)
   (corfu-history-mode t)
 
-  (use-package! corfu-doc)
   (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
 
   (add-hook 'corfu-mode-hook (lambda ()
                                (global-company-mode -1)))
-
-  ;; use corfu in minibuffer
-  (defun corfu-enable-in-minibuffer ()
-    "Enable Corfu in the minibuffer if `completion-at-point' is bound."
-    (when (where-is-internal #'completion-at-point (list (current-local-map)))
-      ;; (setq-local corfu-auto nil) Enable/disable auto completion
-      (corfu-mode 1)))
-  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
-  ;; make completion work on  evil-ex
 
   (defun evil-ex-corfu-bracket ()
     (interactive)
@@ -87,6 +89,7 @@
 ;; Use dabbrev with Corfu!
 (use-package! dabbrev
 ;; Swap M-/ and C-M-/
+  :after corfu
   :bind (("M-/" . dabbrev-completion)
          ("C-M-/" . dabbrev-expand)))
 

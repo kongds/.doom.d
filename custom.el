@@ -196,7 +196,27 @@
  '(rustic-ansi-faces
    ["#2E3440" "#BF616A" "#A3BE8C" "#EBCB8B" "#81A1C1" "#B48EAD" "#88C0D0" "#ECEFF4"])
  '(safe-local-variable-values
-   '((c-file-offsets
+   '((elisp-lint-indent-specs
+      (describe . 1)
+      (it . 1)
+      (thread-first . 0)
+      (cl-flet . 1)
+      (cl-flet* . 1)
+      (org-element-map . defun)
+      (org-roam-dolist-with-progress . 2)
+      (org-roam-with-temp-buffer . 1)
+      (org-with-point-at . 1)
+      (magit-insert-section . defun)
+      (magit-section-case . 0)
+      (org-roam-with-file . 2))
+     (elisp-lint-ignored-validators "byte-compile" "package-lint")
+     (elisp-lint-indent-specs
+      (describe . 1)
+      (it . 1)
+      (thread-first . 0)
+      (cl-flet . 1)
+      (cl-flet* . 1))
+     (c-file-offsets
       (arglist-intro . +))
      (org-download-screenshot-figure-size . 400)
      (vc-prepare-patches-separately)

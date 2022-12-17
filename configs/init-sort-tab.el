@@ -2,8 +2,6 @@
 
 (use-package! sort-tab
   :config
-  (require 'consult)
-  (require 'persp-mode)
 
   (defun sort-tab-workspace-buffer-list ()
     (cl-concatenate 'list
@@ -22,13 +20,14 @@
                                                               (not (eq (string-match "172-" (buffer-name buf)) 0))
                                                               (persp-contain-buffer-p
                                                                buf workspace))))))))
+  (defun sort-tab-get-buffer-list-workspace ()
+    (when-let ((bufs (if (featurep 'consult) (sort-tab-workspace-buffer-list) nil)))
+      (setq bufs (cl-remove-if #'sort-tab-buffer-need-hide-p bufs))
+      (setq bufs (sort bufs #'sort-tab-buffer-freq-higher-p))
+      bufs))
 
   (advice-add 'sort-tab-get-buffer-list
-              :override #'(lambda ()
-                            (let ((bufs (sort-tab-workspace-buffer-list)))
-                              (setq bufs (cl-remove-if #'sort-tab-buffer-need-hide-p bufs))
-                              (setq bufs (sort bufs #'sort-tab-buffer-freq-higher-p))
-                              bufs)))
+              :before-until #'sort-tab-get-buffer-list-workspace)
 
 
   (defun sort-tab-not-focus (&rest args)

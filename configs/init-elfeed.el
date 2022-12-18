@@ -156,24 +156,36 @@
              (pdf (nth 1 (split-string string " ")))
              (arxiv-number (string-replace ".pdf" ""
                                            (nth 0 (last (split-string pdf "/")))))
-             (bibfile (nth 0 citar-bibliography)))
-        (find-file pdf)
-        (if (equal status "new")
-            (save-window-excursion
-                (find-file bibfile)
-                (goto-char (point-max))
-                (when (not (looking-at "^")) (insert "\n"))
-                (insert (arxiv-get-bibtex-entry-via-arxiv-api arxiv-number))
-                (goto-char (point-max))
-                (when (not (looking-at "^")) (insert "\n"))
-                (bibtex-end-of-entry)
-                (backward-char)
-                (insert (format "  file = {%s}\n  " pdf))
-                (save-buffer)
-                (kill-buffer)))
-        ;;(start-process "*fbib*" "*fbib*" "rebiber" "-i" bibfile)
-        )))
+             (bibfile (nth 1 citar-bibliography))
+             (title nil))
+        (when (equal status "new")
+          (save-window-excursion
+            (find-file bibfile)
+            (goto-char (point-max))
+            (when (not (looking-at "^")) (insert "\n"))
+            (insert (arxiv-get-bibtex-entry-via-arxiv-api arxiv-number))
+            (goto-char (point-max))
+            (when (not (looking-at "^")) (insert "\n"))
+            (bibtex-end-of-entry)
+            (backward-char)
+            (insert (format "  file = {%s}\n  " pdf))
+            (save-buffer)
+            ;; get title
+            (goto-char (point-max))
+            (bibtex-beginning-of-entry)
+            (setq title (replace-regexp-in-string "{\\(.*\\)}" "\\1"
+                                                  (cdr (assoc "title" (bibtex-parse-entry)))))
+            (kill-buffer))
 
+          ;; link file to make pdf file has title as name
+          (shell-command (format "mv %s \"%s\"" pdf (string-replace arxiv-number title pdf)))
+          (shell-command (format "ln -s \"%s\" %s" (string-replace arxiv-number title pdf) pdf)))
+
+        (find-file pdf))
+        ;;(start-process "*fbib*" "*fbib*" "rebiber" "-i" bibfile)
+        ))
+
+  (citar-get-entry "conneau2017supervised")
 
   (defun elfeed-show-open-pdf ()
     (interactive)

@@ -1,12 +1,26 @@
 diff --git a/lsp-bridge-diagnostic.el b/lsp-bridge-diagnostic.el
-index 107e38d..e5eaabf 100644
+index d86c497..3f78b1b 100644
 --- a/lsp-bridge-diagnostic.el
 +++ b/lsp-bridge-diagnostic.el
-@@ -241,11 +241,10 @@
+@@ -141,6 +141,13 @@
+ (defun lsp-bridge-diagnostic-hide-tooltip ()
+   (posframe-hide lsp-bridge-diagnostic-tooltip))
+ 
++(cl-defmacro lsp-bridge--with-file-buffer (filepath &rest body)
++  "Evaluate BODY in buffer with FILEPATH."
++  (declare (indent 1))
++  `(when-let ((buffer (lsp-bridge-get-match-buffer ,filepath)))
++     (with-current-buffer buffer
++       ,@body)))
++
+ (defun lsp-bridge-diagnostic--render (filepath diagnostics)
+   (lsp-bridge--with-file-buffer filepath
+     (when lsp-bridge-diagnostic-overlays
+@@ -246,11 +253,10 @@
      (message "[LSP-Bridge] Reach first diagnostic.")))
  
  (defun lsp-bridge-diagnostic-overlay-at-point ()
--  (dolist (overlay lsp-bridge-diagnostic-overlays)
+-  (cl-dolist (overlay lsp-bridge-diagnostic-overlays)
 -    (when (and (>= (point) (overlay-start overlay))
 +  (cl-loop for overlay in lsp-bridge-diagnostic-overlays
 +    do (when (and (>= (point) (overlay-start overlay))
@@ -17,3 +31,20 @@ index 107e38d..e5eaabf 100644
  
  (defun lsp-bridge-diagnostic-copy ()
    (interactive)
+diff --git a/lsp-bridge.el b/lsp-bridge.el
+index 8d1cfc4..836a6b9 100644
+--- a/lsp-bridge.el
++++ b/lsp-bridge.el
+@@ -523,12 +523,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
+   (or (alist-get mode lsp-bridge-formatting-indent-alist)
+       (lsp-bridge--get-indent-width (or (get mode 'derived-mode-parent) 'default))))
+ 
+-(cl-defmacro lsp-bridge--with-file-buffer (filepath &rest body)
+-  "Evaluate BODY in buffer with FILEPATH."
+-  (declare (indent 1))
+-  `(when-let ((buffer (lsp-bridge-get-match-buffer ,filepath)))
+-     (with-current-buffer buffer
+-       ,@body)))
+ 
+ (cl-defmacro lsp-bridge-save-position (&rest body)
+   "`save-excursion' not enough for LSP code format.

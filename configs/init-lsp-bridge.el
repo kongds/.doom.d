@@ -75,6 +75,20 @@
   (define-key acm-mode-map (kbd "C-n") 'acm-select-next)
   (define-key acm-mode-map (kbd "C-p") 'acm-select-prev)
 
+  ;; beginning-of-defun in this function slow down the lsp-bridge
+  (fset 'r-acm-in-string-p (symbol-function 'acm-in-string-p))
+  (fset 'r-acm-in-comment-p (symbol-function 'acm-in-comment-p))
+  (defun acm-in-string-p (&optional state)
+    (if (eq major-mode 'python-mode)
+        nil
+      (r-acm-in-string-p)))
+  (defun acm-in-comment-p (&optional state)
+    (if (eq major-mode 'python-mode)
+        nil
+      (r-acm-in-comment-p)))
+
+
+
   ;; timer doc
   (fset 'r-acm-update (symbol-function 'acm-update))
   (fset 'r-acm-doc-try-show (symbol-function 'acm-doc-try-show))

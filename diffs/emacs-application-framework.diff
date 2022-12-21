@@ -23,7 +23,7 @@ index ba34d87..526c87f 100755
                  if marker_input_quit:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index 96dbf83..bfe8d7f 100755
+index 96dbf83..04910bb 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
 @@ -38,6 +38,7 @@ import base64
@@ -42,7 +42,7 @@ index 96dbf83..bfe8d7f 100755
  
              if self.unknown_url_scheme_policy == "DisallowUnknownUrlSchemes":
                  self.settings.setUnknownUrlSchemePolicy(self.settings.UnknownUrlSchemePolicy.DisallowUnknownUrlSchemes)
-@@ -978,6 +980,44 @@ class BrowserBuffer(Buffer):
+@@ -978,6 +980,47 @@ class BrowserBuffer(Buffer):
                  f.write(base64.b64decode(b64bytes))
  
              message_to_emacs("Save image: " + image_path)
@@ -64,7 +64,10 @@ index 96dbf83..bfe8d7f 100755
 +                               download_data,
 +                               '-O',
 +                               '/tmp/downloading_pdf']
-+                    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
++                    print(command)
++                    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
++                                         env={'https_proxy': 'http://127.0.0.1:1087'})
++
 +                    import time
 +                    while True:
 +                        time.sleep(1)
@@ -87,7 +90,7 @@ index 96dbf83..bfe8d7f 100755
          else:
              if hasattr(self, "try_start_aria2_daemon"):
                  self.try_start_aria2_daemon()
-@@ -1119,11 +1159,11 @@ class BrowserBuffer(Buffer):
+@@ -1119,11 +1162,11 @@ class BrowserBuffer(Buffer):
          elif callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
              self.buffer_widget.clean_search_and_select()
  
@@ -102,10 +105,10 @@ index 96dbf83..bfe8d7f 100755
              self.buffer_widget._search_text(self.buffer_widget.search_term, True)
  
 diff --git a/eaf.el b/eaf.el
-index fe2afed..73719c8 100644
+index 7e41d5e..2ea0a14 100644
 --- a/eaf.el
 +++ b/eaf.el
-@@ -1016,30 +1016,45 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1031,34 +1031,45 @@ provide at least one way to let everyone experience EAF. ;)"
      (defvar eaf--topmost-switch-to-python nil
        "Record if Emacs should switch to Python process.")
  
@@ -125,6 +128,10 @@ index fe2afed..73719c8 100644
        "Manage Emacs's focus change."
 -      (let ((front (cond ((eq system-type 'darwin)
 -                          (shell-command-to-string "app-frontmost --name"))
+-                         ((string-equal (getenv "XDG_CURRENT_DESKTOP") "sway")
+-                          (if (executable-find "jshon")
+-                              (shell-command-to-string (concat eaf-build-dir "swaymsg-treefetch/swaymsg-focusfetcher.sh"))
+-                            (message "Please install jshon for swaywm support.")))
 -                         (t
 -                          (require 'dbus)
 -                          (dbus-call-method :session "org.gnome.Shell" "/org/eaf/wayland" "org.eaf.wayland" "get_active_window" :timeout 1000)))))
@@ -164,7 +171,7 @@ index fe2afed..73719c8 100644
  
      (defun eaf--topmost-focus-out ()
        "Prepare the screenshot and hide all eaf buffers."
-@@ -1048,7 +1063,8 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1067,7 +1078,8 @@ provide at least one way to let everyone experience EAF. ;)"
            (with-current-buffer (window-buffer window)
              (when (derived-mode-p 'eaf-mode)
                (eaf--clip-image window)
@@ -174,3 +181,26 @@ index fe2afed..73719c8 100644
  
      (add-to-list 'move-frame-functions #'eaf-monitor-configuration-change)
  
+@@ -1106,6 +1118,7 @@ provide at least one way to let everyone experience EAF. ;)"
+     (add-to-list 'delete-frame-functions #'eaf--topmost-delete-frame-handler)
+     ))
+ 
++(defvar eaf-showing nil)
+ (defun eaf-monitor-configuration-change (&rest _)
+   "EAF function to respond when detecting a window configuration change."
+   (when (and eaf--monitor-configuration-p
+@@ -1143,6 +1156,14 @@ provide at least one way to let everyone experience EAF. ;)"
+                                   (- w window-divider-right-padding)
+                                   (- h window-divider-bottom-padding))
+                           view-infos)))))))
++        (if view-infos
++            ;; update showing state
++            (unless eaf-showing
++              (setq eaf-showing t)
++              (shell-command "echo > /Users/royokong/.eaf-showing"))
++          (when eaf-showing
++            (setq eaf-showing nil)
++            (shell-command "rm -f /Users/royokong/.eaf-showing")))
+         (eaf-call-async "update_views" (mapconcat #'identity view-infos ","))))))
+ 
+ (defun eaf--split-number (string)

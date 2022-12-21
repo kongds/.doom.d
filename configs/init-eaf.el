@@ -10,7 +10,8 @@
 
   (defun eaf--activate-emacs-mac-window()
     "Activate Emacs macOS window."
-    (shell-command-to-string "open -a /Applications/Emacs.app"))
+    (if eaf--topmost-has-focus
+        (shell-command-to-string "open -a /Applications/Emacs.app")))
 
   (setq eaf-python-command "/opt/homebrew/bin/python3")
 

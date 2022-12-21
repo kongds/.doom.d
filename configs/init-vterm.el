@@ -4,6 +4,7 @@
 ;; Shell Pop: leverage `popper'
 (defvar vterm-pop--frame nil)
 (defvar vterm-pop--window nil)
+(defvar-local +vterm--id nil)
 
 (defun vterm-pop--shell (&optional arg)
   "Run shell and return the buffer."

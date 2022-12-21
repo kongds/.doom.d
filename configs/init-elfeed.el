@@ -148,7 +148,7 @@
 
   (defun arxiv-get-pdf-controller-repl-filter (proc string)
     (setq string (string-replace "\n" "" string))
-    (message string)
+    (message "%s" string)
     (when-let ((str-index (string-match "Opening: " string)))
       (require 'citar)
       (let* ((string (substring string str-index))
@@ -173,8 +173,9 @@
             ;; get title
             (goto-char (point-max))
             (bibtex-beginning-of-entry)
-            (setq title (replace-regexp-in-string "{\\(.*\\)}" "\\1"
-                                                  (cdr (assoc "title" (bibtex-parse-entry)))))
+            (setq title (replace-regexp-in-string
+                         "{\\(.*\\)}" "\\1"
+                         (string-replace "\n"  "" (cdr (assoc "title" (bibtex-parse-entry))))))
             (kill-buffer))
 
           ;; link file to make pdf file has title as name
@@ -185,7 +186,6 @@
         ;;(start-process "*fbib*" "*fbib*" "rebiber" "-i" bibfile)
         ))
 
-  (citar-get-entry "conneau2017supervised")
 
   (defun elfeed-show-open-pdf ()
     (interactive)

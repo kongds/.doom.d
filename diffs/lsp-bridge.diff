@@ -1,22 +1,55 @@
 diff --git a/lsp-bridge-diagnostic.el b/lsp-bridge-diagnostic.el
-index d86c497..3f78b1b 100644
+index d86c497..d4233a5 100644
 --- a/lsp-bridge-diagnostic.el
 +++ b/lsp-bridge-diagnostic.el
-@@ -141,6 +141,13 @@
- (defun lsp-bridge-diagnostic-hide-tooltip ()
-   (posframe-hide lsp-bridge-diagnostic-tooltip))
+@@ -139,7 +139,14 @@
+ (autoload 'lsp-bridge--with-file-buffer "lsp-bridge")
  
+ (defun lsp-bridge-diagnostic-hide-tooltip ()
+-  (posframe-hide lsp-bridge-diagnostic-tooltip))
++  (acm-frame-hide-frame lsp-bridge-diagnostic-frame))
++
 +(cl-defmacro lsp-bridge--with-file-buffer (filepath &rest body)
 +  "Evaluate BODY in buffer with FILEPATH."
 +  (declare (indent 1))
 +  `(when-let ((buffer (lsp-bridge-get-match-buffer ,filepath)))
 +     (with-current-buffer buffer
 +       ,@body)))
-+
+ 
  (defun lsp-bridge-diagnostic--render (filepath diagnostics)
    (lsp-bridge--with-file-buffer filepath
-     (when lsp-bridge-diagnostic-overlays
-@@ -246,11 +253,10 @@
+@@ -180,7 +187,7 @@
+ (defun lsp-bridge-diagnostic-show-tooltip (diagnostic-overlay &optional goto-beginning)
+   (let* ((diagnostic-display-message (overlay-get diagnostic-overlay 'display-message))
+          (diagnostic-message (overlay-get diagnostic-overlay 'message))
+-         (foreground-color (plist-get (face-attribute (overlay-get diagnostic-overlay 'face) :underline) :color)))
++         (cursor (acm-frame-get-popup-position (point))))
+     ;; weather goto beginning of diagnostic
+     (when goto-beginning
+       (goto-char (overlay-start diagnostic-overlay)))
+@@ -192,16 +199,11 @@
+ 
+     (cond
+      ((posframe-workable-p) ;; Perform redisplay make sure posframe can poup to
+-      ;; Perform redisplay make sure posframe can poup to
+-      (redisplay 'force)
+-      (sleep-for 0.01)
+-      (setq lsp-bridge-diagnostic-frame
+-            (posframe-show lsp-bridge-diagnostic-tooltip
+-                           :position (point)
+-                           :internal-border-width lsp-bridge-diagnostic-tooltip-border-width
+-                           :background-color (acm-frame-background-color)
+-                           :foreground-color foreground-color
+-                           )))
++      (acm-frame-create-frame-if-not-exist  lsp-bridge-diagnostic-frame lsp-bridge-diagnostic-tooltip
++                                            "lsp bridge diagnostic tooltip" 0 t)
++      (acm-frame-set-frame-position lsp-bridge-diagnostic-frame
++                                    (car cursor) (+ (cdr cursor) (line-pixel-height)))
++      (acm-frame-set-frame-max-size lsp-bridge-diagnostic-frame))
+      (t (message diagnostic-message)))))
+ 
+ (defun lsp-bridge-diagnostic-maybe-display-error-at-point ()
+@@ -246,11 +248,10 @@
      (message "[LSP-Bridge] Reach first diagnostic.")))
  
  (defun lsp-bridge-diagnostic-overlay-at-point ()

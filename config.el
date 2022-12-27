@@ -86,6 +86,9 @@
           (lambda ()
             ;; sort tab on
             (sort-tab-turn-on)
+
+            (global-company-mode -1)
+
             ;; face
             (set-fontset-font t 'han (font-spec :family "苹方-简"))))
 
@@ -122,6 +125,12 @@
 ;; theme
 (after! consult
   (defun reload-color-after-theme (&rest args)
+    ;; reset cursor color
+    (let ((themes (copy-sequence custom-enabled-themes)))
+      (mapc #'disable-theme custom-enabled-themes)
+      (let (doom-load-theme-hook)
+        (mapc #'enable-theme (reverse themes)))
+      (doom-run-hooks 'doom-load-theme-hook))
 
     (when (and (equal doom-theme 'ef-summer) (featurep 'blink-search)
       (set-face-background 'blink-search-select-face (face-attribute 'highlight :background))

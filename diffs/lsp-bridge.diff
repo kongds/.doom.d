@@ -1,3 +1,25 @@
+diff --git a/core/search_file_words.py b/core/search_file_words.py
+index 3e608b5..ebdd881 100755
+--- a/core/search_file_words.py
++++ b/core/search_file_words.py
+@@ -39,6 +39,7 @@ class SearchFileWords:
+         self.search_words_dispatcher_thread.start()
+     
+     def index_files(self, filepaths):
++        filepaths = [filepath for filepath in filepaths if filepath[-3:] != 'pdf']
+         for filepath in filepaths:
+             self.search_files.add(filepath)
+         
+@@ -52,6 +53,9 @@ class SearchFileWords:
+             self.search_words_queue.put("search_words")
+             
+     def change_file(self, filepath, base64_string):
++        if filepath[-3:] == 'pdf':
++            return
++
+         import base64
+         content = base64.b64decode(base64_string).decode("utf-8")
+         self.search_files.add(filepath)
 diff --git a/lsp-bridge-diagnostic.el b/lsp-bridge-diagnostic.el
 index d86c497..d4233a5 100644
 --- a/lsp-bridge-diagnostic.el
@@ -65,10 +87,10 @@ index d86c497..d4233a5 100644
  (defun lsp-bridge-diagnostic-copy ()
    (interactive)
 diff --git a/lsp-bridge.el b/lsp-bridge.el
-index 8d1cfc4..836a6b9 100644
+index 8def7e1..0f749b3 100644
 --- a/lsp-bridge.el
 +++ b/lsp-bridge.el
-@@ -523,12 +523,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
+@@ -519,12 +519,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
    (or (alist-get mode lsp-bridge-formatting-indent-alist)
        (lsp-bridge--get-indent-width (or (get mode 'derived-mode-parent) 'default))))
  

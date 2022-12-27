@@ -23,7 +23,7 @@ index ba34d87..526c87f 100755
                  if marker_input_quit:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index 96dbf83..04910bb 100755
+index 96dbf83..123e967 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
 @@ -38,6 +38,7 @@ import base64
@@ -42,7 +42,7 @@ index 96dbf83..04910bb 100755
  
              if self.unknown_url_scheme_policy == "DisallowUnknownUrlSchemes":
                  self.settings.setUnknownUrlSchemePolicy(self.settings.UnknownUrlSchemePolicy.DisallowUnknownUrlSchemes)
-@@ -978,6 +980,47 @@ class BrowserBuffer(Buffer):
+@@ -978,6 +980,48 @@ class BrowserBuffer(Buffer):
                  f.write(base64.b64decode(b64bytes))
  
              message_to_emacs("Save image: " + image_path)
@@ -66,7 +66,8 @@ index 96dbf83..04910bb 100755
 +                               '/tmp/downloading_pdf']
 +                    print(command)
 +                    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-+                                         env={'https_proxy': 'http://127.0.0.1:1087'})
++                                         env={'https_proxy': 'http://127.0.0.1:1087',
++                                              'http_proxy': 'http://127.0.0.1:1087'})
 +
 +                    import time
 +                    while True:
@@ -90,7 +91,7 @@ index 96dbf83..04910bb 100755
          else:
              if hasattr(self, "try_start_aria2_daemon"):
                  self.try_start_aria2_daemon()
-@@ -1119,11 +1162,11 @@ class BrowserBuffer(Buffer):
+@@ -1119,11 +1163,11 @@ class BrowserBuffer(Buffer):
          elif callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
              self.buffer_widget.clean_search_and_select()
  

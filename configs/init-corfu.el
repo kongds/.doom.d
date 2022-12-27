@@ -34,9 +34,6 @@
 
   (define-key corfu-map (kbd "M-d") #'corfu-doc-toggle)
 
-  (add-hook 'corfu-mode-hook (lambda ()
-                               (global-company-mode -1)))
-
   (defun evil-ex-corfu-bracket ()
     (interactive)
     (if (= (point)  2)

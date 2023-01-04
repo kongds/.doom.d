@@ -4,7 +4,7 @@
 ;; Shell Pop: leverage `popper'
 (defvar vterm-pop--frame nil)
 (defvar vterm-pop--window nil)
-(defvar-local +vterm--id nil)
+(defvar-local +vterm--id nil )
 
 (defun vterm-pop--shell (&optional arg)
   "Run shell and return the buffer."
@@ -86,6 +86,12 @@
         (evil-insert 0)))))
 
 (after! vterm
+  ;; make tqdm bar look better
+  (set-fontset-font t
+                    '(#x2587 . #x2589)
+                    (font-spec :family "苹方-简" :size 8)
+                    nil 'prepend)
+
   (set-popup-rule! "^vterm" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)
   (set-popup-rule! "^\*vterm\*" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)
   (set-popup-rule! "^\*doom:vterm.*" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)

@@ -35,6 +35,8 @@
                                             +lookup-implementations-functions '(lsp-bridge-find-impl t)
                                             +lookup-references-functions '(lsp-bridge-find-references t))))
 
+(after! company
+  (setq company-global-modes nil))
 
 (use-package! lsp-bridge
   :commands lsp-bridge-mode
@@ -46,10 +48,11 @@
   (setq acm-enable-yas nil)
   (setq acm-candidate-match-function 'orderless-flex)
   (setq acm-enable-dabbrev nil)
+  (setq lsp-bridge-python-lsp-server "pyright-background-analysis")
+  (setq lsp-bridge-disable-backup nil)
+
   :config
   (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)
-
-  ;;(global-lsp-bridge-mode)
 
   (add-hook 'lsp-bridge-mode-hook #'(lambda ()
                                       (delete `(lsp-bridge-mode (" [" lsp-bridge--mode-line-format "] ")) mode-line-misc-info)))
@@ -58,7 +61,10 @@
   (remove-hook 'python-mode-local-vars-hook #'+python-init-anaconda-mode-maybe-h)
   (remove-hook 'python-mode-hook #'+python-use-correct-flycheck-executables-h)
 
-  (setq lsp-bridge-disable-backup nil)
+  (advice-add #'lsp-bridge-restart-process
+              :after #'(lambda (&rest _)
+                         (delete-frame acm-menu-frame)
+                         (delete-frame acm-doc-frame)))
 
   (map!
    (:leader
@@ -85,31 +91,30 @@
   (defun acm-in-comment-p (&optional state)
     (if (eq major-mode 'python-mode)
         nil
-      (r-acm-in-comment-p)))
-
+      (r-acm-in-comment-p))))
 
 
   ;; timer doc
-  (fset 'r-acm-update (symbol-function 'acm-update))
-  (fset 'r-acm-doc-try-show (symbol-function 'acm-doc-try-show))
+  ;; (fset 'r-acm-update (symbol-function 'acm-update))
+  ;; (fset 'r-acm-doc-try-show (symbol-function 'acm-doc-try-show))
 
-  (defvar acm-update-timer nil)
-  (defvar acm-doc-timer nil)
-  (defvar acm-delay 0.5)
+  ;; (defvar acm-update-timer nil)
+  ;; (defvar acm-doc-timer nil)
+  ;; (defvar acm-delay 0.5)
 
-  ;;(defun acm-update ()
-  ;;  (if acm-update-timer
-  ;;      (cancel-timer acm-update-timer))
-  ;;  (setq acm-update-timer (run-with-idle-timer acm-delay nil #'r-acm-update)))
+  ;; (defun acm-update ()
+  ;;   (if acm-update-timer
+  ;;       (cancel-timer acm-update-timer))
+  ;;   (setq acm-update-timer (run-with-idle-timer acm-delay nil #'r-acm-update)))
 
-  (advice-add 'acm-doc-hide :before #'(lambda ()
-                                        (if acm-doc-timer
-                                            (cancel-timer acm-doc-timer))))
+  ;; (advice-add 'acm-doc-hide :before #'(lambda ()
+  ;;                                       (if acm-doc-timer
+  ;;                                           (cancel-timer acm-doc-timer))))
 
-  (defun acm-doc-try-show ()
-    (if acm-doc-timer
-        (cancel-timer acm-doc-timer))
-    (setq acm-doc-timer (run-with-idle-timer acm-delay nil #'r-acm-doc-try-show))))
+  ;; (defun acm-doc-try-show ()
+  ;;   (if acm-doc-timer
+  ;;       (cancel-timer acm-doc-timer))
+  ;;   (setq acm-doc-timer (run-with-idle-timer acm-delay nil #'r-acm-doc-try-show))))
 
 (use-package! lsp-mode
   :commands lsp-mode

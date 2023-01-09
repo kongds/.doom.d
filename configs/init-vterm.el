@@ -88,9 +88,16 @@
 (after! vterm
   ;; make tqdm bar look better
   (set-fontset-font t
-                    '(#x2587 . #x2589)
+                    '(#x2580 . #x2590)
                     (font-spec :family "苹方-简" :size 8)
                     nil 'prepend)
+
+  (dolist (code '(#x2500 #x250C #x2510 #x253c #x2518 #x2514 #x252c #x2534))
+     (set-fontset-font t
+                    `(,code . ,code)
+                    (font-spec :family "苹方-简" :size 8)
+                    nil 'prepend))
+
 
   (set-popup-rule! "^vterm" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)
   (set-popup-rule! "^\*vterm\*" :side 'right :size 0.5 :vslot -4 :select t :quit nil :ttl nil)

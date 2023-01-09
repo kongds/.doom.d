@@ -95,6 +95,12 @@
              (read-only-mode 1)
              (compilation-mode))
            (+popup-buffer (get-buffer cbuffer)))
+          ((string-match "(Pdb)" current-line)
+           ;; pdb stop
+           (if (string-match "172-" (buffer-name work-remote-tmux-rerun--buffer))
+               (work-remote-tmux-start-open-172)
+             (work-remote-tmux-start-open-192))
+           (evil-insert 0))
           ;; wait
           ((and (> work-remote-tmux-rerun--wait-timer-count 0) current-line)
            (message "%s(%ss): %s"

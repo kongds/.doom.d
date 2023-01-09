@@ -41,9 +41,12 @@
   (setq org-directory "~/.org")
   (setq org-default-notes-file (concat org-directory "/inbox.org"))
 
+
   (use-package! evil-org
     :config
-    (add-hook 'org-mode-hook 'evil-org-mode))
+    (add-hook 'org-mode-hook (lambda ()
+                               (setq tab-always-indent t)
+                               (evil-org-mode))))
 
   (use-package! ob-async)
   (use-package! org-tempo)

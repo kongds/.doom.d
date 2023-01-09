@@ -211,7 +211,7 @@
 
 (doom-load-packages-incrementally '(python treesit acm lsp-bridge corfu))
 (doom-load-packages-incrementally '(zmq citar elfeed jupyter evil-org))
-(doom-load-packages-incrementally '(telega))
+(doom-load-packages-incrementally '(telega pdf-tools))
 
 ;; tools
 (add-to-list 'load-path "/Users/royokong/.doom.d/tools/")

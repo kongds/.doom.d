@@ -1,5 +1,5 @@
 diff --git a/sort-tab.el b/sort-tab.el
-index 61f7a64..c879560 100644
+index 626b320..5c034ea 100644
 --- a/sort-tab.el
 +++ b/sort-tab.el
 @@ -227,7 +227,8 @@
@@ -83,7 +83,7 @@ index 61f7a64..c879560 100644
 -           (insert sort-tab-propertized-separator))
 -
           ;; Don't sort tabs if using sort-tab commands.
-          (when (not (string-prefix-p "sort-tab-" (prin1-to-string last-command)))
+          (unless (string-prefix-p "sort-tab-" (prin1-to-string last-command))
 -           (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
 +           (setq sort-tab-visible-buffers
 +                  (sort-tab-get-buffer-list)))

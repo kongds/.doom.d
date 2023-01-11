@@ -1,8 +1,22 @@
 diff --git a/sort-tab.el b/sort-tab.el
-index 626b320..5c034ea 100644
+index 626b320..aac97de 100644
 --- a/sort-tab.el
 +++ b/sort-tab.el
-@@ -227,7 +227,8 @@
+@@ -196,10 +196,11 @@
+     (set-window-parameter sort-tab-window 'no-delete-other-windows nil)
+     (set-window-parameter sort-tab-window 'window-side nil)
+     (set-window-parameter sort-tab-window 'window-slot nil)
+-    (set-window-parameter sort-tab-window 'no-other-window nil)
++    (set-window-parameter sort-tab-window 'no-other-window nil))
+ 
+     ;; Kill sort-tab window.
+-    (delete-window (get-buffer-window (sort-tab-get-buffer))))
++  (when-let ((buf (get-buffer-window (sort-tab-get-buffer))))
++    (delete-window buf))
+ 
+   ;; Reset sort-tab window.
+   (setq sort-tab-window nil)
+@@ -227,7 +228,8 @@
  
  (defun sort-tab-stop-count-freq ()
    "Stop counting buffer used frequency."
@@ -12,7 +26,7 @@ index 626b320..5c034ea 100644
    (setq sort-tab-buffer-freq-count-timer nil))
  
  (defun sort-tab-buffer-freq (buf)
-@@ -279,11 +280,14 @@
+@@ -279,11 +281,14 @@
  
  (defun sort-tab-buffer-need-hide-p (buf)
    (let* ((name (buffer-name buf)))
@@ -28,7 +42,7 @@ index 626b320..5c034ea 100644
  
  (defun sort-tab-is-normal-buffer-p (current-buffer)
    (and
-@@ -311,26 +315,28 @@
+@@ -311,26 +316,28 @@
       ,@body
  
       (when (eq sort-tab-align 'center)
@@ -68,7 +82,7 @@ index 626b320..5c034ea 100644
        ;; Debug usage.
        ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
        ;;   (goto-char (point-max))
-@@ -340,23 +346,41 @@
+@@ -340,23 +347,41 @@
  
        (let* ((current-tab-start-column 0)
               (current-tab-end-column 0)
@@ -117,7 +131,7 @@ index 626b320..5c034ea 100644
             (insert sort-tab-propertized-separator)
  
             ;; Calculate the current tab column.
-@@ -373,7 +397,16 @@
+@@ -373,7 +398,16 @@
                      (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
                     ((< current-tab-start-column (window-hscroll))
                      (set-window-hscroll tab-window current-tab-start-column))
@@ -135,7 +149,7 @@ index 626b320..5c034ea 100644
  
  (defun sort-tab-get-tab-name (buf current-buffer)
    (propertize
-@@ -384,6 +417,12 @@
+@@ -384,6 +418,12 @@
               (when (sort-tab-is-eaf-browser-buffer-p buf)
                 (setq bufname (replace-regexp-in-string "\\s-" "" bufname)))
  
@@ -148,7 +162,17 @@ index 626b320..5c034ea 100644
               (if (> (length bufname) sort-tab-name-max-length)
                   (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
                 bufname)))
-@@ -508,7 +547,25 @@
+@@ -467,7 +507,8 @@
+   (let ((visible-buffers sort-tab-visible-buffers))
+     (setq sort-tab-visible-buffers nil)
+     (dolist (buf visible-buffers)
+-      (kill-buffer buf))))
++      (unless (buffer-modified-p buf)
++        (kill-buffer buf)))))
+ 
+ (defun sort-tab-close-mode-tabs ()
+   (interactive)
+@@ -508,7 +549,25 @@
  
  (defun sort-tab-select-visible-nth-tab (&optional tab-index)
    (interactive "p")

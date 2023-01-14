@@ -38,6 +38,35 @@
 (after! company
   (setq company-global-modes nil))
 
+
+(after! lookup
+  ;; fix rtags find defination
+  ;; (point-marker) cannot work with different buffer
+  (defun +lookup--run-handlers (handler identifier origin)
+    (doom-log "Looking up '%s' with '%s'" identifier handler)
+    (condition-case-unless-debug e
+        (let ((wconf (current-window-configuration))
+              (window (selected-window))
+              (result (condition-case-unless-debug e
+                          (+lookup--run-handler handler identifier)
+                        (error
+                         (doom-log "Lookup handler %S threw an error: %s" handler e)
+                         'fail))))
+          (cond ((eq result 'fail)
+                 (set-window-configuration wconf)
+                 nil)
+                ((or (get handler '+lookup-async)
+                     (eq result 'deferred)))
+                ((or result
+                     (null origin)
+                     (/= (point-marker) origin))
+                 (prog1 (with-current-buffer (window-buffer window) (point-marker))
+                   (set-window-configuration wconf)))))
+      ((error user-error)
+       (message "Lookup handler %S: %s" handler e)
+       nil))))
+
+
 (use-package! lsp-bridge
   :commands lsp-bridge-mode
   :init
@@ -94,28 +123,6 @@
       (r-acm-in-comment-p))))
 
 
-  ;; timer doc
-  ;; (fset 'r-acm-update (symbol-function 'acm-update))
-  ;; (fset 'r-acm-doc-try-show (symbol-function 'acm-doc-try-show))
-
-  ;; (defvar acm-update-timer nil)
-  ;; (defvar acm-doc-timer nil)
-  ;; (defvar acm-delay 0.5)
-
-  ;; (defun acm-update ()
-  ;;   (if acm-update-timer
-  ;;       (cancel-timer acm-update-timer))
-  ;;   (setq acm-update-timer (run-with-idle-timer acm-delay nil #'r-acm-update)))
-
-  ;; (advice-add 'acm-doc-hide :before #'(lambda ()
-  ;;                                       (if acm-doc-timer
-  ;;                                           (cancel-timer acm-doc-timer))))
-
-  ;; (defun acm-doc-try-show ()
-  ;;   (if acm-doc-timer
-  ;;       (cancel-timer acm-doc-timer))
-  ;;   (setq acm-doc-timer (run-with-idle-timer acm-delay nil #'r-acm-doc-try-show))))
-
 (use-package! lsp-mode
   :commands lsp-mode
   :custom (lsp-completion-provider :none) ;; we use Corfu!
@@ -124,14 +131,6 @@
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))
     (setq-local completion-at-point-functions (list  (cape-super-capf #'lsp-completion-at-point #'cape-dict #'cape-file))))
-    ;; (setq-local completion-at-point-functions
-    ;;             (list  (cape-super-capf #'lsp-completion-at-point
-    ;;                                     (cape-company-to-capf (apply-partially #'company--multi-backend-adapter '(company-dabbrev-code company-tabnine))))))
-    ;; (setq-local completion-at-point-functions (list  (cape-super-capf #'lsp-completion-at-point
-    ;;                                                                   (cape-company-to-capf
-    ;;                                                                    (apply-partially
-    ;;                                                                     #'company--multi-backend-adapter
-    ;;                                                                     '(company-dabbrev-code))))))) ;; Configure orderless
   :hook (lsp-completion-mode . my/lsp-mode-setup-completion))
 
 ;; A few more useful configurations...

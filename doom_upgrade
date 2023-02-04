@@ -7,6 +7,7 @@ for diff_file in ~/.doom.d/diffs/*; do
 
     echo $diff_file
     package=$((basename $diff_file) | sed 's/.diff//')
+    echo $package
 
     if [ -d ~/.emacs.d/.local/straight/repos/${package} ]; then
         cd ~/.emacs.d/.local/straight/repos/${package}
@@ -53,7 +54,7 @@ else
 fi
 
 VER=`emacs --version | head -n 1 | awk '{print $3}'`
-rm -rf ~/.emacs.d/.local/straight/build-${VER}/eaf ~/.emacs.d/.local/straight/build-${VER}/jupyter
+rm -rf ~/.emacs.d/.local/straight/build-${VER}/eaf ~/.emacs.d/.local/straight/build-${VER}/jupyter ~/.emacs.d/.local/straight/build-${VER}/copilot
 
 
 for diff_file in ~/.doom.d/diffs/*; do

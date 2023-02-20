@@ -1,37 +1,56 @@
+diff --git a/acm/acm.el b/acm/acm.el
+index 33bccf4..816df00 100644
+--- a/acm/acm.el
++++ b/acm/acm.el
+@@ -719,7 +719,7 @@ The key of candidate will change between two LSP results."
+                         (+ cursor-y offset-y))))
+     (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
+ 
+-(defun acm-doc-try-show (&optional update-completion-item)
++(defun acm-doc-try-show2 (&optional update-completion-item)
+   (when acm-enable-doc
+     (let* ((candidate (acm-menu-current-candidate))
+            (backend (plist-get candidate :backend))
+@@ -762,6 +762,19 @@ The key of candidate will change between two LSP results."
+           ;; Hide doc frame immediately if backend is not LSP.
+           (_ (acm-doc-hide)))))))
+ 
++(defvar acm-doc-show-timer nil)
++(defvar acm-doc-show-delay 0.5)
++
++(defun acm-doc-try-show (&optional update-completion-item)
++  "Show doc frame."
++  (acm-doc-hide)
++  (acm-cancel-timer acm-doc-show-timer)
++  (setq acm-doc-show-timer
++        (run-with-idle-timer acm-doc-show-delay nil
++                             (lambda ()
++                               (if (frame-visible-p acm-menu-frame)
++                                   (acm-doc-try-show2 update-completion-item))))))
++
+ (defun acm-doc-frame-adjust ()
+   (let* ((emacs-width (frame-pixel-width))
+          (emacs-height (frame-pixel-height))
 diff --git a/core/search_file_words.py b/core/search_file_words.py
-index addc4fa..d2e69d9 100755
+index b8e74ff..3823723 100755
 --- a/core/search_file_words.py
 +++ b/core/search_file_words.py
-@@ -39,6 +39,7 @@ class SearchFileWords:
-         self.search_words_dispatcher_thread.start()
-     
-     def index_files(self, filepaths):
-+        filepaths = [filepath for filepath in filepaths if filepath[-3:] != 'pdf']
-         for filepath in filepaths:
-             self.search_files.add(filepath)
-         
-@@ -52,8 +53,15 @@ class SearchFileWords:
-             self.search_words_queue.put("search_words")
-             
-     def change_file(self, filepath, base64_string):
-+        if filepath[-3:] == 'pdf':
-+            return
+@@ -85,7 +85,9 @@ class SearchFileWords:
+             all_words = set()
+             for file, words in self.files.items():
+                 all_words = all_words | words
+-                
 +
-         import base64
--        content = base64.b64decode(base64_string).decode("utf-8")
-+        try:
-+            content = base64.b64decode(base64_string).decode("utf-8")
-+        except UnicodeDecodeError:
-+            return
++            prefix = prefix.split('.')[-1]
 +
-         self.search_files.add(filepath)
-         self.search_content_dict[filepath] = content
-         
+             search_candidates = self.search_word(prefix, all_words)
+             candidates = []
+             if len(search_candidates) > 0:
 diff --git a/lsp-bridge-diagnostic.el b/lsp-bridge-diagnostic.el
-index d86c497..d4233a5 100644
+index d3027cf..5926b51 100644
 --- a/lsp-bridge-diagnostic.el
 +++ b/lsp-bridge-diagnostic.el
-@@ -139,7 +139,14 @@
+@@ -158,7 +158,14 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
  (autoload 'lsp-bridge--with-file-buffer "lsp-bridge")
  
  (defun lsp-bridge-diagnostic-hide-tooltip ()
@@ -47,7 +66,7 @@ index d86c497..d4233a5 100644
  
  (defun lsp-bridge-diagnostic--render (filepath diagnostics)
    (lsp-bridge--with-file-buffer filepath
-@@ -180,7 +187,7 @@
+@@ -200,7 +207,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
  (defun lsp-bridge-diagnostic-show-tooltip (diagnostic-overlay &optional goto-beginning)
    (let* ((diagnostic-display-message (overlay-get diagnostic-overlay 'display-message))
           (diagnostic-message (overlay-get diagnostic-overlay 'message))
@@ -56,7 +75,7 @@ index d86c497..d4233a5 100644
      ;; weather goto beginning of diagnostic
      (when goto-beginning
        (goto-char (overlay-start diagnostic-overlay)))
-@@ -192,16 +199,11 @@
+@@ -212,16 +219,11 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
  
      (cond
       ((posframe-workable-p) ;; Perform redisplay make sure posframe can poup to
@@ -78,7 +97,7 @@ index d86c497..d4233a5 100644
       (t (message diagnostic-message)))))
  
  (defun lsp-bridge-diagnostic-maybe-display-error-at-point ()
-@@ -246,11 +248,10 @@
+@@ -266,11 +268,10 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
      (message "[LSP-Bridge] Reach first diagnostic.")))
  
  (defun lsp-bridge-diagnostic-overlay-at-point ()
@@ -94,10 +113,10 @@ index d86c497..d4233a5 100644
  (defun lsp-bridge-diagnostic-copy ()
    (interactive)
 diff --git a/lsp-bridge.el b/lsp-bridge.el
-index 5e76831..7a4da36 100644
+index e142cac..734d01e 100644
 --- a/lsp-bridge.el
 +++ b/lsp-bridge.el
-@@ -544,13 +544,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
+@@ -596,13 +596,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
    (or (alist-get mode lsp-bridge-formatting-indent-alist)
        (lsp-bridge--get-indent-width (or (get mode 'derived-mode-parent) 'default))))
  
@@ -111,3 +130,75 @@ index 5e76831..7a4da36 100644
  (cl-defmacro lsp-bridge-save-position (&rest body)
    "`save-excursion' not enough for LSP code format.
  So we build this macro to restore postion after code format."
+@@ -732,18 +725,24 @@ So we build this macro to restore postion after code format."
+             (lsp-bridge-use-ds-pinyin-in-org-mode
+              "ds-pinyin"))))))
+ 
++(defvar-local lsp-bridge-has-lsp-server--p nil)
++(defvar-local lsp-bridge-has-lsp-server--p-set nil)
+ (defun lsp-bridge-has-lsp-server-p ()
+-  (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
+-    (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
+-                                               (lsp-bridge--with-file-buffer dirname
+-                                                 (lsp-bridge-get-multi-lang-server-by-mode))))
+-           (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
+-                                         (lsp-bridge--with-file-buffer dirname
+-                                           (lsp-bridge-get-single-lang-server-by-mode)))))
+-      (if multi-lang-server-by-extension
+-          multi-lang-server-by-extension
+-        lang-server-by-extension)
+-      )))
++  (if lsp-bridge-has-lsp-server--p-set
++      lsp-bridge-has-lsp-server--p
++    (setq-local lsp-bridge-has-lsp-server--p
++                (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
++                  (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
++                                                             (lsp-bridge--with-file-buffer dirname
++                                                               (lsp-bridge-get-multi-lang-server-by-mode))))
++                         (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
++                                                       (lsp-bridge--with-file-buffer dirname
++                                                         (lsp-bridge-get-single-lang-server-by-mode)))))
++                    (if multi-lang-server-by-extension
++                        multi-lang-server-by-extension
++                      lang-server-by-extension)
++                    ))
++                lsp-bridge-has-lsp-server--p-set t)))
+ 
+ (defun lsp-bridge-call-async (method &rest args)
+   "Call Python EPC function METHOD and ARGS asynchronously."
+@@ -885,7 +884,7 @@ So we build this macro to restore postion after code format."
+       (cond ((member this-command-string '("self-insert-command" "org-self-insert-command"))
+              (setq this-command 'acm-filter-insert-char)
+              (setq last-command 'acm-filter-insert-char))
+-            ((member this-command-string '("delete-block-backward" "grammatical-edit-backward-delete"))
++            ((member this-command-string '("delete-block-backward" "grammatical-edit-backward-delete" "evil-delete-backward-char-and-join"))
+              (setq this-command 'acm-filter-delete-char)
+              (setq last-command 'acm-filter-delete-char))
+             ))))
+@@ -1131,6 +1130,9 @@ So we build this macro to restore postion after code format."
+       ;; Record last command to `lsp-bridge-last-change-command'.
+       (setq lsp-bridge-last-change-command (format "%s" this-command))
+ 
++      (if (member this-command-string '("evil-delete-backward-char-and-join"))
++          (setq-local lsp-bridge-prohibit-completion t))
++
+       ;; Record last change position to avoid popup outdate completions.
+       (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
+ 
+@@ -1555,12 +1557,14 @@ So we build this macro to restore postion after code format."
+   (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
+     ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
+     ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
+-    (unless (file-exists-p (buffer-file-name))
++    (unless (and (buffer-file-name) (file-exists-p (buffer-file-name)))
+       (save-buffer))
+ 
+     (setq-local acm-backend-lsp-completion-trigger-characters nil)
+     (setq-local acm-backend-lsp-completion-position nil)
+-    (setq-local acm-backend-lsp-filepath (file-truename buffer-file-name))
++    (if buffer-file-name
++        (setq-local acm-backend-lsp-filepath (file-truename buffer-file-name))
++      (setq-local acm-backend-lsp-filepath "/Users/royokong/temp"))
+     (setq-local acm-backend-lsp-items (make-hash-table :test 'equal))
+     (setq-local acm-backend-lsp-server-names nil)
+ 

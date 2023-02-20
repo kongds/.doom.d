@@ -1,5 +1,5 @@
 diff --git a/color-rg.el b/color-rg.el
-index 6894362..e23e80e 100644
+index 08f3957..44fd3bb 100644
 --- a/color-rg.el
 +++ b/color-rg.el
 @@ -621,6 +621,11 @@ This function is called from `compilation-filter-hook'."

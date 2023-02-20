@@ -23,7 +23,7 @@ index ba34d87..526c87f 100755
                  if marker_input_quit:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index 96dbf83..123e967 100755
+index bb4d205..727a021 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
 @@ -38,6 +38,7 @@ import base64
@@ -34,7 +34,7 @@ index 96dbf83..123e967 100755
  
  MOUSE_LEFT_BUTTON = 1
  MOUSE_WHEEL_BUTTON = 4
-@@ -871,6 +872,7 @@ class BrowserBuffer(Buffer):
+@@ -880,6 +881,7 @@ class BrowserBuffer(Buffer):
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, self.enable_javascript)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptCanAccessClipboard, self.enable_javascript_access_clipboard)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.ShowScrollBars, self.enable_scrollbar)
@@ -42,7 +42,7 @@ index 96dbf83..123e967 100755
  
              if self.unknown_url_scheme_policy == "DisallowUnknownUrlSchemes":
                  self.settings.setUnknownUrlSchemePolicy(self.settings.UnknownUrlSchemePolicy.DisallowUnknownUrlSchemes)
-@@ -978,6 +980,48 @@ class BrowserBuffer(Buffer):
+@@ -987,6 +989,48 @@ class BrowserBuffer(Buffer):
                  f.write(base64.b64decode(b64bytes))
  
              message_to_emacs("Save image: " + image_path)
@@ -91,7 +91,7 @@ index 96dbf83..123e967 100755
          else:
              if hasattr(self, "try_start_aria2_daemon"):
                  self.try_start_aria2_daemon()
-@@ -1119,11 +1163,11 @@ class BrowserBuffer(Buffer):
+@@ -1126,11 +1170,11 @@ class BrowserBuffer(Buffer):
          elif callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
              self.buffer_widget.clean_search_and_select()
  
@@ -106,10 +106,10 @@ index 96dbf83..123e967 100755
              self.buffer_widget._search_text(self.buffer_widget.search_term, True)
  
 diff --git a/eaf.el b/eaf.el
-index 7e41d5e..2ea0a14 100644
+index 12090d5..faf08d4 100644
 --- a/eaf.el
 +++ b/eaf.el
-@@ -1031,34 +1031,45 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1030,38 +1030,45 @@ provide at least one way to let everyone experience EAF. ;)"
      (defvar eaf--topmost-switch-to-python nil
        "Record if Emacs should switch to Python process.")
  
@@ -133,6 +133,10 @@ index 7e41d5e..2ea0a14 100644
 -                          (if (executable-find "jshon")
 -                              (shell-command-to-string (concat eaf-build-dir "swaymsg-treefetch/swaymsg-focusfetcher.sh"))
 -                            (message "Please install jshon for swaywm support.")))
+-                         ((string-equal (getenv "XDG_CURRENT_DESKTOP") "Hyprland")
+-                          (if (executable-find "jshon")
+-                              (shell-command-to-string "hyprctl -j activewindow | jshon -e class -u")
+-                            (message "Please install jshon for hyprland support.")))
 -                         (t
 -                          (require 'dbus)
 -                          (dbus-call-method :session "org.gnome.Shell" "/org/eaf/wayland" "org.eaf.wayland" "get_active_window" :timeout 1000)))))
@@ -172,7 +176,7 @@ index 7e41d5e..2ea0a14 100644
  
      (defun eaf--topmost-focus-out ()
        "Prepare the screenshot and hide all eaf buffers."
-@@ -1067,7 +1078,8 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1070,7 +1077,8 @@ provide at least one way to let everyone experience EAF. ;)"
            (with-current-buffer (window-buffer window)
              (when (derived-mode-p 'eaf-mode)
                (eaf--clip-image window)
@@ -182,7 +186,7 @@ index 7e41d5e..2ea0a14 100644
  
      (add-to-list 'move-frame-functions #'eaf-monitor-configuration-change)
  
-@@ -1106,6 +1118,7 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1109,6 +1117,7 @@ provide at least one way to let everyone experience EAF. ;)"
      (add-to-list 'delete-frame-functions #'eaf--topmost-delete-frame-handler)
      ))
  
@@ -190,7 +194,7 @@ index 7e41d5e..2ea0a14 100644
  (defun eaf-monitor-configuration-change (&rest _)
    "EAF function to respond when detecting a window configuration change."
    (when (and eaf--monitor-configuration-p
-@@ -1143,6 +1156,14 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1146,6 +1155,14 @@ provide at least one way to let everyone experience EAF. ;)"
                                    (- w window-divider-right-padding)
                                    (- h window-divider-bottom-padding))
                            view-infos)))))))

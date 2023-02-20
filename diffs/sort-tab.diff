@@ -1,5 +1,5 @@
 diff --git a/sort-tab.el b/sort-tab.el
-index 626b320..aac97de 100644
+index 2de092a..cde9e05 100644
 --- a/sort-tab.el
 +++ b/sort-tab.el
 @@ -196,10 +196,11 @@
@@ -26,7 +26,7 @@ index 626b320..aac97de 100644
    (setq sort-tab-buffer-freq-count-timer nil))
  
  (defun sort-tab-buffer-freq (buf)
-@@ -279,11 +281,14 @@
+@@ -289,11 +291,14 @@
  
  (defun sort-tab-buffer-need-hide-p (buf)
    (let* ((name (buffer-name buf)))
@@ -42,7 +42,7 @@ index 626b320..aac97de 100644
  
  (defun sort-tab-is-normal-buffer-p (current-buffer)
    (and
-@@ -311,26 +316,28 @@
+@@ -321,26 +326,28 @@
       ,@body
  
       (when (eq sort-tab-align 'center)
@@ -82,14 +82,15 @@ index 626b320..aac97de 100644
        ;; Debug usage.
        ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
        ;;   (goto-char (point-max))
-@@ -340,23 +347,41 @@
+@@ -350,25 +357,43 @@
  
        (let* ((current-tab-start-column 0)
               (current-tab-end-column 0)
 +             (tab-count 0)
               (tab-window (get-buffer-window (sort-tab-get-buffer)))
               found-current-tab
-              tab)
+              tab
+              (buffer-index -1))
          (sort-tab-update-tabs
 -         ;; Show hide buffer at left when current buffer is match hidden rule.
 -         (when (sort-tab-is-hidden-buffer-p current-buffer)
@@ -110,7 +111,8 @@ index 626b320..aac97de 100644
  
           (dolist (buf sort-tab-visible-buffers)
             ;; Insert tab.
-            (setq tab (sort-tab-get-tab-name buf current-buffer))
+            (setq buffer-index (+ buffer-index 1))
+            (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
 -           (insert tab)
 +           ;; (insert tab)
 +           (cl-incf tab-count)
@@ -131,7 +133,7 @@ index 626b320..aac97de 100644
             (insert sort-tab-propertized-separator)
  
             ;; Calculate the current tab column.
-@@ -373,7 +398,16 @@
+@@ -385,7 +410,16 @@
                      (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
                     ((< current-tab-start-column (window-hscroll))
                      (set-window-hscroll tab-window current-tab-start-column))
@@ -147,9 +149,9 @@ index 626b320..aac97de 100644
 +     ((string-equal sort-tab-buffer-name (buffer-name current-buffer))
 +      (sort-tab-update-tabs))))))
  
- (defun sort-tab-get-tab-name (buf current-buffer)
+ (defun sort-tab-get-tab-name (buf current-buffer &optional buffer-index)
    (propertize
-@@ -384,6 +418,12 @@
+@@ -400,6 +434,12 @@
               (when (sort-tab-is-eaf-browser-buffer-p buf)
                 (setq bufname (replace-regexp-in-string "\\s-" "" bufname)))
  
@@ -162,7 +164,7 @@ index 626b320..aac97de 100644
               (if (> (length bufname) sort-tab-name-max-length)
                   (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
                 bufname)))
-@@ -467,7 +507,8 @@
+@@ -483,7 +523,8 @@
    (let ((visible-buffers sort-tab-visible-buffers))
      (setq sort-tab-visible-buffers nil)
      (dolist (buf visible-buffers)
@@ -172,7 +174,7 @@ index 626b320..aac97de 100644
  
  (defun sort-tab-close-mode-tabs ()
    (interactive)
-@@ -508,7 +549,25 @@
+@@ -524,7 +565,25 @@
  
  (defun sort-tab-select-visible-nth-tab (&optional tab-index)
    (interactive "p")

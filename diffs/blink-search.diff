@@ -166,7 +166,7 @@ index e6b31fd..176ba19 100644
  
  ;; Struct: blink-search-deferred-object
 diff --git a/blink-search.el b/blink-search.el
-index e1920ed..8059776 100644
+index c40a48f..c9c4892 100644
 --- a/blink-search.el
 +++ b/blink-search.el
 @@ -430,7 +430,7 @@ you need customize option if some 'M + key' conflict with your command.")

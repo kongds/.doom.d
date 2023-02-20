@@ -138,7 +138,7 @@
 (package! ef-theme :recipe (:host github :repo "protesilaos/ef-themes" :files ("*")))
 
 ;;(package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "b581ac9")
-(package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "ac3634e")
+(package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "123a8bccba7f773e3a0caaf97634681922854853")
 
 (package! line-reminder :recipe (:host github :repo "emacs-vs/line-reminder"))
 
@@ -146,8 +146,11 @@
 
 (package! blink-search :recipe (:host github :repo "manateelazycat/blink-search" :files ("*")))
 
+(package! exec-path-from-shell)
 (package! color-rg :recipe (:host github :repo "manateelazycat/color-rg" :files ("*")))
 
 (package! pyim)
 
 (package! emacsql-sqlite-builtin)
+
+(package! flycheck-grammarly :recipe (:host github :repo "emacs-grammarly/flycheck-grammarly" :files ("*")))

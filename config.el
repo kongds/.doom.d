@@ -211,7 +211,7 @@
 
 (doom-load-packages-incrementally '(python treesit acm lsp-bridge corfu))
 (doom-load-packages-incrementally '(zmq citar elfeed jupyter evil-org))
-(doom-load-packages-incrementally '(telega pdf-tools))
+(doom-load-packages-incrementally '(telega pdf-tools org-noter))
 
 ;; tools
 (add-to-list 'load-path "/Users/royokong/.doom.d/tools/")
@@ -225,6 +225,9 @@
 (use-package! translate-shell :commands (translate-shell translate-rewrite))
 
 (use-package! get-gpu-status :commands get-gpu-status)
+
+(use-package! hl-evil :commands hl-timer-toggle)
+
 ;;(load! "tools/start-sync")
 ;;
 ;;(load! "tools/quick-open")

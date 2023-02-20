@@ -20,3 +20,18 @@ after  (unless (member '("\\*Async[a-z0-9 ]*" display-buffer-no-window)  display
                                        (when (memq (process-status process) '(exit signal))
                                          (kill-buffer shell-buffer-name)
                                          (shell-command-sentinel process signal)))))))
+
+;; fix Marker does not point anywhere
+(after! org-src
+  (defun org-src--edit-buffer (beg end)
+    "Return buffer editing area between BEG and END.
+Return nil if there is no such buffer."
+    (catch 'exit
+      (dolist (b (buffer-list))
+        (with-current-buffer b
+	  (and (org-src-edit-buffer-p)
+	       (eq (marker-buffer beg) (marker-buffer org-src--beg-marker))
+	       (= beg org-src--beg-marker)
+	       (eq (marker-buffer end) (marker-buffer org-src--end-marker))
+	       (= end org-src--end-marker)
+	       (throw 'exit b)))))))

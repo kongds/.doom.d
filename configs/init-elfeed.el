@@ -29,6 +29,7 @@
   (setq
    citar-bibliography (list "/Users/royokong/mendeley.bib/library.bib" "/Users/royokong/library.bib")
    citar-file-extensions '("pdf" "org" "md")
+   citar-default-action #'citar-open-files
    citar-file-open-function #'find-file)
   (defun robo/citar-full-names (names)
     "Transform names like LastName, FirstName to FirstName LastName."
@@ -39,16 +40,16 @@
              (split-string name " ")
            (let ((split-name (split-string name ", ")))
              (cl-concatenate 'string (nth 1 split-name) " " (nth 0 split-name)))))
-       (split-string names " and ") ", ")))
+       (split-string
+        (replace-regexp-in-string ":" "" names)
+        " and ") ", ")))
   (setq citar-display-transform-functions
         '((("author" "editor") . robo/citar-full-names)))
   (setq citar-templates
         '((main . "${author editor:55}     ${date year issued:4}     ${title:55}")
           (suffix . "  ${tags keywords keywords:40}")
           (preview . "${author editor} ${title}, ${journal publisher container-title collection-title booktitle} ${volume} (${year issued date}).\n")
-          (note . "#+title: Notes on ${author editor}, ${title}")))
-  ;; use consult-completing-read for enhanced interface
-  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple))
+          (note . "#+title: Notes on ${author editor}, ${title}"))))
 
 (use-package! elfeed
   :commands elfeed
@@ -251,7 +252,12 @@
   (require 'oc-biblatex)
   (require 'oc-csl)
   (require 'citar)
-  (setq org-cite-global-bibliography citar-bibliography
+
+  (after! oc-basic
+    (add-function :override (symbol-function 'org-cite-basic--all-keys) #'citar-org-list-keys))
+
+
+  (setq org-cite-global-bibliography nil
         org-cite-insert-processor 'citar
         org-cite-follow-processor 'citar
         org-cite-activate-processor 'citar

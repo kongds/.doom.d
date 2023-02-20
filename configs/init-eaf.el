@@ -50,7 +50,7 @@
                            :follow #'(lambda (link)
                                        (eaf-org-open (concat "browser::http:" link)))
                            :store #'eaf-org-store-link)
-  (after! magit-mode
+  (after! magit
     (defun parse-url (url)
       "convert a git remote location as a HTTP URL"
       (if (string-match "^http" url) url (replace-regexp-in-string

@@ -94,6 +94,7 @@
   :config
   (use-package! websocket
     :after org-roam)
+  (setq org-roam-completion-everywhere nil)
   (setq +org-roam-open-buffer-on-find-file nil))
 
 ;; org roam bibtex configs

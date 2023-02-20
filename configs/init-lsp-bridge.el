@@ -21,8 +21,7 @@
 
 (add-hook 'emacs-lisp-mode-hook #'(lambda()
                                     (setq-local corfu-auto nil)
-                                    (lsp-bridge-mode)
-                                    ))
+                                    (lsp-bridge-mode)))
 
 (add-hook 'python-mode-hook #'(lambda()
                                 ;; remove lsp-bridge modeline
@@ -30,14 +29,18 @@
                                 (flycheck-mode -1)
                                 (setq-local lsp-bridge-enable-hover-diagnostic t)
 
+                                ;; highlight symbol
+                                (highlight-symbol-mode 1)
+
                                 (lsp-bridge-mode)
                                 (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
                                             +lookup-implementations-functions '(lsp-bridge-find-impl t)
                                             +lookup-references-functions '(lsp-bridge-find-references t))))
-
-(after! company
-  (setq company-global-modes nil))
-
+(add-hook 'c-mode-hook #'(lambda()
+                           (lsp-bridge-mode)
+                           (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
+                                       +lookup-implementations-functions '(lsp-bridge-find-impl t)
+                                       +lookup-references-functions '(lsp-bridge-find-references t))))
 
 (after! lookup
   ;; fix rtags find defination
@@ -79,6 +82,11 @@
   (setq acm-enable-dabbrev nil)
   (setq lsp-bridge-python-lsp-server "pyright-background-analysis")
   (setq lsp-bridge-disable-backup nil)
+  (setq lsp-bridge-symbols-enable-which-func t)
+  (setq lsp-bridge-enable-mode-line nil)
+  (setq lsp-bridge-enable-signature-help nil)
+  (setq lsp-bridge-org-babel-lang-list '("clojure" "latex" "python"))
+  (setq lsp-bridge-python-ruff-lsp-server "pyright-background-analysis_ruff")
 
   :config
   (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)

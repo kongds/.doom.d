@@ -15,8 +15,7 @@
  '(company-dabbrev-downcase nil t)
  '(company-dabbrev-ignore-case nil t)
  '(company-dabbrev-other-buffers nil t)
- '(company-global-modes
-   '(not erc-mode circe-mode message-mode help-mode gud-mode vterm-mode netease-cloud-music-switch-playlist-mode-map netease-cloud-music-mode netease-cloud-music-change-playlist-mode netease-cloud-music-switch-playlist-mode))
+ '(company-global-modes nil)
  '(company-idle-delay 0)
  '(company-minimum-prefix-length 2)
  '(company-require-match 'never)
@@ -147,26 +146,6 @@
  '(jdee-db-spec-breakpoint-face-colors (cons "#191C25" "#434C5E"))
  '(lsp-bridge-completion-popup-predicates
    '(lsp-bridge-not-only-blank-before-cursor lsp-bridge-not-match-hide-characters lsp-bridge-not-match-stop-commands lsp-bridge-not-in-string lsp-bridge-not-in-comment lsp-bridge-not-follow-complete lsp-bridge-is-evil-state lsp-bridge-is-meow-state lsp-bridge-not-complete-manually lsp-bridge-not-in-org-table))
- '(lsp-bridge-enable-signature-help nil)
- '(lsp-bridge-lang-server-list
-   '(((c-mode c++-mode)
-      . "clangd")
-     (java-mode . "jdtls")
-     (python-mode . "pyright")
-     (ruby-mode . "solargraph")
-     (rust-mode . "rust-analyzer")
-     (elixir-mode . "elixirLS")
-     (go-mode . "gopls")
-     (haskell-mode . "hls")
-     (dart-mode . "dart_analysis_server")
-     (scala-mode . "metals")
-     ((typescript-mode js2-mode js-mode)
-      . "typescript")
-     (tuareg-mode . "ocamllsp")
-     (erlang-mode . "erlang_ls")
-     ((latex-mode Tex-latex-mode texmode context-mode texinfo-mode bibtex-mode)
-      . "texlab")))
- '(lsp-bridge-org-babel-lang-list '("clojure" "latex" "python" "jupyter-python"))
  '(lsp-enable-file-watchers t)
  '(lsp-enable-imenu nil)
  '(lsp-session-file "/Users/royokong/.emacs.d/.local/etc/lsp-session" t)
@@ -193,10 +172,13 @@
    '("/Users/royokong/org/.attach/" "^\\.idea$" "^\\.vscode$" "^\\.ensime_cache$" "^\\.eunit$" "^\\.git$" "^\\.hg$" "^\\.fslckout$" "^_FOSSIL_$" "^\\.bzr$" "^_darcs$" "^\\.pijul$" "^\\.tox$" "^\\.svn$" "^\\.stack-work$" "^\\.ccls-cache$" "^\\.cache$" "^\\.clangd$"))
  '(realgud:pdb-command-name "bash debug_remote_pdb.sh")
  '(rime-deactivate-when-exit-minibuffer nil)
+ '(rtags-path
+   "/Users/royokong/emacs_configs/.emacs.d.doom/.local/straight/repos/rtags/bin")
  '(rustic-ansi-faces
    ["#2E3440" "#BF616A" "#A3BE8C" "#EBCB8B" "#81A1C1" "#B48EAD" "#88C0D0" "#ECEFF4"])
  '(safe-local-variable-values
-   '((elisp-lint-indent-specs
+   '((cmake-tab-width . 4)
+     (elisp-lint-indent-specs
       (describe . 1)
       (it . 1)
       (thread-first . 0)

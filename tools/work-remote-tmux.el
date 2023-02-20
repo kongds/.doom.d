@@ -66,8 +66,11 @@
 (defvar work-remote-tmux-rerun--prompt nil)
 (defvar work-remote-tmux-rerun--buffer nil)
 (defvar work-remote-tmux-rerun--wait-timer-count nil)
-(defvar work-remote-tmux-rerun--wait-timer-count nil)
+(defvar work-remote-tmux-rerun--running nil)
 
+(defun vterm-remote-tmux-rerun--show-string (vterm-buffer-name vterm-time-consume vterm-output)
+  (message "%s(%ss): %s" vterm-buffer-name vterm-time-consume
+           (substring vterm-output 0 (min (length vterm-output) 157))))
 
 (defun vterm-remote-tmux-rerun--check-end ()
   (let ((current-line
@@ -94,16 +97,20 @@
              (delete-region (point) (point-max))
              (read-only-mode 1)
              (compilation-mode))
-           (+popup-buffer (get-buffer cbuffer)))
+           (+popup-buffer (get-buffer cbuffer))
+           (select-window (get-buffer-window cbuffer))
+           (setq work-remote-tmux-rerun--running nil))
           ((string-match "(Pdb)" current-line)
            ;; pdb stop
-           (if (string-match "172-" (buffer-name work-remote-tmux-rerun--buffer))
-               (work-remote-tmux-start-open-172)
-             (work-remote-tmux-start-open-192))
-           (evil-insert 0))
+           (vterm-remote-tmux-rerun-pdb-mode 1)
+           (let ((current-window (selected-window)))
+             (switch-to-buffer-other-window work-remote-tmux-rerun--buffer)
+             (select-window current-window))
+           (setq work-remote-tmux-rerun--running nil))
           ;; wait
-          ((and (> work-remote-tmux-rerun--wait-timer-count 0) current-line)
-           (message "%s(%ss): %s"
+          ((and work-remote-tmux-rerun--running
+                (> work-remote-tmux-rerun--wait-timer-count 0) current-line)
+           (vterm-remote-tmux-rerun--show-string
                     (buffer-name work-remote-tmux-rerun--buffer)
                     (* (- 600 work-remote-tmux-rerun--wait-timer-count) 0.5)
                     (if (eq 0 (length current-line))
@@ -117,12 +124,59 @@
            (run-with-timer 0.5 nil #'vterm-remote-tmux-rerun--check-end)))
       ))
 
+(define-minor-mode vterm-remote-tmux-rerun-pdb-mode
+  "PDB"
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-c C-c") #'vterm-remote-tmux-rerun-pdb-continue)
+            (define-key map (kbd "C-c C-n") #'vterm-remote-tmux-rerun-pdb-next)
+            map)
+  :global t
+  :lighter "PDB")
+
+(after! evil-collection
+  (evil-collection-define-key 'normal  'vterm-remote-tmux-rerun-pdb-mode-map
+    (kbd "n") #'vterm-remote-tmux-rerun-pdb-next
+    (kbd "q") #'vterm-remote-tmux-rerun-pdb-quit
+    (kbd "c") #'vterm-remote-tmux-rerun-pdb-continue
+    (kbd "e") #'vterm-remote-tmux-rerun-pdb-eval)
+  (evil-collection-define-key 'visual  'vterm-remote-tmux-rerun-pdb-mode-map
+    (kbd "e") #'vterm-remote-tmux-rerun-pdb-eval))
+
+(defun vterm-remote-tmux-rerun-pdb-next ()
+  (interactive)
+  (with-current-buffer work-remote-tmux-rerun--buffer
+    (vterm-send-string "n")
+    (vterm-send-return)))
+
+(defun vterm-remote-tmux-rerun-pdb-continue ()
+  (interactive)
+  (with-current-buffer work-remote-tmux-rerun--buffer
+    (vterm-send-string "c")
+    (vterm-send-return)))
+
+(defun vterm-remote-tmux-rerun-pdb-eval (&optional arg)
+  (interactive (list (if (use-region-p)
+                         (buffer-substring-no-properties
+                          (region-beginning) (region-end))
+                       (read-string "eval: "))))
+  (with-current-buffer work-remote-tmux-rerun--buffer
+    (vterm-send-string arg)
+    (vterm-send-return)))
+
+(defun vterm-remote-tmux-rerun-pdb-quit ()
+  (interactive)
+  (with-current-buffer work-remote-tmux-rerun--buffer
+    (vterm-send-string "q")
+    (vterm-send-return)
+    (vterm-remote-tmux-rerun-pdb-mode -1)))
 
 (defun work-remote-tmux-rerun  (args)
   (interactive "P")
   (save-buffer)
+  (setq work-remote-tmux-rerun--running t)
   (if startsync-running (run-with-timer 0.1 nil 'work-remote-tmux-rerun args)
     (let ((l-vterm-window nil)
+          (l-vterm-buffer nil)
           (window-conf (current-window-configuration)))
 
       (dolist (window (window-list))
@@ -130,9 +184,16 @@
                    (cl-search "192-" (buffer-name (window-buffer window))))
           (setq l-vterm-window window)))
 
+      (dolist (buffer (buffer-list))
+        (when (or (cl-search "172-" (buffer-name buffer))
+                  (cl-search "192-" (buffer-name buffer)))
+          (setq l-vterm-buffer buffer)))
+
       (cond
        (l-vterm-window
         (select-window  l-vterm-window))
+       (l-vterm-buffer
+        (switch-to-buffer l-vterm-buffer))
        ((or (not work-remote-tmux-rerun--buffer)
             (cl-search "172-" (buffer-name work-remote-tmux-rerun--buffer)))
         (work-remote-tmux-toggle work-remote-server-172))
@@ -151,7 +212,6 @@
       (setq work-remote-tmux-rerun--start-point (point))
       (setq work-remote-tmux-rerun--buffer (current-buffer))
       (setq work-remote-tmux-rerun--wait-timer-count 600)
-
       (setq work-remote-tmux-rerun--prompt "^.* ➜ .* ✗ $")
 
       (vterm-send-key "p" nil nil t)
@@ -282,8 +342,12 @@
 )
 
 (defun work-remote-tmux-restart-job (job)
-  (interactive (list (completing-read "Job: " (work-remote-tmux-get-jobs))))
-  (when  (y-or-n-p (format "Restart job %s" job))
+  (interactive (if work-remote-tmux-rerun--running
+                   (list nil)
+                   (list (completing-read "Job: " (work-remote-tmux-get-jobs)))))
+  (if work-remote-tmux-rerun--running
+      (setq work-remote-tmux-rerun--running nil)
+    (when  (y-or-n-p (format "Restart job %s" job))
       (let* ((jd (gethash job (work-remote-tmux-get-jobs)))
              (pid (cdr (assoc 'pid jd)))
              (cmd (cdr (assoc 'cmd jd)))
@@ -291,12 +355,12 @@
              (server (cdr (assoc 'server jd)))
              (ip (nth 1 (split-string server "@"))))
         (work-remote-tmux-start-open ip)
-        (work-remote-tmux--restart-job pid gpuid cmd))))
+        (work-remote-tmux--restart-job pid gpuid cmd)))))
 
 
 (defun work-remote-tmux-restart-job-with-other-cmd (job)
   (interactive (list (completing-read "Job: " (work-remote-tmux-get-jobs))))
-  (when (y-or-n-p (format "Restart job %s" job))
+  (when (y-or-n-p (format "Restart job with other cmd %s" job))
     (let* ((jd (gethash job (work-remote-tmux-get-jobs)))
            (pid (cdr (assoc 'pid jd)))
            (cmd (read-string "CMD: "))

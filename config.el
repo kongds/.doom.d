@@ -228,6 +228,8 @@
 
 (use-package! hl-evil :commands hl-timer-toggle)
 
+(use-package! doctor-chatgpt :after doctor)
+
 ;;(load! "tools/start-sync")
 ;;
 ;;(load! "tools/quick-open")

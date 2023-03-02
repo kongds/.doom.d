@@ -11,6 +11,14 @@
   :type 'string
   :group 'doctor-chatgpt)
 
+(defun doctor-chatgpt-save-chat-and-kill ()
+  (interactive)
+  (if (> (length doctor-chatgpt-recv-list) 1)
+      (write-file (expand-file-name
+                   (concat "~/.doctor-chats/"
+                           (format-time-string "%Y-%m-%d-%H:%M")))))
+  (kill-this-buffer))
+
 (defun doctor-chatgpt-filter (process output)
   "Filter for chatgpt process."
   (let ((buffer (process-buffer process)))
@@ -65,5 +73,8 @@
 
 (advice-add 'doctor :before #'doctor-chatgpt-start-process)
 (advice-add 'doctor-read-print :override #'doctor-chatgpt-read-print)
+(define-key doctor-mode-map (kbd "s-k") #'doctor-chatgpt-save-chat-and-kill)
+(after! evil-collection
+  (evil-collection-define-key 'normal 'doctor-mode-map "q" #'doctor-chatgpt-save-chat-and-kill))
 
 (provide 'doctor-chatgpt)

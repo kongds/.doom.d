@@ -6,6 +6,11 @@
 (defvar doctor-chatgpt-send-start-point 0)
 (defvar doctor-chatgpt-overlay nil)
 
+(defcustom doctor-chatgpt-offical-key ""
+  "The offical key for chatgpt."
+  :type 'string
+  :group 'doctor-chatgpt)
+
 (defun doctor-chatgpt-filter (process output)
   "Filter for chatgpt process."
   (let ((buffer (process-buffer process)))
@@ -40,7 +45,8 @@
   (setq doctor-chatgpt-send-start-point 114)  ;; skip doctor prompt
   (setq doctor-chatgpt-process
         (start-process "*doctor-chatgpt*" "*doctor-chatgpt*"
-                       "/opt/homebrew/bin/python3" "-m" "revChatGPT.V1"))
+                       "/opt/homebrew/bin/python3" (expand-file-name "~/.doom.d/tools/revChatGPT_wrap.py")
+                       "--api_key" doctor-chatgpt-offical-key))
   (setq doctor-chatgpt-ready nil)
   (set-process-filter doctor-chatgpt-process 'doctor-chatgpt-filter))
 

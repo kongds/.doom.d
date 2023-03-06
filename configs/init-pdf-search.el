@@ -120,7 +120,8 @@
     "Convert outline format to list."
     (let* ((outline (pdf-info-outline buffer))
            (completions (make-hash-table :test 'equal :size (length outline)))
-           (parent-section '()))
+           (parent-section '())
+           (index 0))
       (dolist (item outline)
         (let ((depth (cdr (nth 0 item)))
               (type (cdr (nth 1 item)))
@@ -134,7 +135,6 @@
             (add-to-list 'parent-section (cons title depth) t))
            (t
             (setcdr (nthcdr (- depth 2) parent-section) (list (cons title depth)))))
-          (message "parent-section: %s" parent-section)
           (puthash
            (if (equal depth 1)
                title
@@ -142,20 +142,33 @@
               (let ((ptitle ""))
                 (dolist (parent parent-section)
                   (when (> depth (cdr parent))
-                    (message "parent: %s %s" parent ptitle)
                     (setq ptitle
                           (if (eq (length ptitle) 0)
                               (car parent)
                             (concat ptitle " > " (car parent))))))
                 ptitle)
               " > " title))
-           (list depth type page top title) completions)))
+           (list depth type page top title index) completions)
+          (setq index (1+ index))))
       completions))
+
+  ;; from https://emacs.stackexchange.com/questions/8115/make-completing-read-respect-sorting-order-of-a-collection/8177#8177
+  ;; to make completing-read respect the order of the collection
+  (defun my-presorted-completion-table (completions)
+    (lambda (string pred action)
+      (if (eq action 'metadata)
+          `(metadata (display-sort-function . ,#'identity))
+        (complete-with-action action completions string pred))))
 
   (defun pdf-outline-consult (section-title)
     (interactive (list
                   (completing-read "Section: "
-                                   (pdf-info-outline-format-to-list (current-buffer)))))
+                                   (my-presorted-completion-table
+                                    (let ((sorted-list (list)))
+                                      (maphash (lambda (k v) (push (cons k v) sorted-list)) (pdf-info-outline-format-to-list (current-buffer)))
+                                      (sort sorted-list (lambda (a b) (< (car (last (cdr a)))
+                                                                    (car (last (cdr b))))))))
+                                   nil nil nil t)))
     (let* ((section (gethash section-title (pdf-info-outline-format-to-list (current-buffer))))
            (depth (nth 0 section))
            (type (nth 1 section))

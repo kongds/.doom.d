@@ -115,6 +115,58 @@
       (kbd "<escape>") #'my/pdf-view-force-normal-state))
   )
 
+(after! pdf-outline
+  (defun pdf-info-outline-format-to-list (buffer)
+    "Convert outline format to list."
+    (let* ((outline (pdf-info-outline buffer))
+           (completions (make-hash-table :test 'equal :size (length outline)))
+           (parent-section '()))
+      (dolist (item outline)
+        (let ((depth (cdr (nth 0 item)))
+              (type (cdr (nth 1 item)))
+              (title (cdr (nth 2 item)))
+              (page (cdr (nth 3 item)))
+              (top (cdr (nth 4 item))))
+          (cond
+           ((eq depth 1)
+            (setq parent-section (list (cons title depth))))
+           ((<= (length parent-section) (1- depth))
+            (add-to-list 'parent-section (cons title depth) t))
+           (t
+            (setcdr (nthcdr (- depth 2) parent-section) (list (cons title depth)))))
+          (message "parent-section: %s" parent-section)
+          (puthash
+           (if (equal depth 1)
+               title
+             (concat
+              (let ((ptitle ""))
+                (dolist (parent parent-section)
+                  (when (> depth (cdr parent))
+                    (message "parent: %s %s" parent ptitle)
+                    (setq ptitle
+                          (if (eq (length ptitle) 0)
+                              (car parent)
+                            (concat ptitle " > " (car parent))))))
+                ptitle)
+              " > " title))
+           (list depth type page top title) completions)))
+      completions))
+
+  (defun pdf-outline-consult (section-title)
+    (interactive (list
+                  (completing-read "Section: "
+                                   (pdf-info-outline-format-to-list (current-buffer)))))
+    (let* ((section (gethash section-title (pdf-info-outline-format-to-list (current-buffer))))
+           (depth (nth 0 section))
+           (type (nth 1 section))
+           (page (nth 2 section))
+           (top (nth 3 section)))
+      (pdf-links-action-perform
+       `((depth . ,depth) (type . ,type) (title . ,section-title) (page . ,page) (top . ,top)))))
+
+  (evil-collection-define-key 'normal 'pdf-view-mode-map
+    "o" 'pdf-outline-consult))
+
 (after! pdf-view
   (evil-collection-define-key 'normal 'pdf-view-mode-map
     "N" 'pdf-history-forward

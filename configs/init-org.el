@@ -193,7 +193,7 @@
   (define-key org-mode-map (kbd "C-k") #'org-babel-previous-src-block))
 
 ;; babel + lsp-bridge
-(after! org
+(after! (org lsp-bridge)
   ;; support return
   (defun acm-maybe-complete ()
     (if (acm-frame-visible-p acm-menu-frame)

@@ -68,9 +68,8 @@
 (defvar work-remote-tmux-rerun--wait-timer-count nil)
 (defvar work-remote-tmux-rerun--running nil)
 
-(defun vterm-remote-tmux-rerun--show-string (vterm-buffer-name vterm-time-consume vterm-output)
-  (message "%s(%ss): %s" vterm-buffer-name vterm-time-consume
-           (substring vterm-output 0 (min (length vterm-output) 157))))
+(defun work-remote-tmux--notify (str)
+  (message (substring str 0 (min (length str) 157))))
 
 (defun vterm-remote-tmux-rerun--check-end ()
   (let ((current-line
@@ -110,16 +109,17 @@
           ;; wait
           ((and work-remote-tmux-rerun--running
                 (> work-remote-tmux-rerun--wait-timer-count 0) current-line)
-           (vterm-remote-tmux-rerun--show-string
+           (work-remote-tmux--notify
+            (format "%s(%ss): %s"
                     (buffer-name work-remote-tmux-rerun--buffer)
                     (* (- 600 work-remote-tmux-rerun--wait-timer-count) 0.5)
                     (if (eq 0 (length current-line))
                         (with-current-buffer work-remote-tmux-rerun--buffer
                           (save-excursion
                             (when (eq 0 (length (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line))))
-                                (previous-line))
+                              (previous-line))
                             (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line))))
-                      current-line))
+                      current-line)))
            (cl-decf work-remote-tmux-rerun--wait-timer-count)
            (run-with-timer 0.5 nil #'vterm-remote-tmux-rerun--check-end)))
       ))
@@ -292,23 +292,26 @@
              (puthash (cdr (assoc 'pid job)) job jobs))
 
            (dolist (pid pids)
-             (unless (member pid work-remote-tmux-current-pids)
-               (message "start job %s %s-%s %s" pid
+             (unless (or t (member pid work-remote-tmux-current-pids))
+               ;; skip message start job
+               (work-remote-tmux--notify
+                (format "start job %s %s-%s %s" pid
                         (substring (cdr (assoc 'server (gethash pid jobs))) 3 6)
                         (cdr (assoc 'gpuid (gethash pid jobs)))
                         (if (> (length (cdr (assoc 'run_name (gethash pid jobs)))) 0)
                             (cdr (assoc 'run_name (gethash pid jobs)))
-                          (cdr (assoc 'cmd (gethash pid jobs)))))))
+                          (cdr (assoc 'cmd (gethash pid jobs))))))))
 
            (if work-remote-tmux-current-pids
                (dolist (pid work-remote-tmux-current-pids)
                  (unless (member pid pids)
-                   (message "finish job %s %s-%s %s" pid
-                            (substring (cdr (assoc 'server (gethash pid work-remote-tmux-current-jobs))) 3 6)
-                            (cdr (assoc 'gpuid (gethash pid work-remote-tmux-current-jobs)))
-                            (if (> (length (cdr (assoc 'run_name (gethash pid work-remote-tmux-current-jobs)))) 0)
-                                (cdr (assoc 'run_name (gethash pid work-remote-tmux-current-jobs)))
-                              (cdr (assoc 'cmd (gethash pid work-remote-tmux-current-jobs))))))))
+                   (work-remote-tmux--notify
+                    (format "finish job %s %s-%s %s" pid
+                           (substring (cdr (assoc 'server (gethash pid work-remote-tmux-current-jobs))) 3 6)
+                           (cdr (assoc 'gpuid (gethash pid work-remote-tmux-current-jobs)))
+                           (if (> (length (cdr (assoc 'run_name (gethash pid work-remote-tmux-current-jobs)))) 0)
+                               (cdr (assoc 'run_name (gethash pid work-remote-tmux-current-jobs)))
+                             (cdr (assoc 'cmd (gethash pid work-remote-tmux-current-jobs)))))))))
 
            (setq work-remote-tmux-current-pids pids
                  work-remote-tmux-current-jobs jobs))

@@ -1,7 +1,8 @@
 ;;; configs/init-copilot.el -*- lexical-binding: t; -*-
 
 (use-package! copilot
-  :hook (prog-mode . copilot-mode)
+  :hook ((prog-mode . copilot-mode)
+         (org-mode . copilot-mode))
   :custom
   (copilot-network-proxy '(:host "127.0.0.1" :port 1087))
   (copilot-idle-delay 0)

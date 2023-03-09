@@ -192,3 +192,12 @@
   (define-key org-mode-map (kbd "C-j") #'org-babel-next-src-block)
   (define-key org-mode-map (kbd "C-k") #'org-babel-previous-src-block))
 
+;; babel + lsp-bridge
+(after! org
+  ;; support return
+  (defun acm-maybe-complete ()
+    (if (acm-frame-visible-p acm-menu-frame)
+        (or (acm-complete) t)
+      nil))
+  (add-to-list 'acm-continue-commands '+org/return)
+  (advice-add '+org/return :before-until #'acm-maybe-complete))

@@ -58,6 +58,15 @@
   (setq doctor-chatgpt-ready nil)
   (set-process-filter doctor-chatgpt-process 'doctor-chatgpt-filter))
 
+(defun doctor-chatgpt ()
+  "Switch to *doctor* buffer and start giving psychotherapy."
+  (interactive)
+  (switch-to-buffer "*doctor*")
+  (when (eq (point-max) 1)
+    ;; init
+    (doctor-chatgpt-start-process)
+    (doctor-mode)))
+
 (defun doctor-chatgpt-read-print ()
   "Top level loop."
   (interactive nil doctor-mode)
@@ -71,7 +80,7 @@
   (setq doctor-chatgpt-replying t)
   (process-send-string doctor-chatgpt-process (concat doctor-sent "\n\n")))
 
-(advice-add 'doctor :before #'doctor-chatgpt-start-process)
+(advice-add 'doctor :override #'doctor-chatgpt)
 (advice-add 'doctor-read-print :override #'doctor-chatgpt-read-print)
 (define-key doctor-mode-map (kbd "s-k") #'doctor-chatgpt-save-chat-and-kill)
 (after! evil-collection

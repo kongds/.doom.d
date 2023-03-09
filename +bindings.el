@@ -27,6 +27,16 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
                       (- (display-pixel-width) 20)
                       (- (display-pixel-height) bias) t))))
 
+(defun make-second-screen-frame ()
+  (interactive)
+  (if (cl-find-if (lambda (frame) (equal "second-screen" (frame-parameter frame 'name)))
+                      (frame-list))
+      (select-frame-by-name "second-screen")
+    (let ((frame (make-frame)))
+      (set-frame-position frame 2560 -655)
+      (set-frame-name "second-screen")
+      (set-frame-size frame  (- 1440 20) (- 2560 5) t))))
+
 (map!
  "s-a" #'mark-whole-buffer
  "s-v" #'yank
@@ -38,7 +48,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
  "s-z" #'undo
  "s-k" #'kill-this-buffer
  "s-s" #'save-buffer
- "s-n" #'make-frame
+ "s-n" #'make-second-screen-frame
  "s-q" #'save-buffers-kill-emacs
  "s-;" #'vterm-pop-posframe-toggle
 
@@ -108,7 +118,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   :desc "ace" :n "w a" #'ace-select-window
   :desc "kill other window" :n "w 0" #'delete-other-windows)
 
- ;;:n "t" #'blink-search
+ :n "t" #'doctor
  :nv "S" #'color-rg-search-input
 
  (:after cape

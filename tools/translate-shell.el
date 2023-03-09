@@ -89,7 +89,7 @@
 (define-derived-mode translate-shell-mode fundamental-mode "translate"
   )
 
-(after! evil-collection-pdf
+(after! evil-collection
   (evil-collection-define-key 'normal 'translate-shell-mode-map
     "q" (lambda ()
           (interactive)

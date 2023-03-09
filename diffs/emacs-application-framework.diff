@@ -1,5 +1,5 @@
 diff --git a/core/buffer.py b/core/buffer.py
-index ba34d87..526c87f 100755
+index 2faff27..492d045 100755
 --- a/core/buffer.py
 +++ b/core/buffer.py
 @@ -292,7 +292,7 @@ class Buffer(QGraphicsScene):
@@ -11,7 +11,7 @@ index ba34d87..526c87f 100755
          self.fetch_search_input_thread.start()
  
      def stop_search_input_monitor_thread(self):
-@@ -489,6 +489,10 @@ class FetchMarkerInputThread(QThread):
+@@ -495,6 +495,10 @@ class FetchMarkerInputThread(QThread):
                  
                  marker_input_quit = minibuffer_input and len(minibuffer_input) > 0 and minibuffer_input[-1] in self.marker_quit_keys
                  marker_input_finish = minibuffer_input in self.markers
@@ -23,10 +23,10 @@ index ba34d87..526c87f 100755
                  if marker_input_quit:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index bb4d205..727a021 100755
+index bf3c6c8..8609009 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
-@@ -38,6 +38,7 @@ import base64
+@@ -39,6 +39,7 @@ import base64
  import os
  import platform
  import pathlib
@@ -34,7 +34,7 @@ index bb4d205..727a021 100755
  
  MOUSE_LEFT_BUTTON = 1
  MOUSE_WHEEL_BUTTON = 4
-@@ -880,6 +881,7 @@ class BrowserBuffer(Buffer):
+@@ -879,6 +880,7 @@ class BrowserBuffer(Buffer):
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, self.enable_javascript)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptCanAccessClipboard, self.enable_javascript_access_clipboard)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.ShowScrollBars, self.enable_scrollbar)
@@ -42,7 +42,7 @@ index bb4d205..727a021 100755
  
              if self.unknown_url_scheme_policy == "DisallowUnknownUrlSchemes":
                  self.settings.setUnknownUrlSchemePolicy(self.settings.UnknownUrlSchemePolicy.DisallowUnknownUrlSchemes)
-@@ -987,6 +989,48 @@ class BrowserBuffer(Buffer):
+@@ -986,6 +988,48 @@ class BrowserBuffer(Buffer):
                  f.write(base64.b64decode(b64bytes))
  
              message_to_emacs("Save image: " + image_path)
@@ -91,7 +91,7 @@ index bb4d205..727a021 100755
          else:
              if hasattr(self, "try_start_aria2_daemon"):
                  self.try_start_aria2_daemon()
-@@ -1126,11 +1170,11 @@ class BrowserBuffer(Buffer):
+@@ -1125,11 +1169,11 @@ class BrowserBuffer(Buffer):
          elif callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
              self.buffer_widget.clean_search_and_select()
  
@@ -106,10 +106,10 @@ index bb4d205..727a021 100755
              self.buffer_widget._search_text(self.buffer_widget.search_term, True)
  
 diff --git a/eaf.el b/eaf.el
-index 12090d5..faf08d4 100644
+index 6a0c488..b7226d0 100644
 --- a/eaf.el
 +++ b/eaf.el
-@@ -1030,38 +1030,45 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1042,40 +1042,45 @@ provide at least one way to let everyone experience EAF. ;)"
      (defvar eaf--topmost-switch-to-python nil
        "Record if Emacs should switch to Python process.")
  
@@ -127,24 +127,26 @@ index 12090d5..faf08d4 100644
 +
      (defun eaf--topmost-focus-change ()
        "Manage Emacs's focus change."
--      (let ((front (cond ((eq system-type 'darwin)
--                          (shell-command-to-string "app-frontmost --name"))
--                         ((string-equal (getenv "XDG_CURRENT_DESKTOP") "sway")
--                          (if (executable-find "jshon")
--                              (shell-command-to-string (concat eaf-build-dir "swaymsg-treefetch/swaymsg-focusfetcher.sh"))
--                            (message "Please install jshon for swaywm support.")))
--                         ((string-equal (getenv "XDG_CURRENT_DESKTOP") "Hyprland")
--                          (if (executable-find "jshon")
--                              (shell-command-to-string "hyprctl -j activewindow | jshon -e class -u")
--                            (message "Please install jshon for hyprland support.")))
--                         (t
--                          (require 'dbus)
--                          (dbus-call-method :session "org.gnome.Shell" "/org/eaf/wayland" "org.eaf.wayland" "get_active_window" :timeout 1000)))))
+-      (let* ((front (cond ((eq system-type 'darwin)
+-                           (shell-command-to-string "app-frontmost --name"))
+-                          ((string-equal (getenv "XDG_CURRENT_DESKTOP") "sway")
+-                           (if (executable-find "jshon")
+-                               (shell-command-to-string (concat eaf-build-dir "swaymsg-treefetch/swaymsg-focusfetcher.sh"))
+-                             (message "Please install jshon for swaywm support.")))
+-                          ((string-equal (getenv "XDG_CURRENT_DESKTOP") "Hyprland")
+-                           (gethash "class" (json-parse-string (shell-command-to-string "hyprctl -j activewindow"))))
+-                          (t
+-                           (require 'dbus)
+-                           (dbus-call-method :session "org.gnome.Shell" "/org/eaf/wayland" "org.eaf.wayland" "get_active_window" :timeout 1000))))
+-             (front-app-name (string-trim front)))
 +      (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
          (cond
--         ((member front (list "Python\n" "python3\n" "python3"))
+-         ((member front-app-name (list "Python" "python3"))
 -          (setq eaf--topmost-switch-to-python t))
--         ((member front (list "Emacs\n" "emacs"))
+-         ((or (string-equal (string-replace "." "-" front)
+-                            eaf--emacs-program-name)
+-              (string-match-p (regexp-quote front-app-name)
+-                              eaf--emacs-program-name))
 -          (if eaf--topmost-switch-to-python
 -              (setq eaf--topmost-switch-to-python nil)
 -            (run-with-timer 0.1 nil #'eaf--topmost-focus-update)))
@@ -176,7 +178,7 @@ index 12090d5..faf08d4 100644
  
      (defun eaf--topmost-focus-out ()
        "Prepare the screenshot and hide all eaf buffers."
-@@ -1070,7 +1077,8 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1084,7 +1089,8 @@ provide at least one way to let everyone experience EAF. ;)"
            (with-current-buffer (window-buffer window)
              (when (derived-mode-p 'eaf-mode)
                (eaf--clip-image window)
@@ -184,17 +186,17 @@ index 12090d5..faf08d4 100644
 +              (eaf-call-sync "hide_buffer_view" eaf--buffer-id)))))
 +        (setq eaf--topmost-has-focus nil))
  
-     (add-to-list 'move-frame-functions #'eaf-monitor-configuration-change)
+     (defun eaf--clip-image (window)
+       "Clip the image of the qwidget."
+@@ -1123,6 +1129,7 @@ provide at least one way to let everyone experience EAF. ;)"
  
-@@ -1109,6 +1117,7 @@ provide at least one way to let everyone experience EAF. ;)"
-     (add-to-list 'delete-frame-functions #'eaf--topmost-delete-frame-handler)
-     ))
+     (add-to-list 'delete-frame-functions #'eaf--topmost-delete-frame-handler)))
  
 +(defvar eaf-showing nil)
  (defun eaf-monitor-configuration-change (&rest _)
    "EAF function to respond when detecting a window configuration change."
    (when (and eaf--monitor-configuration-p
-@@ -1146,6 +1155,14 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1160,6 +1167,14 @@ provide at least one way to let everyone experience EAF. ;)"
                                    (- w window-divider-right-padding)
                                    (- h window-divider-bottom-padding))
                            view-infos)))))))

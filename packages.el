@@ -144,8 +144,6 @@
 
 (package! elfeed)
 
-(package! blink-search :recipe (:host github :repo "manateelazycat/blink-search" :files ("*")))
-
 (package! exec-path-from-shell)
 (package! color-rg :recipe (:host github :repo "manateelazycat/color-rg" :files ("*")))
 

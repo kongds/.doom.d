@@ -48,13 +48,29 @@ else
     echo "Upgrading packages"
     export http_proxy=http://127.0.0.1:1087;export https_proxy=http://127.0.0.1:1087;export ALL_PROXY=socks5://127.0.0.1:1080
     STASH_NAME=$(date '+%Y-%m-%d-%H:%M:%S')
+
+    cd ~/.emacs.d
     git stash push -m $STASH_NAME
     ~/.emacs.d/bin/doom upgrade
     git stash apply stash@{0}
+
+    # delete package
+    for package in $(git diff | grep "package\!" | grep "^+" | sed "s/^.*e! \(.*\) :pin.*/\1/")
+    do
+        echo $package
+        if [ $package == "jupyter" ]; then
+            rm -rf ~/.emacs.d/.local/straight/repos/emacs-jupyter
+        else
+            rm -rf ~/.emacs.d/.local/straight/repos/${package}
+        fi
+        rm -rf ~/.emacs.d/.local/straight/build-${VER}/${package}
+    done
+    ~/.emacs.d/bin/doom sync
+    cd -
 fi
 
 VER=`emacs --version | head -n 1 | awk '{print $3}'`
-rm -rf ~/.emacs.d/.local/straight/build-${VER}/eaf ~/.emacs.d/.local/straight/build-${VER}/jupyter ~/.emacs.d/.local/straight/build-${VER}/copilot
+rm -rf ~/.emacs.d/.local/straight/build-${VER}/eaf ~/.emacs.d/.local/straight/build-${VER}/jupyter
 
 
 for diff_file in ~/.doom.d/diffs/*; do

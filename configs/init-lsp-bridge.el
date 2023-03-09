@@ -3,10 +3,10 @@
 ;;(add-to-list 'load-path "/Users/royokong/lsp-bridge")
 
 (add-hook 'org-mode-hook #'(lambda()
-                             (setq-local corfu-auto t)
+                             (setq-local corfu-auto nil)
                              ;;(setq-local acm-enable-english-helper t)
-                             ;;(lsp-bridge-mode)
-                             (setq-local completion-at-point-functions (list  (cape-super-capf  #'cape-dict #'cape-dabbrev)))
+                             (lsp-bridge-mode)
+                             ;;(setq-local completion-at-point-functions (list  (cape-super-capf  #'cape-dict #'cape-dabbrev)))
                              ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
                              ))
 
@@ -21,7 +21,8 @@
 
 (add-hook 'emacs-lisp-mode-hook #'(lambda()
                                     (setq-local corfu-auto nil)
-                                    (lsp-bridge-mode)))
+
+                                    (unless (string-match "\*org-src-fontification:" (buffer-name)) (lsp-bridge-mode))))
 
 (add-hook 'python-mode-hook #'(lambda()
                                 ;; remove lsp-bridge modeline
@@ -32,12 +33,12 @@
                                 ;; highlight symbol
                                 (highlight-symbol-mode 1)
 
-                                (lsp-bridge-mode)
+                                (unless (string-match "\*org-src-fontification:" (buffer-name)) (lsp-bridge-mode))
                                 (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
                                             +lookup-implementations-functions '(lsp-bridge-find-impl t)
                                             +lookup-references-functions '(lsp-bridge-find-references t))))
 (add-hook 'c-mode-hook #'(lambda()
-                           (lsp-bridge-mode)
+                           (unless (string-match "\*org-src-fontification:" (buffer-name)) (lsp-bridge-mode))
                            (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
                                        +lookup-implementations-functions '(lsp-bridge-find-impl t)
                                        +lookup-references-functions '(lsp-bridge-find-references t))))
@@ -87,6 +88,7 @@
   (setq lsp-bridge-enable-signature-help nil)
   (setq lsp-bridge-org-babel-lang-list '("clojure" "latex" "python"))
   (setq lsp-bridge-python-ruff-lsp-server "pyright-background-analysis_ruff")
+  (setq lsp-bridge-enable-org-babel t)
 
   :config
   (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)
@@ -98,10 +100,37 @@
   (remove-hook 'python-mode-local-vars-hook #'+python-init-anaconda-mode-maybe-h)
   (remove-hook 'python-mode-hook #'+python-use-correct-flycheck-executables-h)
 
+  (defvar lsp-bridge-running-window nil)
+  (defvar lsp-bridge-running-eob-timer nil)
+  (defun lsp-bridge-restart-process-try-eob ()
+    (message "wait eob...")
+    (if (and (window-live-p lsp-bridge-running-window)
+             (equal (buffer-name (window-buffer lsp-bridge-running-window)) "*lsp-bridge*"))
+        (when (> (with-current-buffer "*lsp-bridge*" (point-max))  100)
+          (let ((sw (selected-window)))
+            (select-window lsp-bridge-running-window)
+            (recenter (- (max 1 scroll-margin)))
+            (select-window sw))
+          (acm-cancel-timer lsp-bridge-running-eob-timer))
+      (acm-cancel-timer lsp-bridge-running-eob-timer)))
+
+  (defun lsp-bridge-restart-process-after (&rest _)
+    (when (window-live-p lsp-bridge-running-window)
+      (set-window-buffer lsp-bridge-running-window (get-buffer "*lsp-bridge*"))
+      (setq lsp-bridge-running-eob-timer
+            (run-at-time 1 t #'lsp-bridge-restart-process-try-eob)))
+    (delete-frame acm-menu-frame)
+    (delete-frame acm-doc-frame))
+
   (advice-add #'lsp-bridge-restart-process
-              :after #'(lambda (&rest _)
-                         (delete-frame acm-menu-frame)
-                         (delete-frame acm-doc-frame)))
+              :after #'lsp-bridge-restart-process-after)
+
+  (advice-add #'lsp-bridge-restart-process
+              :before #'(lambda (&rest _)
+                          (setq lsp-bridge-running-window nil)
+                          (dolist (window (window-list))
+                            (when (equal (buffer-name (window-buffer window)) "*lsp-bridge*")
+                              (setq lsp-bridge-running-window window)))))
 
   (map!
    (:leader

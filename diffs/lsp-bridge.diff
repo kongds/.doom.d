@@ -1,8 +1,8 @@
 diff --git a/acm/acm.el b/acm/acm.el
-index 33bccf4..816df00 100644
+index 0383973..5c42847 100644
 --- a/acm/acm.el
 +++ b/acm/acm.el
-@@ -719,7 +719,7 @@ The key of candidate will change between two LSP results."
+@@ -742,7 +742,7 @@ The key of candidate will change between two LSP results."
                          (+ cursor-y offset-y))))
      (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
  
@@ -11,7 +11,7 @@ index 33bccf4..816df00 100644
    (when acm-enable-doc
      (let* ((candidate (acm-menu-current-candidate))
             (backend (plist-get candidate :backend))
-@@ -762,6 +762,19 @@ The key of candidate will change between two LSP results."
+@@ -786,6 +786,19 @@ The key of candidate will change between two LSP results."
            ;; Hide doc frame immediately if backend is not LSP.
            (_ (acm-doc-hide)))))))
  
@@ -31,6 +31,63 @@ index 33bccf4..816df00 100644
  (defun acm-doc-frame-adjust ()
    (let* ((emacs-width (frame-pixel-width))
           (emacs-height (frame-pixel-height))
+diff --git a/core/fileaction.py b/core/fileaction.py
+index 2e53632..dfe6bec 100755
+--- a/core/fileaction.py
++++ b/core/fileaction.py
+@@ -198,7 +198,7 @@ class FileAction:
+         self.last_change_file_time = time.time()
+ 
+         # Send textDocument/completion 100ms later.
+-        self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, prefix))
++        self.try_completion_timer = threading.Timer(0.01, lambda : self.try_completion(position, before_char, prefix))
+         self.try_completion_timer.start()
+         
+     def update_file(self, buffer_name):
+@@ -355,7 +355,12 @@ class FileAction:
+     def rename_file(self, old_filepath, new_filepath):
+         self.get_lsp_servers()[0].send_did_rename_files_notification(old_filepath, new_filepath)
+ 
++    completion_request_ids = -1
+     def send_server_request(self, lsp_server, handler_name, *args, **kwargs):
++        if self.completion_request_ids > 0 and handler_name == "completion":
++            # Drop completion request if previous completion request is not finished.
++            return
++
+         handler: Handler = self.method_handlers[lsp_server.server_info["name"]][handler_name]
+         
+         handler.latest_request_id = request_id = generate_request_id()
+@@ -371,7 +376,10 @@ class FileAction:
+             method=handler.method,
+             params=params,
+             request_id=request_id)
+-        
++        if handler_name == "completion":
++            self.completion_request_ids = request_id
++            self.completion_start_time = time.time()
++
+     def exit(self):
+         for lsp_server in (self.org_lang_servers.values() if self.org_file else self.get_lsp_servers()):
+             if lsp_server.server_name in LSP_SERVER_DICT:
+diff --git a/core/lspserver.py b/core/lspserver.py
+index a9e87f3..b880b8b 100755
+--- a/core/lspserver.py
++++ b/core/lspserver.py
+@@ -618,6 +618,14 @@ class LspServer:
+             else:
+                 if "method" not in message and message["id"] in self.request_dict:
+                     handler = self.request_dict[message["id"]]
++                    if handler.method == 'textDocument/completion':
++                        for key  in self.files:
++                            fileaction = self.files[key]
++                            if message['id'] == fileaction.completion_request_ids:
++                                import time
++                                fileaction.completion_request_ids = -1
++                                print(fileaction, message['id'],
++                                      time.time() - fileaction.completion_start_time)
+                     handler.handle_response(
+                         request_id=message["id"],
+                         response=message["result"],
 diff --git a/core/search_file_words.py b/core/search_file_words.py
 index b8e74ff..3823723 100755
 --- a/core/search_file_words.py
@@ -46,6 +103,19 @@ index b8e74ff..3823723 100755
              search_candidates = self.search_word(prefix, all_words)
              candidates = []
              if len(search_candidates) > 0:
+diff --git a/langserver/pyright-background-analysis.json b/langserver/pyright-background-analysis.json
+index 9444e0c..c3962be 100644
+--- a/langserver/pyright-background-analysis.json
++++ b/langserver/pyright-background-analysis.json
+@@ -12,7 +12,7 @@
+       "autoImportCompletions": true,
+       "typeshedPaths": [],
+       "stubPath": "",
+-      "useLibraryCodeForTypes": true,
++      "useLibraryCodeForTypes": false,
+       "diagnosticMode": "openFilesOnly",
+       "typeCheckingMode": "basic",
+       "logLevel": "verbose",
 diff --git a/lsp-bridge-diagnostic.el b/lsp-bridge-diagnostic.el
 index d3027cf..5926b51 100644
 --- a/lsp-bridge-diagnostic.el
@@ -113,10 +183,10 @@ index d3027cf..5926b51 100644
  (defun lsp-bridge-diagnostic-copy ()
    (interactive)
 diff --git a/lsp-bridge.el b/lsp-bridge.el
-index e142cac..734d01e 100644
+index 5a8a62c..e8e36d9 100644
 --- a/lsp-bridge.el
 +++ b/lsp-bridge.el
-@@ -596,13 +596,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
+@@ -599,13 +599,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
    (or (alist-get mode lsp-bridge-formatting-indent-alist)
        (lsp-bridge--get-indent-width (or (get mode 'derived-mode-parent) 'default))))
  
@@ -130,43 +200,52 @@ index e142cac..734d01e 100644
  (cl-defmacro lsp-bridge-save-position (&rest body)
    "`save-excursion' not enough for LSP code format.
  So we build this macro to restore postion after code format."
-@@ -732,18 +725,24 @@ So we build this macro to restore postion after code format."
-             (lsp-bridge-use-ds-pinyin-in-org-mode
-              "ds-pinyin"))))))
+@@ -747,26 +740,31 @@ So we build this macro to restore postion after code format."
+                    (setq-local acm-is-elisp-mode-in-org t))
+                (lsp-bridge-get-single-lang-server-by-mode))))))))
  
 +(defvar-local lsp-bridge-has-lsp-server--p nil)
 +(defvar-local lsp-bridge-has-lsp-server--p-set nil)
  (defun lsp-bridge-has-lsp-server-p ()
--  (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
--    (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
--                                               (lsp-bridge--with-file-buffer dirname
--                                                 (lsp-bridge-get-multi-lang-server-by-mode))))
--           (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
--                                         (lsp-bridge--with-file-buffer dirname
--                                           (lsp-bridge-get-single-lang-server-by-mode)))))
--      (if multi-lang-server-by-extension
--          multi-lang-server-by-extension
--        lang-server-by-extension)
--      )))
-+  (if lsp-bridge-has-lsp-server--p-set
-+      lsp-bridge-has-lsp-server--p
-+    (setq-local lsp-bridge-has-lsp-server--p
-+                (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
-+                  (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
-+                                                             (lsp-bridge--with-file-buffer dirname
-+                                                               (lsp-bridge-get-multi-lang-server-by-mode))))
-+                         (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
-+                                                       (lsp-bridge--with-file-buffer dirname
-+                                                         (lsp-bridge-get-single-lang-server-by-mode)))))
-+                    (if multi-lang-server-by-extension
-+                        multi-lang-server-by-extension
-+                      lang-server-by-extension)
-+                    ))
-+                lsp-bridge-has-lsp-server--p-set t)))
+   (cond ((and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
+          (setq-local acm-is-elisp-mode-in-org nil)
+-         (and (org-babel-when-in-src-block)
++         (and (org-babel-get-src-block-info)
+               ;; not send change-file for begin_src and end_src
+               (not (string-match-p "^[[:space:]]*#\\+"
+-                              (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
++                                   (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+               (lsp-bridge-get-single-lang-server-by-mode)))
+         (t
+-         (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
+-           (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
+-                                                      (lsp-bridge--with-file-buffer dirname
+-                                                        (lsp-bridge-get-multi-lang-server-by-mode))))
+-                  (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
+-                                                (lsp-bridge--with-file-buffer dirname
+-                                                  (lsp-bridge-get-single-lang-server-by-mode)))))
+-             (if multi-lang-server-by-extension
+-                 multi-lang-server-by-extension
+-               lang-server-by-extension)
+-             )))))
++         (if lsp-bridge-has-lsp-server--p-set
++             lsp-bridge-has-lsp-server--p
++           (setq-local lsp-bridge-has-lsp-server--p
++                       (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
++                         (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
++                                                                    (lsp-bridge--with-file-buffer dirname
++                                                                      (lsp-bridge-get-multi-lang-server-by-mode))))
++                                (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
++                                                              (lsp-bridge--with-file-buffer dirname
++                                                                (lsp-bridge-get-single-lang-server-by-mode)))))
++                           (if multi-lang-server-by-extension
++                               multi-lang-server-by-extension
++                             lang-server-by-extension)))
++                       lsp-bridge-has-lsp-server--p-set t)))))
  
  (defun lsp-bridge-call-async (method &rest args)
    "Call Python EPC function METHOD and ARGS asynchronously."
-@@ -885,7 +884,7 @@ So we build this macro to restore postion after code format."
+@@ -908,7 +906,7 @@ So we build this macro to restore postion after code format."
        (cond ((member this-command-string '("self-insert-command" "org-self-insert-command"))
               (setq this-command 'acm-filter-insert-char)
               (setq last-command 'acm-filter-insert-char))
@@ -175,7 +254,7 @@ index e142cac..734d01e 100644
               (setq this-command 'acm-filter-delete-char)
               (setq last-command 'acm-filter-delete-char))
              ))))
-@@ -1131,6 +1130,9 @@ So we build this macro to restore postion after code format."
+@@ -1154,6 +1152,9 @@ So we build this macro to restore postion after code format."
        ;; Record last command to `lsp-bridge-last-change-command'.
        (setq lsp-bridge-last-change-command (format "%s" this-command))
  
@@ -185,8 +264,8 @@ index e142cac..734d01e 100644
        ;; Record last change position to avoid popup outdate completions.
        (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
  
-@@ -1555,12 +1557,14 @@ So we build this macro to restore postion after code format."
-   (when-let* ((lsp-server-name (lsp-bridge-has-lsp-server-p)))
+@@ -1586,12 +1587,14 @@ So we build this macro to restore postion after code format."
+             (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)))
      ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
      ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
 -    (unless (file-exists-p (buffer-file-name))

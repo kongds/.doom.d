@@ -92,6 +92,12 @@
 (advice-add 'doctor :override #'doctor-chatgpt)
 (advice-add 'doctor-read-print :override #'doctor-chatgpt-read-print)
 (define-key doctor-mode-map (kbd "s-k") #'doctor-chatgpt-save-chat-and-kill)
+(define-key doctor-mode-map (kbd "DEL") #'doctor-chatgpt-backward-delete-char)
+(defun doctor-chatgpt-backward-delete-char ()
+  (interactive)
+  (when (> (point) doctor-chatgpt-send-start-point)
+    (backward-delete-char 1)))
+
 (after! evil-collection
   (evil-collection-define-key 'normal 'doctor-mode-map "q" #'doctor-chatgpt-save-chat-and-kill))
 

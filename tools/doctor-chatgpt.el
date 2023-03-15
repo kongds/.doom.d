@@ -6,6 +6,11 @@
 (defvar doctor-chatgpt-send-start-point 0)
 (defvar doctor-chatgpt-overlay nil)
 
+(defcustom doctor-chatgpt-version 3
+  "The version of chatgpt."
+  :type 'int
+  :group 'doctor-chatgpt)
+
 (defcustom doctor-chatgpt-offical-key ""
   "The offical key for chatgpt."
   :type 'string
@@ -13,10 +18,14 @@
 
 (defun doctor-chatgpt-save-chat-and-kill ()
   (interactive)
-  (if (> (length doctor-chatgpt-recv-list) 1)
-      (write-file (expand-file-name
-                   (concat "~/.doctor-chats/"
-                           (format-time-string "%Y-%m-%d-%H:%M")))))
+  (when-let ((recentf-keep '(".*" . nil)) ;; not push temp file in recentf-list
+             (recentf-exclude '(".*"))
+             (need-save (> (length doctor-chatgpt-recv-list) 1)))
+    (write-file (expand-file-name
+                 (concat "~/.doctor-chats/"
+                         (format-time-string "%Y-%m-%d-%H:%M")))))
+  (when (process-live-p doctor-chatgpt-process)
+    (kill-process doctor-chatgpt-process))
   (kill-this-buffer))
 
 (defun doctor-chatgpt-filter (process output)
@@ -54,7 +63,7 @@
   (setq doctor-chatgpt-process
         (start-process "*doctor-chatgpt*" "*doctor-chatgpt*"
                        "/opt/homebrew/bin/python3" (expand-file-name "~/.doom.d/tools/revChatGPT_wrap.py")
-                       "--api_key" doctor-chatgpt-offical-key))
+                       "--api_key" doctor-chatgpt-offical-key "--version" (number-to-string doctor-chatgpt-version)))
   (setq doctor-chatgpt-ready nil)
   (set-process-filter doctor-chatgpt-process 'doctor-chatgpt-filter))
 
@@ -78,7 +87,7 @@
   (insert "\n")
   (push doctor-sent doctor-chatgpt-send-list)
   (setq doctor-chatgpt-replying t)
-  (process-send-string doctor-chatgpt-process (concat doctor-sent "\n\n")))
+  (process-send-string doctor-chatgpt-process (concat doctor-sent "\n\n\n\n\n")))
 
 (advice-add 'doctor :override #'doctor-chatgpt)
 (advice-add 'doctor-read-print :override #'doctor-chatgpt-read-print)

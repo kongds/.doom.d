@@ -65,22 +65,47 @@
                        "/opt/homebrew/bin/python3" (expand-file-name "~/.doom.d/tools/revChatGPT_wrap.py")
                        "--api_key" doctor-chatgpt-offical-key "--version" (number-to-string doctor-chatgpt-version)))
   (setq doctor-chatgpt-ready nil)
+  (setq doctor-chatgpt-replying t)
   (set-process-filter doctor-chatgpt-process 'doctor-chatgpt-filter))
 
-(defun doctor-chatgpt ()
-  "Switch to *doctor* buffer and start giving psychotherapy."
-  (interactive)
-  (switch-to-buffer "*doctor*")
-  (when (eq (point-max) 1)
-    ;; init
-    (doctor-chatgpt-start-process)
-    (doctor-mode)))
+(defun doctor-chatgpt-want-to-input (input)
+  "Send INPUT to chatgpt."
+  (cond
+   ((and (process-live-p doctor-chatgpt-process)
+         doctor-chatgpt-ready
+         (not doctor-chatgpt-replying))
+    (with-current-buffer "*doctor*"
+      (goto-char (point-max))
+      (insert input)
+      (insert "\n")
+      (doctor-chatgpt-read-print t)))
+   (t
+    (run-with-timer 0.1 nil #'doctor-chatgpt-want-to-input input))))
 
-(defun doctor-chatgpt-read-print ()
+(defun doctor-chatgpt (&optional arg)
+  "Switch to *doctor* buffer and start giving psychotherapy."
+  (interactive (list (if (use-region-p)
+                           (buffer-substring (region-beginning) (region-end))
+                       nil)))
+  (cond
+   (arg
+    (doctor-chatgpt)
+    (doctor-chatgpt-want-to-input (format "%sExplain this code" arg)))
+   (t
+    (if (eq major-mode 'doctor-mode)
+        (switch-to-prev-buffer)
+      (switch-to-buffer "*doctor*")
+      (when (eq (point-max) 1)
+        ;; init
+        (doctor-chatgpt-start-process)
+        (doctor-mode))))))
+
+(defun doctor-chatgpt-read-print (&optional not-use-face)
   "Top level loop."
   (interactive nil doctor-mode)
-  (overlay-put (make-overlay doctor-chatgpt-send-start-point (point-max))
-               'face 'highlight)
+  (unless not-use-face
+        (overlay-put (make-overlay doctor-chatgpt-send-start-point (point-max))
+                     'face 'highlight))
   (setq doctor-sent
         (string-trim
          (buffer-substring-no-properties doctor-chatgpt-send-start-point (point-max))))

@@ -30,7 +30,6 @@
  '(dash-docs-browser-func 'eaf-browse-url)
  '(dired-dwim-target t)
  '(display-time-format "")
- '(doctor-chatgpt-offical-key "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")
  '(doom-big-font-mode t t)
  '(eaf-browser-keybinding
    '(("C--" . "zoom_out")
@@ -422,6 +421,13 @@
  '(vc-annotate-very-old-color nil)
  '(vterm-shell "/opt/homebrew/bin/fish")
  '(wakatime-python-bin nil)
+ '(warning-suppress-log-types
+   '((org-element-cache)
+     (org-element-cache)
+     (org-element-cache)
+     (org-element-cache)
+     (org-element-cache)
+     (org-element-cache)))
  '(warning-suppress-types '((jupyter) (jupyter) (defvaralias))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

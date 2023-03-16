@@ -71,16 +71,29 @@
 (defun work-remote-tmux--notify (str)
   (message (substring str 0 (min (length str) 157))))
 
+(defun vterm-remote-tmux-rerun--clean-current-line (current-line)
+  (replace-regexp-in-string "%" "" (replace-regexp-in-string "\r" "" current-line)))
+
+(defun vterm-remote-tmux-rerun--get-current-line ()
+  (let ((current-line (if (buffer-live-p work-remote-tmux-rerun--buffer)
+                          (with-current-buffer work-remote-tmux-rerun--buffer
+                            (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line)))
+                        nil)))
+    (if (eq 0 (length current-line))
+        (with-current-buffer work-remote-tmux-rerun--buffer
+          (save-excursion
+            (when (eq 0 (length (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line))))
+              (previous-line))
+            (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line))))
+      current-line)))
+
+(defvar vterm-remote-tmux-rerun--last-line nil)
 (defun vterm-remote-tmux-rerun--check-end ()
-  (let ((current-line
-         (if (buffer-live-p work-remote-tmux-rerun--buffer)
-             (with-current-buffer work-remote-tmux-rerun--buffer
-               (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line)))
-           nil))
-        (cbuffer (compilation-buffer-name "compilation" nil nil)))
+  (let ((current-line (vterm-remote-tmux-rerun--clean-current-line
+                       (vterm-remote-tmux-rerun--get-current-line))))
     (cond ((eq (string-match work-remote-tmux-rerun--prompt current-line) 0)
            ;; end
-           (with-current-buffer (get-buffer-create cbuffer)
+           (with-current-buffer (get-buffer-create (compilation-buffer-name "compilation" nil nil))
              (read-only-mode -1)
              (erase-buffer)
              (insert
@@ -95,12 +108,13 @@
              (while (search-backward-regexp work-remote-tmux-rerun--prompt nil t))
              (delete-region (point) (point-max))
              (read-only-mode 1)
-             (compilation-mode))
-           (+popup-buffer (get-buffer cbuffer))
-           (select-window (get-buffer-window cbuffer))
+             (compilation-mode)
+             (+popup-buffer (current-buffer))
+             (select-window (get-buffer-window (current-buffer))))
            (setq work-remote-tmux-rerun--running nil))
           ((string-match "(Pdb)" current-line)
            ;; pdb stop
+           (message "PDB start")
            (vterm-remote-tmux-rerun-pdb-mode 1)
            (let ((current-window (selected-window)))
              (switch-to-buffer-other-window work-remote-tmux-rerun--buffer)
@@ -109,20 +123,17 @@
           ;; wait
           ((and work-remote-tmux-rerun--running
                 (> work-remote-tmux-rerun--wait-timer-count 0) current-line)
-           (work-remote-tmux--notify
-            (format "%s(%ss): %s"
-                    (buffer-name work-remote-tmux-rerun--buffer)
-                    (* (- 600 work-remote-tmux-rerun--wait-timer-count) 0.5)
-                    (if (eq 0 (length current-line))
-                        (with-current-buffer work-remote-tmux-rerun--buffer
-                          (save-excursion
-                            (when (eq 0 (length (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line))))
-                              (previous-line))
-                            (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line))))
-                      current-line)))
+           (unless (equal current-line vterm-remote-tmux-rerun--last-line)
+                (work-remote-tmux--notify
+                (format "%s(%ss): %s"
+                        (buffer-name work-remote-tmux-rerun--buffer)
+                        (* (- 600 work-remote-tmux-rerun--wait-timer-count) 0.5)
+                        current-line))
+                )
            (cl-decf work-remote-tmux-rerun--wait-timer-count)
            (run-with-timer 0.5 nil #'vterm-remote-tmux-rerun--check-end)))
-      ))
+    (setq vterm-remote-tmux-rerun--last-line current-line)))
+
 
 (define-minor-mode vterm-remote-tmux-rerun-pdb-mode
   "PDB"
@@ -138,9 +149,25 @@
     (kbd "n") #'vterm-remote-tmux-rerun-pdb-next
     (kbd "q") #'vterm-remote-tmux-rerun-pdb-quit
     (kbd "c") #'vterm-remote-tmux-rerun-pdb-continue
+    (kbd "J") #'vterm-remote-tmux-rerun-pdb-jump
+    (kbd "E") #'vterm-remote-tmux-rerun-pdb-eval-this-line
     (kbd "e") #'vterm-remote-tmux-rerun-pdb-eval)
   (evil-collection-define-key 'visual  'vterm-remote-tmux-rerun-pdb-mode-map
     (kbd "e") #'vterm-remote-tmux-rerun-pdb-eval))
+
+(defun vterm-remote-tmux-rerun-pdb-jump ()
+  (interactive)
+  (let* ((project-root (doom-project-root))
+         (buffer-line-number (line-number-at-pos))
+         (file-name (file-relative-name (or buffer-file-truename (file-truename file-name))
+                                        (if project-root
+                                            project-root
+                                          nil))))
+    (with-current-buffer work-remote-tmux-rerun--buffer
+      (vterm-send-string (format "b %s:%s" file-name buffer-line-number))
+      (vterm-send-return)
+      (vterm-send-string "c")
+      (vterm-send-return))))
 
 (defun vterm-remote-tmux-rerun-pdb-next ()
   (interactive)
@@ -154,13 +181,21 @@
     (vterm-send-string "c")
     (vterm-send-return)))
 
+(defun vterm-remote-tmux-rerun-pdb-eval-this-line ()
+  (interactive)
+  (let ((line (buffer-substring-no-properties
+                        (line-beginning-position) (line-end-position))))
+  (with-current-buffer work-remote-tmux-rerun--buffer
+    (vterm-send-string (string-trim line))
+    (vterm-send-return))))
+
 (defun vterm-remote-tmux-rerun-pdb-eval (&optional arg)
   (interactive (list (if (use-region-p)
                          (buffer-substring-no-properties
                           (region-beginning) (region-end))
-                       (read-string "eval: "))))
+                       (evil-find-thing t 'symbol))))
   (with-current-buffer work-remote-tmux-rerun--buffer
-    (vterm-send-string arg)
+    (vterm-send-string (string-trim arg))
     (vterm-send-return)))
 
 (defun vterm-remote-tmux-rerun-pdb-quit ()
@@ -404,20 +439,19 @@
 
 
 
-(after! evil-collection
-  (evil-collection-define-key 'normal  'vterm-mode-map
-    (kbd "C-b") #'(lambda ()
-                    (interactive)
-                    (vterm--self-insert)
-                    (evil-collection-vterm-insert)))
-  (evil-collection-define-key 'insert 'vterm-mode-map
-    (kbd "C-w") nil
-    (kbd "C-w k") #'evil-window-up
-    (kbd "C-w j") #'evil-window-down
-    (kbd "C-w h") #'my-evil-move-left-window
-    (kbd "C-w l") #'my-evil-move-right-window
-    (kbd "C-w C-h") #'my-evil-move-left-window
-    (kbd "C-w C-l") #'my-evil-move-right-window))
+(evil-collection-define-key 'normal  'vterm-mode-map
+  (kbd "C-b") #'(lambda ()
+                  (interactive)
+                  (vterm--self-insert)
+                  (evil-collection-vterm-insert)))
+(evil-collection-define-key 'insert 'vterm-mode-map
+  (kbd "C-w") nil
+  (kbd "C-w k") #'evil-window-up
+  (kbd "C-w j") #'evil-window-down
+  (kbd "C-w h") #'my-evil-move-left-window
+  (kbd "C-w l") #'my-evil-move-right-window
+  (kbd "C-w C-h") #'my-evil-move-left-window
+  (kbd "C-w C-l") #'my-evil-move-right-window)
 
 ;; start timer to update jobs
 (work-remote-tmux-update-job-start)

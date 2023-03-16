@@ -21,6 +21,16 @@
     (interactive "p")
     (-my-evil-move-window nil))
 
+  (defun my-evil-move-next-window (args)
+    (interactive "p")
+    (cond
+     ((eq (next-frame) (selected-frame))
+       (evil-window-next nil))
+     ((or (eq (length (window-list)) 1)
+          (eq last-command 'my-evil-move-next-window))
+      (+evil/next-frame 1))
+     (t (evil-window-next nil))))
+
   (evil-global-set-key 'normal (kbd "C-w h") #'my-evil-move-left-window)
   (evil-global-set-key 'normal (kbd "C-w l") #'my-evil-move-right-window)
   (evil-global-set-key 'normal (kbd "C-w C-h") #'my-evil-move-left-window)
@@ -43,4 +53,5 @@
    (:leader
     :desc "evil window right" :n "w l" #'my-evil-move-right-window
     :desc "evil window left" :n "w h" #'my-evil-move-left-window
+    :desc "evil window next" :n "w w" #'my-evil-move-next-window
     )))

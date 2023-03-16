@@ -183,7 +183,7 @@ index d3027cf..5926b51 100644
  (defun lsp-bridge-diagnostic-copy ()
    (interactive)
 diff --git a/lsp-bridge.el b/lsp-bridge.el
-index 5a8a62c..e8e36d9 100644
+index 2968d3c..4076971 100644
 --- a/lsp-bridge.el
 +++ b/lsp-bridge.el
 @@ -599,13 +599,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p

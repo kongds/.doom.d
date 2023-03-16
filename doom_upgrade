@@ -50,9 +50,9 @@ else
     STASH_NAME=$(date '+%Y-%m-%d-%H:%M:%S')
 
     cd ~/.emacs.d
-    git stash push -m $STASH_NAME
+    #git stash push -m $STASH_NAME
     ~/.emacs.d/bin/doom upgrade
-    git stash apply stash@{0}
+    #git stash apply stash@{0}
 
     # delete package
     for package in $(git diff | grep "package\!" | grep "^+" | sed "s/^.*e! \(.*\) :pin.*/\1/")

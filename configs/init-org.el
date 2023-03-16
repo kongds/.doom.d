@@ -201,3 +201,14 @@
       nil))
   (add-to-list 'acm-continue-commands '+org/return)
   (advice-add '+org/return :before-until #'acm-maybe-complete))
+
+
+(after! (org warnings)
+  ;; encounter a bug in org-mode 9.6 when using latex preview
+  (fset #'backtrace-get-frames nil)
+  (fset #'backtrace-to-string nil)
+
+  (fset 'backtrace-get-frames nil)
+  (fset 'backtrace-to-string nil)
+
+  (warnings-suppress 'org-element-cache))

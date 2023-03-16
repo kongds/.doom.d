@@ -118,7 +118,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   :desc "ace" :n "w a" #'ace-select-window
   :desc "kill other window" :n "w 0" #'delete-other-windows)
 
- :n "t" #'doctor
+ :nv "t" #'doctor
  :nv "S" #'color-rg-search-input
 
  (:after cape

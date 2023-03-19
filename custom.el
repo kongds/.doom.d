@@ -422,12 +422,7 @@
  '(vterm-shell "/opt/homebrew/bin/fish")
  '(wakatime-python-bin nil)
  '(warning-suppress-log-types
-   '((org-element-cache)
-     (org-element-cache)
-     (org-element-cache)
-     (org-element-cache)
-     (org-element-cache)
-     (org-element-cache)))
+   '((org-element-cache)))
  '(warning-suppress-types '((jupyter) (jupyter) (defvaralias))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

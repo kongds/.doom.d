@@ -35,7 +35,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
     (let ((frame (make-frame)))
       (set-frame-position frame 2560 -655)
       (set-frame-name "second-screen")
-      (set-frame-size frame  (- 1440 20) (- 2560 5) t))))
+      (set-frame-size frame  (- 1440 20) (- 2560 4) t))))
 
 (map!
  "s-a" #'mark-whole-buffer

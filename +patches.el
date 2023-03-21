@@ -35,3 +35,11 @@ Return nil if there is no such buffer."
 	       (eq (marker-buffer end) (marker-buffer org-src--end-marker))
 	       (= end org-src--end-marker)
 	       (throw 'exit b)))))))
+
+
+(after! projectile
+  (defun projectile-project-root-remove-home-dir (dir)
+    (if (equal (expand-file-name "~/") dir)
+        nil
+      dir))
+  (advice-add 'projectile-project-root :filter-return #'projectile-project-root-remove-home-dir))

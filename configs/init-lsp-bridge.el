@@ -2,48 +2,34 @@
 
 ;;(add-to-list 'load-path "/Users/royokong/lsp-bridge")
 
-(add-hook 'org-mode-hook #'(lambda()
-                             (setq-local corfu-auto nil)
-                             ;;(setq-local acm-enable-english-helper t)
-                             (unless (equal (buffer-name) "*Capture*")
-                               (lsp-bridge-mode))
-                             ;;(setq-local completion-at-point-functions (list  (cape-super-capf  #'cape-dict #'cape-dabbrev)))
-                             ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
-                             ))
+(defun lsp-bridge-maybe-start-from-hook ()
+  (unless (or (string-match "\*org-src-fontification:" (buffer-name))
+              (equal (buffer-name) "*Capture*"))
+    (setq-local corfu-auto nil)
+    (lsp-bridge-mode))
+
+  ;; use lsp bridge as diagnosis
+  (when (member major-mode '(python-mode c-mode c++-mode sh-mode))
+    (flycheck-mode -1))
+
+  (when (member major-mode '(python-mode c-mode c++-mode))
+    (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
+                +lookup-implementations-functions '(lsp-bridge-find-impl t)
+                +lookup-references-functions '(lsp-bridge-find-references t))))
+
+;; use lsp bridge for following modes
+(dolist (hook '(c-mode-hook
+                c++-mode-hook
+                python-mode-hook
+                sh-mode-hook
+                emacs-lisp-mode-hook
+                org-mode-hook))
+  (add-hook hook #'lsp-bridge-maybe-start-from-hook))
 
 (add-hook 'tex-mode-hook #'(lambda()
                              (setq-local corfu-auto t)
-                             ;;(setq-local acm-enable-english-helper t)
-                             ;;(lsp-bridge-mode)
                              (setq-local corfu-auto-delay 0.1)
-                             (setq-local completion-at-point-functions (list (cape-super-capf #'cape-dabbrev #'cape-tex #'cape-dict #'cape-file)))
-                             ;; (setq-local +lsp-company-backends '(company-capf company-dabbrev-code company-ispell :separate))
-                             ))
-
-(add-hook 'emacs-lisp-mode-hook #'(lambda()
-                                    (setq-local corfu-auto nil)
-
-                                    (unless (string-match "\*org-src-fontification:" (buffer-name)) (lsp-bridge-mode))))
-
-(add-hook 'python-mode-hook #'(lambda()
-                                ;; remove lsp-bridge modeline
-                                (setq-local corfu-auto nil)
-                                (flycheck-mode -1)
-                                (setq-local lsp-bridge-enable-hover-diagnostic t)
-
-                                ;; highlight symbol
-                                (highlight-symbol-mode 1)
-
-                                (unless (string-match "\*org-src-fontification:" (buffer-name)) (lsp-bridge-mode))
-                                (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
-                                            +lookup-implementations-functions '(lsp-bridge-find-impl t)
-                                            +lookup-references-functions '(lsp-bridge-find-references t))))
-(add-hook 'c-mode-hook #'(lambda()
-                           (unless (string-match "\*org-src-fontification:" (buffer-name)) (lsp-bridge-mode))
-                           (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
-                                       +lookup-implementations-functions '(lsp-bridge-find-impl t)
-                                       +lookup-references-functions '(lsp-bridge-find-references t))))
-
+                             (setq-local completion-at-point-functions (list (cape-super-capf #'cape-dabbrev #'cape-tex #'cape-dict #'cape-file)))))
 (after! lookup
   ;; fix rtags find defination
   ;; (point-marker) cannot work with different buffer
@@ -90,6 +76,7 @@
   (setq lsp-bridge-org-babel-lang-list '("clojure" "latex" "python"))
   (setq lsp-bridge-python-ruff-lsp-server "pyright-background-analysis_ruff")
   (setq lsp-bridge-enable-org-babel t)
+  (setq lsp-bridge-enable-hover-diagnostic t)
 
   :config
   (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)

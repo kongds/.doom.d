@@ -1,8 +1,8 @@
 diff --git a/core/buffer.py b/core/buffer.py
-index 2faff27..492d045 100755
+index 3d6b984..66f9b7b 100755
 --- a/core/buffer.py
 +++ b/core/buffer.py
-@@ -292,7 +292,7 @@ class Buffer(QGraphicsScene):
+@@ -301,7 +301,7 @@ class Buffer(QGraphicsScene):
      def start_search_input_monitor_thread(self, callback_tag):
          self.fetch_search_input_thread = FetchSearchInputThread(callback_tag)
          self.fetch_search_input_thread.search_changed.connect(self.handle_input_response)
@@ -11,7 +11,7 @@ index 2faff27..492d045 100755
          self.fetch_search_input_thread.start()
  
      def stop_search_input_monitor_thread(self):
-@@ -495,6 +495,10 @@ class FetchMarkerInputThread(QThread):
+@@ -488,6 +488,10 @@ class FetchMarkerInputThread(QThread):
                  
                  marker_input_quit = minibuffer_input and len(minibuffer_input) > 0 and minibuffer_input[-1] in self.marker_quit_keys
                  marker_input_finish = minibuffer_input in self.markers
@@ -19,8 +19,8 @@ index 2faff27..492d045 100755
 +                    marker_input_finish = minibuffer_input in self.markers
 +                else:
 +                    marker_input_finish = False
-                 
-                 if marker_input_quit:
+ 
+                 if marker_input_quit or marker_input_finish:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
 index bf3c6c8..8609009 100755

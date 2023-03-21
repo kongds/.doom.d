@@ -70,21 +70,21 @@ index 2e53632..dfe6bec 100755
          for lsp_server in (self.org_lang_servers.values() if self.org_file else self.get_lsp_servers()):
              if lsp_server.server_name in LSP_SERVER_DICT:
 diff --git a/core/lspserver.py b/core/lspserver.py
-index a9e87f3..b880b8b 100755
+index a9e87f3..78f3ea5 100755
 --- a/core/lspserver.py
 +++ b/core/lspserver.py
 @@ -618,6 +618,14 @@ class LspServer:
              else:
                  if "method" not in message and message["id"] in self.request_dict:
                      handler = self.request_dict[message["id"]]
-+                    if handler.method == 'textDocument/completion':
-+                        for key  in self.files:
-+                            fileaction = self.files[key]
-+                            if message['id'] == fileaction.completion_request_ids:
-+                                import time
-+                                fileaction.completion_request_ids = -1
-+                                print(fileaction, message['id'],
-+                                      time.time() - fileaction.completion_start_time)
++                    # if handler.method == 'textDocument/completion':
++                    #     for key  in self.files:
++                    #         fileaction = self.files[key]
++                    #         if message['id'] == fileaction.completion_request_ids:
++                    #             import time
++                    #             fileaction.completion_request_ids = -1
++                    #             print(fileaction, message['id'],
++                    #                   time.time() - fileaction.completion_start_time)
                      handler.handle_response(
                          request_id=message["id"],
                          response=message["result"],
@@ -199,7 +199,7 @@ index d3027cf..5926b51 100644
  (defun lsp-bridge-diagnostic-copy ()
    (interactive)
 diff --git a/lsp-bridge.el b/lsp-bridge.el
-index 0955c91..72c839c 100644
+index 0955c91..4099844 100644
 --- a/lsp-bridge.el
 +++ b/lsp-bridge.el
 @@ -601,13 +601,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
@@ -280,7 +280,28 @@ index 0955c91..72c839c 100644
        ;; Record last change position to avoid popup outdate completions.
        (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
  
-@@ -1588,12 +1589,14 @@ So we build this macro to restore postion after code format."
+@@ -1268,12 +1269,20 @@ So we build this macro to restore postion after code format."
+                            (base64-encode-string (encode-coding-string (buffer-string) 'utf-8))
+                            )))
+ 
++(defvar-local lsp-bridge-file-last-size nil)
+ (defun lsp-bridge-search-words-rebuild-cache ()
+   "Rebuild words cache when idle."
+   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
+     ;; Update file search words when idle.
+     (lsp-bridge-search-words-update)
+ 
++    ;; Sync file when idle to avoid file not correctly updated in lsp server.
++    (when (and (lsp-bridge-call-file-api-p)
++               (not (eq major-mode 'org-mode))
++               (not (eq lsp-bridge-file-last-size (buffer-size))))
++      (setq-local lsp-bridge-file-last-size (buffer-size))
++      (lsp-bridge-call-file-api "update_file" (buffer-name)))
++
+     (unless (eq last-command 'mwheel-scroll)
+       (lsp-bridge-call-async "search_file_words_rebuild_cache"))))
+ 
+@@ -1588,12 +1597,14 @@ So we build this macro to restore postion after code format."
              (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)))
      ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
      ;; So we need save buffer to disk before enable `lsp-bridge-mode'.

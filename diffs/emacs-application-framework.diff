@@ -23,18 +23,18 @@ index 3d6b984..66f9b7b 100755
                  if marker_input_quit or marker_input_finish:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index bf3c6c8..8609009 100755
+index 8c9d2d0..ca66310 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
-@@ -39,6 +39,7 @@ import base64
- import os
+@@ -40,6 +40,7 @@ import os
  import platform
  import pathlib
+ import threading
 +import subprocess
  
  MOUSE_LEFT_BUTTON = 1
  MOUSE_WHEEL_BUTTON = 4
-@@ -879,6 +880,7 @@ class BrowserBuffer(Buffer):
+@@ -904,6 +905,7 @@ class BrowserBuffer(Buffer):
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, self.enable_javascript)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptCanAccessClipboard, self.enable_javascript_access_clipboard)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.ShowScrollBars, self.enable_scrollbar)
@@ -42,7 +42,7 @@ index bf3c6c8..8609009 100755
  
              if self.unknown_url_scheme_policy == "DisallowUnknownUrlSchemes":
                  self.settings.setUnknownUrlSchemePolicy(self.settings.UnknownUrlSchemePolicy.DisallowUnknownUrlSchemes)
-@@ -986,6 +988,48 @@ class BrowserBuffer(Buffer):
+@@ -1011,6 +1013,47 @@ class BrowserBuffer(Buffer):
                  f.write(base64.b64decode(b64bytes))
  
              message_to_emacs("Save image: " + image_path)
@@ -85,13 +85,12 @@ index bf3c6c8..8609009 100755
 +
 +                message_to_emacs("Opening: " + paper_root+file_name)
 +                eval_in_emacs('find-file', [paper_root+file_name])
-+            import threading
 +            thread = threading.Thread(target=download_pdf_and_open, args=(download_data,))
 +            thread.start()
          else:
              if hasattr(self, "try_start_aria2_daemon"):
                  self.try_start_aria2_daemon()
-@@ -1125,11 +1169,11 @@ class BrowserBuffer(Buffer):
+@@ -1150,11 +1193,11 @@ class BrowserBuffer(Buffer):
          elif callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
              self.buffer_widget.clean_search_and_select()
  
@@ -106,10 +105,10 @@ index bf3c6c8..8609009 100755
              self.buffer_widget._search_text(self.buffer_widget.search_term, True)
  
 diff --git a/eaf.el b/eaf.el
-index 6a0c488..b7226d0 100644
+index 8251b85..11a948f 100644
 --- a/eaf.el
 +++ b/eaf.el
-@@ -1042,40 +1042,45 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1042,42 +1042,45 @@ provide at least one way to let everyone experience EAF. ;)"
      (defvar eaf--topmost-switch-to-python nil
        "Record if Emacs should switch to Python process.")
  
@@ -134,7 +133,9 @@ index 6a0c488..b7226d0 100644
 -                               (shell-command-to-string (concat eaf-build-dir "swaymsg-treefetch/swaymsg-focusfetcher.sh"))
 -                             (message "Please install jshon for swaywm support.")))
 -                          ((string-equal (getenv "XDG_CURRENT_DESKTOP") "Hyprland")
--                           (gethash "class" (json-parse-string (shell-command-to-string "hyprctl -j activewindow"))))
+-                           (or
+-                            (gethash "class" (json-parse-string (shell-command-to-string "hyprctl -j activewindow")))
+-                            ""))
 -                          (t
 -                           (require 'dbus)
 -                           (dbus-call-method :session "org.gnome.Shell" "/org/eaf/wayland" "org.eaf.wayland" "get_active_window" :timeout 1000))))
@@ -143,7 +144,7 @@ index 6a0c488..b7226d0 100644
          (cond
 -         ((member front-app-name (list "Python" "python3"))
 -          (setq eaf--topmost-switch-to-python t))
--         ((or (string-equal (string-replace "." "-" front)
+-         ((or (string-equal (replace-regexp-in-string "\\." "-" front)
 -                            eaf--emacs-program-name)
 -              (string-match-p (regexp-quote front-app-name)
 -                              eaf--emacs-program-name))
@@ -178,7 +179,7 @@ index 6a0c488..b7226d0 100644
  
      (defun eaf--topmost-focus-out ()
        "Prepare the screenshot and hide all eaf buffers."
-@@ -1084,7 +1089,8 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1086,7 +1089,8 @@ provide at least one way to let everyone experience EAF. ;)"
            (with-current-buffer (window-buffer window)
              (when (derived-mode-p 'eaf-mode)
                (eaf--clip-image window)
@@ -188,7 +189,7 @@ index 6a0c488..b7226d0 100644
  
      (defun eaf--clip-image (window)
        "Clip the image of the qwidget."
-@@ -1123,6 +1129,7 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1125,6 +1129,7 @@ provide at least one way to let everyone experience EAF. ;)"
  
      (add-to-list 'delete-frame-functions #'eaf--topmost-delete-frame-handler)))
  
@@ -196,7 +197,7 @@ index 6a0c488..b7226d0 100644
  (defun eaf-monitor-configuration-change (&rest _)
    "EAF function to respond when detecting a window configuration change."
    (when (and eaf--monitor-configuration-p
-@@ -1160,6 +1167,14 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1162,6 +1167,14 @@ provide at least one way to let everyone experience EAF. ;)"
                                    (- w window-divider-right-padding)
                                    (- h window-divider-bottom-padding))
                            view-infos)))))))

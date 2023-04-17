@@ -1,8 +1,8 @@
 diff --git a/acm/acm.el b/acm/acm.el
-index 0383973..5c42847 100644
+index 9237996..8d251f6 100644
 --- a/acm/acm.el
 +++ b/acm/acm.el
-@@ -742,7 +742,7 @@ The key of candidate will change between two LSP results."
+@@ -755,7 +755,7 @@ The key of candidate will change between two LSP results."
                          (+ cursor-y offset-y))))
      (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
  
@@ -11,7 +11,7 @@ index 0383973..5c42847 100644
    (when acm-enable-doc
      (let* ((candidate (acm-menu-current-candidate))
             (backend (plist-get candidate :backend))
-@@ -786,6 +786,19 @@ The key of candidate will change between two LSP results."
+@@ -799,6 +799,19 @@ The key of candidate will change between two LSP results."
            ;; Hide doc frame immediately if backend is not LSP.
            (_ (acm-doc-hide)))))))
  
@@ -32,19 +32,34 @@ index 0383973..5c42847 100644
    (let* ((emacs-width (frame-pixel-width))
           (emacs-height (frame-pixel-height))
 diff --git a/core/fileaction.py b/core/fileaction.py
-index 2e53632..dfe6bec 100755
+index c29d029..3d7bfeb 100755
 --- a/core/fileaction.py
 +++ b/core/fileaction.py
-@@ -198,7 +198,7 @@ class FileAction:
+@@ -201,15 +201,19 @@ class FileAction:
          self.last_change_file_time = time.time()
  
          # Send textDocument/completion 100ms later.
--        self.try_completion_timer = threading.Timer(0.1, lambda : self.try_completion(position, before_char, prefix))
-+        self.try_completion_timer = threading.Timer(0.01, lambda : self.try_completion(position, before_char, prefix))
-         self.try_completion_timer.start()
-         
-     def update_file(self, buffer_name):
-@@ -355,7 +355,12 @@ class FileAction:
+-        delay = 0 if is_running_in_server() else 0.1
+-        self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix))
+-        self.try_completion_timer.start()
+-        
++        if position['line'] < 0:
++            print("error in change file", start, end, range_length, change_text, position, before_char, buffer_name, prefix, self.org_line_bias)
++        else:
++            delay = 0 if is_running_in_server() else 0.1
++            self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix))
++            self.try_completion_timer.start()
++
+     def update_file(self, buffer_name, org_line_bias=None):
+         self.org_line_bias = org_line_bias
+         buffer_content = get_buffer_content(self.filepath, buffer_name)
+         for lsp_server in self.get_lsp_servers():
+             lsp_server.send_whole_change_notification(self.filepath, self.version, buffer_content)
++            print(lsp_server, 'update_file')
+         self.version += 1
+ 
+     def try_completion(self, position, before_char, prefix):
+@@ -388,7 +392,13 @@ class FileAction:
      def rename_file(self, old_filepath, new_filepath):
          self.get_lsp_servers()[0].send_did_rename_files_notification(old_filepath, new_filepath)
  
@@ -52,47 +67,47 @@ index 2e53632..dfe6bec 100755
      def send_server_request(self, lsp_server, handler_name, *args, **kwargs):
 +        if self.completion_request_ids > 0 and handler_name == "completion":
 +            # Drop completion request if previous completion request is not finished.
++            print("Drop completion request for {}".format(self.filepath), self.completion_request_ids)
 +            return
 +
          handler: Handler = self.method_handlers[lsp_server.server_info["name"]][handler_name]
          
          handler.latest_request_id = request_id = generate_request_id()
-@@ -371,7 +376,10 @@ class FileAction:
+@@ -404,6 +414,10 @@ class FileAction:
              method=handler.method,
              params=params,
              request_id=request_id)
--        
++
 +        if handler_name == "completion":
 +            self.completion_request_ids = request_id
 +            self.completion_start_time = time.time()
-+
+         
      def exit(self):
          for lsp_server in (self.org_lang_servers.values() if self.org_file else self.get_lsp_servers()):
-             if lsp_server.server_name in LSP_SERVER_DICT:
 diff --git a/core/lspserver.py b/core/lspserver.py
-index a9e87f3..78f3ea5 100755
+index 3b7dee0..6e5a55d 100755
 --- a/core/lspserver.py
 +++ b/core/lspserver.py
-@@ -618,6 +618,14 @@ class LspServer:
+@@ -626,6 +626,14 @@ class LspServer:
              else:
                  if "method" not in message and message["id"] in self.request_dict:
                      handler = self.request_dict[message["id"]]
-+                    # if handler.method == 'textDocument/completion':
-+                    #     for key  in self.files:
-+                    #         fileaction = self.files[key]
-+                    #         if message['id'] == fileaction.completion_request_ids:
-+                    #             import time
-+                    #             fileaction.completion_request_ids = -1
-+                    #             print(fileaction, message['id'],
-+                    #                   time.time() - fileaction.completion_start_time)
++                    if handler.method == 'textDocument/completion':
++                        for key  in self.files:
++                            fileaction = self.files[key]
++                            if message['id'] == fileaction.completion_request_ids:
++                                fileaction.completion_request_ids = -1
++                                import time
++                                print(fileaction, message['id'],
++                                      time.time() - fileaction.completion_start_time)
                      handler.handle_response(
                          request_id=message["id"],
                          response=message["result"],
 diff --git a/core/search_file_words.py b/core/search_file_words.py
-index b8e74ff..91d4eaa 100755
+index 6ddb239..9f9bbe0 100755
 --- a/core/search_file_words.py
 +++ b/core/search_file_words.py
-@@ -85,7 +85,7 @@ class SearchFileWords:
+@@ -99,7 +99,7 @@ class SearchFileWords:
              all_words = set()
              for file, words in self.files.items():
                  all_words = all_words | words
@@ -101,7 +116,7 @@ index b8e74ff..91d4eaa 100755
              search_candidates = self.search_word(prefix, all_words)
              candidates = []
              if len(search_candidates) > 0:
-@@ -107,12 +107,14 @@ class SearchFileWords:
+@@ -121,12 +121,14 @@ class SearchFileWords:
              logger.error(traceback.format_exc())
              
      def search_word(self, prefix, all_words):
@@ -133,26 +148,31 @@ index 9444e0c..c3962be 100644
        "typeCheckingMode": "basic",
        "logLevel": "verbose",
 diff --git a/lsp-bridge-diagnostic.el b/lsp-bridge-diagnostic.el
-index d3027cf..5926b51 100644
+index 52eef15..3d2c44f 100644
 --- a/lsp-bridge-diagnostic.el
 +++ b/lsp-bridge-diagnostic.el
-@@ -158,7 +158,14 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
- (autoload 'lsp-bridge--with-file-buffer "lsp-bridge")
+@@ -155,10 +155,18 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
+ 
+ (defvar lsp-bridge-diagnostic-display-error-at-point-timer nil)
+ 
+-(autoload 'lsp-bridge--with-file-buffer "lsp-bridge")
++(cl-defmacro lsp-bridge--with-file-buffer (filename filehost &rest body)
++  "Evaluate BODY in buffer with FILEPATH."
++  (declare (indent 1))
++  `(when-let ((buffer (pcase filehost
++                        ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
++                        (_ (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
++     (with-current-buffer buffer
++       ,@body)))
++
  
  (defun lsp-bridge-diagnostic-hide-tooltip ()
 -  (posframe-hide lsp-bridge-diagnostic-tooltip))
 +  (acm-frame-hide-frame lsp-bridge-diagnostic-frame))
-+
-+(cl-defmacro lsp-bridge--with-file-buffer (filepath &rest body)
-+  "Evaluate BODY in buffer with FILEPATH."
-+  (declare (indent 1))
-+  `(when-let ((buffer (lsp-bridge-get-match-buffer ,filepath)))
-+     (with-current-buffer buffer
-+       ,@body)))
  
- (defun lsp-bridge-diagnostic--render (filepath diagnostics)
-   (lsp-bridge--with-file-buffer filepath
-@@ -200,7 +207,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
+ (defun lsp-bridge-diagnostic-hide-overlays ()
+   (when lsp-bridge-diagnostic-overlays
+@@ -203,7 +211,7 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
  (defun lsp-bridge-diagnostic-show-tooltip (diagnostic-overlay &optional goto-beginning)
    (let* ((diagnostic-display-message (overlay-get diagnostic-overlay 'display-message))
           (diagnostic-message (overlay-get diagnostic-overlay 'message))
@@ -161,7 +181,7 @@ index d3027cf..5926b51 100644
      ;; weather goto beginning of diagnostic
      (when goto-beginning
        (goto-char (overlay-start diagnostic-overlay)))
-@@ -212,16 +219,11 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
+@@ -215,16 +223,11 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
  
      (cond
       ((posframe-workable-p) ;; Perform redisplay make sure posframe can poup to
@@ -183,8 +203,8 @@ index d3027cf..5926b51 100644
       (t (message diagnostic-message)))))
  
  (defun lsp-bridge-diagnostic-maybe-display-error-at-point ()
-@@ -266,11 +268,10 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
-     (message "[LSP-Bridge] Reach first diagnostic.")))
+@@ -269,11 +272,10 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
+       (message "[LSP-Bridge] Reach first diagnostic."))))
  
  (defun lsp-bridge-diagnostic-overlay-at-point ()
 -  (cl-dolist (overlay lsp-bridge-diagnostic-overlays)
@@ -199,69 +219,40 @@ index d3027cf..5926b51 100644
  (defun lsp-bridge-diagnostic-copy ()
    (interactive)
 diff --git a/lsp-bridge.el b/lsp-bridge.el
-index 0955c91..4099844 100644
+index b35e02d..f55ad16 100644
 --- a/lsp-bridge.el
 +++ b/lsp-bridge.el
-@@ -601,13 +601,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
+@@ -606,15 +606,6 @@ you can customize `lsp-bridge-get-workspace-folder' to return workspace folder p
    (or (alist-get mode lsp-bridge-formatting-indent-alist)
        (lsp-bridge--get-indent-width (or (get mode 'derived-mode-parent) 'default))))
  
--(cl-defmacro lsp-bridge--with-file-buffer (dirname &rest body)
+-(cl-defmacro lsp-bridge--with-file-buffer (filename filehost &rest body)
 -  "Evaluate BODY in buffer with FILEPATH."
 -  (declare (indent 1))
--  `(when-let ((buffer (lsp-bridge-get-match-buffer ,dirname)))
+-  `(when-let ((buffer (pcase filehost
+-                        ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
+-                        (_ (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
 -     (with-current-buffer buffer
 -       ,@body)))
 -
  (cl-defmacro lsp-bridge-save-position (&rest body)
    "`save-excursion' not enough for LSP code format.
  So we build this macro to restore postion after code format."
-@@ -749,26 +742,31 @@ So we build this macro to restore postion after code format."
-                    (setq-local acm-is-elisp-mode-in-org t))
-                (lsp-bridge-get-single-lang-server-by-mode))))))))
+@@ -758,10 +749,13 @@ So we build this macro to restore postion after code format."
+             (lsp-bridge-enable-org-babel
+              (lsp-bridge-org-babel-check-lsp-server)))))))
  
 +(defvar-local lsp-bridge-has-lsp-server--p nil)
 +(defvar-local lsp-bridge-has-lsp-server--p-set nil)
  (defun lsp-bridge-has-lsp-server-p ()
    (cond ((and lsp-bridge-enable-org-babel (eq major-mode 'org-mode))
           (setq-local acm-is-elisp-mode-in-org nil)
--         (and (org-babel-when-in-src-block)
-+         (and (org-babel-get-src-block-info)
-               ;; not send change-file for begin_src and end_src
-               (not (string-match-p "^[[:space:]]*#\\+"
--                              (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
-+                                   (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
-               (lsp-bridge-get-single-lang-server-by-mode)))
+          (lsp-bridge-org-babel-check-lsp-server))
++        (lsp-bridge-has-lsp-server--p-set lsp-bridge-has-lsp-server--p)
          (t
--         (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
--           (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
--                                                      (lsp-bridge--with-file-buffer dirname
--                                                        (lsp-bridge-get-multi-lang-server-by-mode))))
--                  (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
--                                                (lsp-bridge--with-file-buffer dirname
--                                                  (lsp-bridge-get-single-lang-server-by-mode)))))
--             (if multi-lang-server-by-extension
--                 multi-lang-server-by-extension
--               lang-server-by-extension)
--             )))))
-+         (if lsp-bridge-has-lsp-server--p-set
-+             lsp-bridge-has-lsp-server--p
-+           (setq-local lsp-bridge-has-lsp-server--p
-+                       (when-let* ((dirname (ignore-errors (file-truename buffer-file-name))))
-+                         (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension dirname)
-+                                                                    (lsp-bridge--with-file-buffer dirname
-+                                                                      (lsp-bridge-get-multi-lang-server-by-mode))))
-+                                (lang-server-by-extension (or (lsp-bridge-get-single-lang-server-by-extension dirname)
-+                                                              (lsp-bridge--with-file-buffer dirname
-+                                                                (lsp-bridge-get-single-lang-server-by-mode)))))
-+                           (if multi-lang-server-by-extension
-+                               multi-lang-server-by-extension
-+                             lang-server-by-extension)))
-+                       lsp-bridge-has-lsp-server--p-set t)))))
- 
- (defun lsp-bridge-call-async (method &rest args)
-   "Call Python EPC function METHOD and ARGS asynchronously."
-@@ -910,7 +908,7 @@ So we build this macro to restore postion after code format."
+          (when-let* ((filename (or (ignore-errors (file-truename buffer-file-name))
+                                    (when (lsp-bridge-is-remote-file)
+@@ -924,7 +918,7 @@ So we build this macro to restore postion after code format."
        (cond ((member this-command-string '("self-insert-command" "org-self-insert-command"))
               (setq this-command 'acm-filter-insert-char)
               (setq last-command 'acm-filter-insert-char))
@@ -270,7 +261,56 @@ index 0955c91..4099844 100644
               (setq this-command 'acm-filter-delete-char)
               (setq last-command 'acm-filter-delete-char))
              ))))
-@@ -1156,6 +1154,9 @@ So we build this macro to restore postion after code format."
+@@ -1003,21 +997,25 @@ So we build this macro to restore postion after code format."
+                                             server-name
+                                             completion-trigger-characters
+                                             server-names)
+-  (lsp-bridge--with-file-buffer filename filehost
+-                                ;; Save completion items.
+-                                (setq-local acm-backend-lsp-completion-position position)
+-                                (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
+-                                (setq-local acm-backend-lsp-server-names server-names)
+-                                (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)
+-
+-                                (let* ((lsp-items acm-backend-lsp-items)
+-                                       (completion-table (make-hash-table :test 'equal)))
+-                                  (dolist (item candidates)
+-                                    (plist-put item :annotation (capitalize (plist-get item :icon)))
+-                                    (puthash (plist-get item :key) item completion-table))
+-                                  (puthash server-name completion-table lsp-items)
+-                                  (setq-local acm-backend-lsp-items lsp-items))
+-                                (lsp-bridge-try-completion)))
++  ;; avoid completion when cursor move in org
++  (when (or (not (eq major-mode 'org-mode))
++         (eq (plist-get (lsp-bridge--point-position (point)) :character)
++            (plist-get position :character)))
++    (lsp-bridge--with-file-buffer filename filehost
++                                  ;; Save completion items.
++                                  (setq-local acm-backend-lsp-completion-position position)
++                                  (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
++                                  (setq-local acm-backend-lsp-server-names server-names)
++                                  (setq-local acm-backend-lsp-fetch-completion-item-ticker nil)
++                                  
++                                  (let* ((lsp-items acm-backend-lsp-items)
++                                         (completion-table (make-hash-table :test 'equal)))
++                                    (dolist (item candidates)
++                                      (plist-put item :annotation (capitalize (plist-get item :icon)))
++                                      (puthash (plist-get item :key) item completion-table))
++                                    (puthash server-name completion-table lsp-items)
++                                    (setq-local acm-backend-lsp-items lsp-items))
++                                  (lsp-bridge-try-completion))))
+ 
+ (defun lsp-bridge-try-completion ()
+   (cond (lsp-bridge-prohibit-completion
+@@ -1193,12 +1191,17 @@ So we build this macro to restore postion after code format."
+   (setq lsp-bridge-last-change-position
+         (list (current-buffer) (buffer-chars-modified-tick) (point))))
+ 
++(defvar-local lsp-org-babel-save-current--point nil)
++
+ (defun lsp-bridge-monitor-after-change (begin end length)
+   (unless lsp-bridge-revert-buffer-flag
+     (let ((this-command-string (format "%s" this-command)))
        ;; Record last command to `lsp-bridge-last-change-command'.
        (setq lsp-bridge-last-change-command (format "%s" this-command))
  
@@ -280,41 +320,120 @@ index 0955c91..4099844 100644
        ;; Record last change position to avoid popup outdate completions.
        (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
  
-@@ -1268,12 +1269,20 @@ So we build this macro to restore postion after code format."
-                            (base64-encode-string (encode-coding-string (buffer-string) 'utf-8))
-                            )))
+@@ -1206,13 +1209,32 @@ So we build this macro to restore postion after code format."
+       (lsp-bridge-org-babel-monitor-after-change begin end length)
+ 
+       ;; Send change_file request to trigger LSP completion.
+-      (when (lsp-bridge-call-file-api-p)
++      (when-let ((pos (lsp-bridge--position))
++                 (ok (lsp-bridge-call-file-api-p)))
++
++        ;; patch for org babel
++        (when (and (member this-command '(+org/return evil-org-open-below))
++                   (not (eq (plist-get lsp-bridge--before-change-begin-pos :line)
++                            (plist-get lsp-bridge--before-change-end-pos :line)))
++                   lsp-org-babel-save-current--point
++                   (> length 1))
++          (setq end lsp-org-babel-save-current--point)
++          (setq begin lsp-org-babel-save-current--point)
++          (setq length 0)
++          (save-excursion
++            (goto-char lsp-org-babel-save-current--point)
++            (forward-line)
++            (setq end (eol)))
++          (setq lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
++          (setq lsp-bridge--before-change-end-pos (lsp-bridge--point-position begin))
++          (setq pos (lsp-bridge--point-position end)))
++
+         (lsp-bridge-call-file-api "change_file"
+                                   lsp-bridge--before-change-begin-pos
+                                   lsp-bridge--before-change-end-pos
+                                   length
+                                   (buffer-substring-no-properties begin end)
+-                                  (lsp-bridge--position)
++                                  pos
+                                   (acm-char-before)
+                                   (buffer-name)
+                                   (acm-get-input-prefix)))
+@@ -1338,6 +1360,7 @@ So we build this macro to restore postion after code format."
+                              (base64-encode-string (encode-coding-string (buffer-string) 'utf-8))
+                              ))))
  
 +(defvar-local lsp-bridge-file-last-size nil)
  (defun lsp-bridge-search-words-rebuild-cache ()
    "Rebuild words cache when idle."
-   (when (lsp-bridge-epc-live-p lsp-bridge-epc-process)
-     ;; Update file search words when idle.
-     (lsp-bridge-search-words-update)
+   (if (lsp-bridge-is-remote-file)
+@@ -1350,6 +1373,12 @@ So we build this macro to restore postion after code format."
+       ;; Update file search words when idle.
+       (lsp-bridge-search-words-update)
  
-+    ;; Sync file when idle to avoid file not correctly updated in lsp server.
-+    (when (and (lsp-bridge-call-file-api-p)
-+               (not (eq major-mode 'org-mode))
-+               (not (eq lsp-bridge-file-last-size (buffer-size))))
-+      (setq-local lsp-bridge-file-last-size (buffer-size))
-+      (lsp-bridge-call-file-api "update_file" (buffer-name)))
-+
-     (unless (eq last-command 'mwheel-scroll)
-       (lsp-bridge-call-async "search_file_words_rebuild_cache"))))
++      ;; Sync file when idle to avoid file not correctly updated in lsp server.
++      (when (and nil (lsp-bridge-call-file-api-p)
++                 (not (eq major-mode 'org-mode))
++                 (not (eq lsp-bridge-file-last-size (buffer-size))))
++        (setq-local lsp-bridge-file-last-size (buffer-size))
++        (lsp-bridge-call-file-api "update_file" (buffer-name)))
+       (unless (eq last-command 'mwheel-scroll)
+         (lsp-bridge-call-async "search_file_words_rebuild_cache")))))
  
-@@ -1588,12 +1597,14 @@ So we build this macro to restore postion after code format."
-             (and lsp-bridge-enable-org-babel (eq major-mode 'org-mode)))
+@@ -1685,12 +1714,14 @@ So we build this macro to restore postion after code format."
      ;; When user open buffer by `ido-find-file', lsp-bridge will throw `FileNotFoundError' error.
      ;; So we need save buffer to disk before enable `lsp-bridge-mode'.
--    (unless (file-exists-p (buffer-file-name))
-+    (unless (and (buffer-file-name) (file-exists-p (buffer-file-name)))
-       (save-buffer))
+     (unless (lsp-bridge-is-remote-file)
+-      (unless (file-exists-p (buffer-file-name))
++      (unless (and (buffer-file-name) (file-exists-p (buffer-file-name)))
+         (save-buffer)))
  
      (setq-local acm-backend-lsp-completion-trigger-characters nil)
      (setq-local acm-backend-lsp-completion-position nil)
--    (setq-local acm-backend-lsp-filepath (file-truename buffer-file-name))
+-    (setq-local acm-backend-lsp-filepath (lsp-bridge-get-buffer-truename))
 +    (if buffer-file-name
-+        (setq-local acm-backend-lsp-filepath (file-truename buffer-file-name))
++        (setq-local acm-backend-lsp-filepath (lsp-bridge-get-buffer-truename))
 +      (setq-local acm-backend-lsp-filepath "/Users/royokong/temp"))
      (setq-local acm-backend-lsp-items (make-hash-table :test 'equal))
      (setq-local acm-backend-lsp-server-names nil)
  
+@@ -2004,7 +2035,6 @@ SymbolKind (defined in the LSP)."
+     ("paths" (setq-local acm-backend-path-items items)))
+   (lsp-bridge-try-completion))
+ 
+-
+ ;;; support which-func-mode
+ ;;;
+ 
+diff --git a/lsp_bridge.py b/lsp_bridge.py
+index 1cb8f54..ee5407b 100755
+--- a/lsp_bridge.py
++++ b/lsp_bridge.py
+@@ -671,6 +671,9 @@ class LspBridge:
+     def build_file_action_function(self, name):
+         def _do(filepath, *args):
+             open_file_success = True
++            if filepath == '/Users/royokong/.org/roam/.org-src-babel':
++                print('skip org src babel')
++                return
+ 
+             if not is_in_path_dict(FILE_ACTION_DICT, filepath):
+                 open_file_success = self.open_file(filepath)  # _do is called inside event_loop, so we can block here.
+@@ -745,12 +748,15 @@ def read_lang_server_info(lang_server_path):
+ 
+ def load_single_server_info(lang_server):
+     lang_server_info_path = ""
+-    if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
+-        # If lang_server is real file path, we load the LSP server configuration from the user specified file.
+-        lang_server_info_path = lang_server
+-    else:
+-        # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
+-        lang_server_info_path = get_lang_server_path(lang_server)
++    try:
++        if os.path.exists(lang_server) and os.path.dirname(lang_server) != "":
++            # If lang_server is real file path, we load the LSP server configuration from the user specified file.
++            lang_server_info_path = lang_server
++        else:
++            # Otherwise, we load LSP server configuration from file lsp-bridge/langserver/lang_server.json.
++            lang_server_info_path = get_lang_server_path(lang_server)
++    except TypeError:
++        print(f'{lang_server} is error in load_single_server_info')
+ 
+     with open(lang_server_info_path, encoding="utf-8", errors="ignore") as f:
+         return read_lang_server_info(f)

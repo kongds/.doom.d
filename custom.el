@@ -165,6 +165,7 @@
      ("\\.mm\\'" . default)
      ("\\.x?html?\\'" . default)
      ("\\.pdf\\'" . emacs)))
+ '(org-startup-folded 'show2levels)
  '(org-startup-with-latex-preview t)
  '(package-selected-packages '(epc forge))
  '(pdf-view-midnight-colors (cons "#ECEFF4" "#2E3440"))
@@ -421,8 +422,7 @@
  '(vc-annotate-very-old-color nil)
  '(vterm-shell "/opt/homebrew/bin/fish")
  '(wakatime-python-bin nil)
- '(warning-suppress-log-types
-   '((org-element-cache)))
+ '(warning-suppress-log-types '((org-element-cache)))
  '(warning-suppress-types '((jupyter) (jupyter) (defvaralias))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -430,3 +430,4 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(ts-fold-replacement-face ((t (:foreground nil :box nil :inherit font-lock-comment-face :weight light)))))
+(put 'narrow-to-region 'disabled nil)

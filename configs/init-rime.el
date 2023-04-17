@@ -34,6 +34,7 @@
   (setq rime-librime-root "~/.emacs.d/librime/dist")
   (setq rime-show-candidate 'posframe)
   (setq rime-cursor "˰")
+  (setq rime-user-data-dir "/Users/royokong/Library/Rime")
 
   (defun rime-evil-escape-advice (orig-fun key)
     "advice for `rime-input-method' to make it work together with `evil-escape'.

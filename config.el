@@ -47,6 +47,18 @@
      ("http" . "127.0.0.1:1087")
      ("https" . "127.0.0.1:1087")))
 
+;; gc set up
+;; use default value, sweet point for me
+(after! gcmh
+  (setq gcmh-high-cons-threshold 1073741824))
+
+;; not ignore some repos in local path
+(defun my-doom-project-ignored-p-around (orig-fn project-root)
+  "Around advice for `doom-project-ignored-p` to not ignore some project roots."
+  (unless (string-match-p "lsp-bridge" project-root)
+    (funcall orig-fn project-root)))
+(advice-add 'doom-project-ignored-p :around #'my-doom-project-ignored-p-around)
+
 ;; Here are some additional functions/macros that could help you configure Doom:
 ;;
 ;; - `load!' for loading external *.el files relative to this one

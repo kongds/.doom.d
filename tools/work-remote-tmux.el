@@ -43,22 +43,21 @@
   (interactive)
   (work-remote-tmux-start-open work-remote-server-192))
 
-(defvar work-remote-tumx-last-buffer nil)
+(defvar work-remote-tmux-current-window-config nil)
 
 (defun work-remote-tmux-toggle (ip)
   (cond ((and (eq major-mode 'vterm-mode)
               (string-match-p
                (format "%s-" (nth 0 (split-string ip "\\.")))
                (buffer-name)))
-         (if work-remote-tumx-last-buffer
-             (switch-to-buffer work-remote-tumx-last-buffer)
-           (message "No last buffer")))
+         (when work-remote-tmux-current-window-config
+           (set-window-configuration work-remote-tmux-current-window-config)
+           (setq work-remote-tmux-current-window-config nil)))
         (t
+         (setq work-remote-tmux-current-window-config (current-window-configuration))
          (let ((buffer-name  (current-buffer))
                (buffer-mode major-mode))
            (work-remote-tmux-start-open ip)
-           (unless (equal buffer-mode 'vterm-mode)
-             (setq-local work-remote-tumx-last-buffer buffer-name))
            (evil-insert 0)))))
 
 (defvar work-remote-tmux-rerun--start-point nil)
@@ -69,7 +68,8 @@
 (defvar work-remote-tmux-rerun--running nil)
 
 (defun work-remote-tmux--notify (str)
-  (message (substring str 0 (min (length str) 157))))
+  (if str
+      (message (substring str 0 (min (length str) 157)))))
 
 (defun vterm-remote-tmux-rerun--clean-current-line (current-line)
   (replace-regexp-in-string "%" "" (replace-regexp-in-string "\r" "" current-line)))
@@ -200,10 +200,11 @@
 
 (defun vterm-remote-tmux-rerun-pdb-quit ()
   (interactive)
-  (with-current-buffer work-remote-tmux-rerun--buffer
-    (vterm-send-string "q")
-    (vterm-send-return)
-    (vterm-remote-tmux-rerun-pdb-mode -1)))
+  (when (buffer-live-p work-remote-tmux-rerun--buffer)
+    (with-current-buffer work-remote-tmux-rerun--buffer
+      (vterm-send-string "q")
+      (vterm-send-return)))
+  (vterm-remote-tmux-rerun-pdb-mode -1))
 
 (defun work-remote-tmux-rerun  (args)
   (interactive "P")
@@ -409,10 +410,26 @@
       (work-remote-tmux--restart-job pid gpuid cmd))))
 
 
+(defmacro work-remote-tmux-toggle-server (server)
+  `(defun ,(intern (format "work-remote-tmux-toggle-%s" server)) ()
+     (interactive)
+     (if (use-region-p)
+         (let ((beg (region-beginning))
+               (end (region-end))
+               (region (buffer-substring-no-properties (region-beginning) (region-end))))
+           (work-remote-tmux-toggle ,server)
+           (vterm-send-return)
+           (vterm-send-string region)
+           (vterm-send-return))
+       (work-remote-tmux-toggle ,server))))
+
+(work-remote-tmux-toggle-server work-remote-server-172)
+(work-remote-tmux-toggle-server work-remote-server-192)
+
+
 (map!
-  "s-i" #'(lambda (args)
-            (interactive "P")
-            (work-remote-tmux-toggle work-remote-server-172))
+  "s-i" #'work-remote-tmux-toggle-work-remote-server-172
+
 
   "s-I" #'(lambda (args)
             (interactive "P")
@@ -426,9 +443,7 @@
 
   "s-R" #'work-remote-tmux-restart-job
 
-  "s-j" #'(lambda (args)
-            (interactive "P")
-            (work-remote-tmux-toggle work-remote-server-192))
+  "s-j" #'work-remote-tmux-toggle-work-remote-server-192
 
   "s-J" #'(lambda (args)
             (interactive "P")

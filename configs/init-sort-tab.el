@@ -31,7 +31,7 @@
 
 
   (defun sort-tab-not-focus (&rest args)
-    (if (eq (current-buffer) (sort-tab-get-buffer))
+    (when (eq (current-buffer) (sort-tab-get-buffer))
         (other-window 1)))
 
   (advice-add 'sort-tab-turn-off

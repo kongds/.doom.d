@@ -1,8 +1,6 @@
 ;;; config-org.el -*- lexical-binding: t; -*-
 (after! org
   :config
-  (after! lsp-bridge
-    (lsp-org-babel-enable "jupyter-python"))
 
   (after! ox
     (defun format-image-inline (source attributes info)

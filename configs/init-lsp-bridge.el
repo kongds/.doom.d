@@ -4,6 +4,8 @@
 
 (defun lsp-bridge-maybe-start-from-hook ()
   (unless (or (string-match "\*org-src-fontification:" (buffer-name))
+              (string-match "\*Org Src" (buffer-name))
+              (string-match ".org-src-babel" (buffer-name))
               (equal (buffer-name) "*Capture*"))
     (setq-local corfu-auto nil)
     (lsp-bridge-mode))
@@ -73,7 +75,7 @@
   (setq lsp-bridge-symbols-enable-which-func t)
   (setq lsp-bridge-enable-mode-line nil)
   (setq lsp-bridge-enable-signature-help nil)
-  (setq lsp-bridge-org-babel-lang-list '("clojure" "latex" "python"))
+  (setq lsp-bridge-org-babel-lang-list nil)
   (setq lsp-bridge-python-ruff-lsp-server "pyright-background-analysis_ruff")
   (setq lsp-bridge-enable-org-babel t)
   (setq lsp-bridge-enable-hover-diagnostic t)
@@ -119,6 +121,11 @@
                           (dolist (window (window-list))
                             (when (equal (buffer-name (window-buffer window)) "*lsp-bridge*")
                               (setq lsp-bridge-running-window window)))))
+  (after! org
+    (advice-add #'+org/return
+                :before #'(lambda ()
+                            (setq lsp-org-babel-save-current--point (point)))))
+
 
   (map!
    (:leader

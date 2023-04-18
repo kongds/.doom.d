@@ -60,6 +60,14 @@
        nil))))
 
 
+(after! rtags
+  ;; if rtags-imenu return No Symbols, use imenu
+  (defun rtags-imenu-filter-output  (ret)
+    (message "rtags-imenu-filter-output: %s" ret)
+    (if (equal ret "RTags: No symbols")
+      (command-execute 'imenu)  ret))
+  (advice-add #'rtags-imenu :filter-return #'rtags-imenu-filter-output))
+
 (use-package! lsp-bridge
   :commands lsp-bridge-mode
   :init

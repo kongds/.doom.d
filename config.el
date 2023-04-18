@@ -135,26 +135,20 @@
         (lambda() (modify-syntax-entry ?- "w")))
 
 ;; theme
-(after! consult
-  (defun reload-color-after-theme (&rest args)
-    ;; reset cursor color
-    (let ((themes (copy-sequence custom-enabled-themes)))
-      (mapc #'disable-theme custom-enabled-themes)
-      (let (doom-load-theme-hook)
-        (mapc #'enable-theme (reverse themes)))
-      (doom-run-hooks 'doom-load-theme-hook))
-
-    (when (and (equal doom-theme 'ef-summer) (featurep 'blink-search)
-      (set-face-background 'blink-search-select-face (face-attribute 'highlight :background))
-      (set-face-foreground 'blink-search-select-face (face-attribute 'highlight :foreground))))
-
-    (when (featurep 'lsp-bridge)
+(defun toggle-dark-light-theme ()
+  (interactive)
+  (if (equal doom-theme 'doom-nord)
+      (load-theme 'ef-summer)
+    (load-theme 'doom-nord)
+    ;; reload to doom-nord again to
+    ;; avoid blink in echo area
+    (load-theme 'doom-nord))
+  (when (featurep 'lsp-bridge)
       (set-face-background 'acm-frame-default-face (face-attribute 'default :background))
       (set-face-background 'acm-frame-select-face (face-attribute 'highlight :background))
-      (set-face-foreground 'acm-frame-select-face (face-attribute 'highlight :foreground))))
-
-  (advice-add 'consult-theme :after #'reload-color-after-theme))
-
+      (set-face-foreground 'acm-frame-select-face (face-attribute 'highlight :foreground))
+      (when lsp-bridge-is-starting
+        (lsp-bridge-restart-process))))
 
 ;; vertico support pyim
 (after! vertico

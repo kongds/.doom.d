@@ -96,8 +96,8 @@
                     major-mode)  'eaf-mode)
               (setq has-eaf-buffer t)))
         has-eaf-buffer))
-    (advice-add #'vertico-posframe--display :before-until #'eaf-in-eaf-buffer)
-    (advice-add #'vertico-posframe--setup :before-until #'eaf-in-eaf-buffer))
+    (advice-add #'vertico-posframe--show :before-until #'eaf-in-eaf-buffer)
+    (advice-add #'vertico-posframe--handle-minibuffer-window :before-until #'eaf-in-eaf-buffer))
   ;;(cancel-timer eaf--mac-switch-to-python-timer)
   )
 

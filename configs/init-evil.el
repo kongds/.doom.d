@@ -35,12 +35,15 @@
   (evil-global-set-key 'normal (kbd "C-w l") #'my-evil-move-right-window)
   (evil-global-set-key 'normal (kbd "C-w C-h") #'my-evil-move-left-window)
   (evil-global-set-key 'normal (kbd "C-w C-l") #'my-evil-move-right-window)
+  (evil-global-set-key 'normal (kbd "K") #'evil-end-of-line)
+  (evil-global-set-key 'normal (kbd "J") #'evil-first-non-blank)
 
   (global-unset-key (kbd "C-w"))
   (global-set-key (kbd "C-w h") #'my-evil-move-left-window)
   (global-set-key (kbd "C-w l") #'my-evil-move-right-window)
   (global-set-key (kbd "C-w C-h") #'my-evil-move-left-window)
   (global-set-key (kbd "C-w C-l") #'my-evil-move-right-window)
+
 
   (evil-global-set-key 'normal (kbd "q") #'kill-this-buffer)
   (evil-global-set-key 'normal (kbd "Q") #'evil-record-macro)

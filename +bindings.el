@@ -76,7 +76,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   :desc "search Google" :n "s o" #'(lambda(arg)
                                      (interactive (list (if (use-region-p)
                                                             (doom-thing-at-point-or-region)
-                                                            (read-string "Search for: "))))
+                                                          (read-string "Search for: "))))
                                      (+lookup/online arg "Google"))
 
   :desc "music" :n "m m" #'netease-cloud-music
@@ -119,6 +119,9 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   :desc "kill other window" :n "w 0" #'delete-other-windows)
 
  :nv "t" #'doctor
+ (:after doctor-chatgpt
+  :nv "T" #'doctor-chatgpt-gpt4)
+
  :nv "S" #'color-rg-search-input
 
  (:after cape

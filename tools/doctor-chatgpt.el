@@ -101,19 +101,19 @@ information we want to display."
         (setq doctor-chatgpt-replying nil)
         (setq output (substring output 0 el)))
 
-      (when-let* ((el (string-match "\n+[0-9]+ [0-9]+ .* You:\n+$" output)))
-        (setq match (split-string (string-trim output)))
+      (when-let* ((el (string-match "\n+[0-9]+? [0-9]+? .+? You:\n+$" output)))
+        (setq match (split-string (string-trim (substring output el))))
         (setq doctor-chatgpt-replying nil)
         (with-current-buffer "*doctor*"
           (read-only-mode -1)
-          (when (string-match "^\n[0-9]" output)
-            (backward-delete-char 1))
+          (goto-char (point-max))
+          (insert (substring output 0 el))
+          (goto-char (point-max))
           (read-only-mode 1)
           (chatgpt--create-tokens-overlay (nth 0 match)
                                           (nth 1 match)
                                           (nth 2 match)))
-        (setq output (substring output 0 el)))
-
+        (setq output ""))
       (when (> (length output) 1) (push output doctor-chatgpt-recv-list))
       (with-current-buffer "*doctor*"
         (read-only-mode -1)
@@ -122,8 +122,13 @@ information we want to display."
         (if doctor-chatgpt-replying
             (read-only-mode 1)
           (if doctor-chatgpt-recv-list (insert "\n\n"))
-          (with-current-buffer "*doctor*"
-            (setq doctor-chatgpt-send-start-point (point-max)))))))))
+          (goto-char (point-max))
+          (forward-line -2)
+          (while (eq (line-beginning-position) (line-end-position))
+            (message "delete ")
+            (delete-char -1))
+          (goto-char (point-max))
+          (setq doctor-chatgpt-send-start-point (point-max))))))))
 
 (defun doctor-chatgpt-start-process ()
   "Start a chat with ChatGPT."

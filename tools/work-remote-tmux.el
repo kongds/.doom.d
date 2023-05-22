@@ -87,30 +87,33 @@
             (buffer-substring-no-properties (vterm--get-beginning-of-line) (vterm--get-end-of-line))))
       current-line)))
 
+(defun vterm-remote-tmux-rerun--popup-result ()
+  (with-current-buffer (get-buffer-create (compilation-buffer-name "compilation" nil nil))
+    (read-only-mode -1)
+    (erase-buffer)
+    (insert
+     (string-replace "/home/jt" "/Users/royokong/nlp"
+                     (with-current-buffer work-remote-tmux-rerun--buffer
+                       (buffer-substring-no-properties (point-min) (point-max)))))
+    (goto-char (point-min))
+    (when (search-forward work-remote-tmux-rerun--prompt-command nil t)
+      (delete-region (point-min) (point)))
+    (goto-char (point-max))
+    (while (search-backward-regexp work-remote-tmux-rerun--prompt nil t))
+    (delete-region (point) (point-max))
+    (read-only-mode 1)
+    (compilation-mode)
+    (+popup-buffer (current-buffer))
+    (select-window (get-buffer-window (current-buffer)))))
+
 (defvar vterm-remote-tmux-rerun--last-line nil)
 (defun vterm-remote-tmux-rerun--check-end ()
   (let ((current-line (vterm-remote-tmux-rerun--clean-current-line
                        (vterm-remote-tmux-rerun--get-current-line))))
     (cond ((eq (string-match work-remote-tmux-rerun--prompt current-line) 0)
            ;; end
-           (with-current-buffer (get-buffer-create (compilation-buffer-name "compilation" nil nil))
-             (read-only-mode -1)
-             (erase-buffer)
-             (insert
-              (string-replace "/home/jt" "/Users/royokong/nlp"
-                              (with-current-buffer work-remote-tmux-rerun--buffer
-                                (buffer-substring-no-properties (point-min) (point-max)))))
-
-             (goto-char (point-min))
-             (when (search-forward work-remote-tmux-rerun--prompt-command nil t)
-               (delete-region (point-min) (point)))
-             (goto-char (point-max))
-             (while (search-backward-regexp work-remote-tmux-rerun--prompt nil t))
-             (delete-region (point) (point-max))
-             (read-only-mode 1)
-             (compilation-mode)
-             (+popup-buffer (current-buffer))
-             (select-window (get-buffer-window (current-buffer))))
+           (unless (get-buffer-window-list work-remote-tmux-rerun--buffer)
+             (vterm-remote-tmux-rerun--popup-result))
            (setq work-remote-tmux-rerun--running nil))
           ((string-match "(Pdb)" current-line)
            ;; pdb stop
@@ -123,13 +126,13 @@
           ;; wait
           ((and work-remote-tmux-rerun--running
                 (> work-remote-tmux-rerun--wait-timer-count 0) current-line)
-           (unless (equal current-line vterm-remote-tmux-rerun--last-line)
+           (unless (or (equal current-line vterm-remote-tmux-rerun--last-line)
+                       (get-buffer-window-list work-remote-tmux-rerun--buffer))
                 (work-remote-tmux--notify
                 (format "%s(%ss): %s"
                         (buffer-name work-remote-tmux-rerun--buffer)
                         (* (- 600 work-remote-tmux-rerun--wait-timer-count) 0.5)
-                        current-line))
-                )
+                        current-line)))
            (cl-decf work-remote-tmux-rerun--wait-timer-count)
            (run-with-timer 0.5 nil #'vterm-remote-tmux-rerun--check-end)))
     (setq vterm-remote-tmux-rerun--last-line current-line)))
@@ -206,11 +209,15 @@
       (vterm-send-return)))
   (vterm-remote-tmux-rerun-pdb-mode -1))
 
-(defun work-remote-tmux-rerun  (args)
-  (interactive "P")
+(defun work-remote-tmux-rerun  (&optional command)
+  (interactive (list (if (use-region-p)
+                         (buffer-substring (region-beginning) (region-end))
+                       nil)))
+  (when command (deactivate-mark))
+
   (save-buffer)
   (setq work-remote-tmux-rerun--running t)
-  (if startsync-running (run-with-timer 0.1 nil 'work-remote-tmux-rerun args)
+  (if startsync-running (run-with-timer 0.1 nil 'work-remote-tmux-rerun command)
     (let ((l-vterm-window nil)
           (l-vterm-buffer nil)
           (window-conf (current-window-configuration)))
@@ -250,7 +257,9 @@
       (setq work-remote-tmux-rerun--wait-timer-count 600)
       (setq work-remote-tmux-rerun--prompt "^.* ➜ .* ✗ $")
 
-      (vterm-send-key "p" nil nil t)
+      (if command
+          (vterm-send-string command)
+        (vterm-send-key "p" nil nil t))
       (sleep-for 0.1)
 
       (setq work-remote-tmux-rerun--prompt-command

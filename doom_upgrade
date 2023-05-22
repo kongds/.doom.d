@@ -42,6 +42,8 @@ for diff_file in ~/.doom.d/diffs/*; do
 done
 
 
+VER=`emacs --version | head -n 1 | awk '{print $3}'`
+
 if [[ $1 == 'not_upgrade' ]]; then
     echo "Not upgrading packages"
 else
@@ -58,18 +60,13 @@ else
     for package in $(git diff | grep "package\!" | grep "^+" | sed "s/^.*e! \(.*\) :pin.*/\1/")
     do
         echo $package
-        if [ $package == "jupyter" ]; then
-            rm -rf ~/.emacs.d/.local/straight/repos/emacs-jupyter
-        else
-            rm -rf ~/.emacs.d/.local/straight/repos/${package}
-        fi
+        rm -rf ~/.emacs.d/.local/straight/repos/${package}
         rm -rf ~/.emacs.d/.local/straight/build-${VER}/${package}
     done
     ~/.emacs.d/bin/doom sync
     cd -
 fi
 
-VER=`emacs --version | head -n 1 | awk '{print $3}'`
 rm -rf ~/.emacs.d/.local/straight/build-${VER}/eaf ~/.emacs.d/.local/straight/build-${VER}/jupyter
 
 

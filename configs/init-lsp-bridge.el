@@ -5,10 +5,14 @@
 (defun lsp-bridge-maybe-start-from-hook ()
   (unless (or (string-match "\*org-src-fontification:" (buffer-name))
               (string-match "\*Org Src" (buffer-name))
+              (string-match "\*temp" (buffer-name))
               (string-match ".org-src-babel" (buffer-name))
               (equal (buffer-name) "*Capture*"))
     (setq-local corfu-auto nil)
     (lsp-bridge-mode))
+
+  (unless (equal major-mode 'org-mode)
+    (yas-minor-mode -1))
 
   ;; use lsp bridge as diagnosis
   (when (member major-mode '(python-mode c-mode c++-mode sh-mode))
@@ -76,8 +80,12 @@
   (setq acm-quick-access-keys '("j" "l" "f" "s" "." "g" "d" "b" "x" ","))
   (setq acm-enable-tabnine nil)
   (setq acm-enable-yas nil)
-  (setq acm-candidate-match-function 'orderless-flex)
+  (setq acm-enable-preview t)
+
+  ;;(setq acm-candidate-match-function 'orderless-flex)
+  (setq acm-candidate-match-function 'regexp-quote)
   (setq acm-enable-dabbrev nil)
+  (setq acm-enable-codeium t)
   (setq lsp-bridge-python-lsp-server "pyright-background-analysis")
   (setq lsp-bridge-disable-backup nil)
   (setq lsp-bridge-symbols-enable-which-func t)

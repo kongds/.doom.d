@@ -53,7 +53,7 @@ else
 
     cd ~/.emacs.d
     #git stash push -m $STASH_NAME
-    ~/.emacs.d/bin/doom upgrade
+    ~/.emacs.d/bin/doom upgrade --force
     #git stash apply stash@{0}
 
     # delete package

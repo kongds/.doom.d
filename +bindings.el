@@ -17,7 +17,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
 (defun toggle-frame-maximized-or-fullframe ()
   (interactive)
   (let ((bias (if (equal (shell-command-to-string "m1ddc display list") "")
-                  37 0)))
+                  36 0)))
     (set-frame-position (selected-frame) 0 bias)
     (if (equal (display-pixel-width) 4000)
         ;; for DELL U2720Q
@@ -50,7 +50,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
  "s-s" #'save-buffer
  "s-n" #'make-second-screen-frame
  "s-q" #'save-buffers-kill-emacs
- "s-;" #'vterm-pop-posframe-toggle
+ "s-;" #'vterm-pop
 
  "C-0" #'toggle-frame-maximized-or-fullframe
 

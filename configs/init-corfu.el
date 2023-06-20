@@ -79,7 +79,7 @@
 
   (define-key evil-ex-completion-map (kbd "(") 'evil-ex-corfu-bracket)
   (define-key evil-ex-completion-map (kbd "!") 'evil-ex-corfu-excal)
-  (define-key evil-ex-completion-map (kbd "C-e") 'evil-ex-ret-maybe-comp)
+  ;;(define-key evil-ex-completion-map (kbd "C-e") 'evil-ex-ret-maybe-comp)
   (define-key evil-ex-completion-map (kbd "<return>") #'evil-ex-ret-maybe-comp))
 
 

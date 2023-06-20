@@ -6,7 +6,7 @@
 (defvar vterm-pop--window nil)
 (defvar-local +vterm--id nil )
 
-(defun vterm-pop--shell (&optional arg)
+(defun vterm-pop--shell ()
   "Run shell and return the buffer."
   (let* ((buffer-name
           (format "*doom:vterm-popup:%s*"
@@ -24,66 +24,21 @@
         (vterm-mode)))
     buffer))
 
-(defun vterm-pop--hide-frame ()
-  "Hide child frame and refocus in parent frame."
-  (when (and (frame-live-p vterm-pop--frame)
-             (frame-visible-p vterm-pop--frame))
-    (make-frame-invisible vterm-pop--frame)
-    (select-frame-set-input-focus (frame-parent vterm-pop--frame))
-    (setq vterm-pop--frame nil)))
-
-(defun vterm-pop-toggle ()
-  "Toggle shell."
+(defvar vterm-pop-current-window-config nil)
+(defun vterm-pop ()
   (interactive)
-  (vterm-pop--hide-frame)
-  (if (window-live-p vterm-pop--window)
-      (progn
-        (delete-window vterm-pop--window)
-        (setq vterm-pop--window nil))
-    (setq vterm-pop--window
-          (get-buffer-window (vterm-pop--shell)))))
+  (cond ((and (eq major-mode 'vterm-mode)
+              (string-match-p (format "*doom:vterm-popup:%s*"
+                                      (if (bound-and-true-p persp-mode)
+                                          (safe-persp-name (get-current-persp))
+                                        "main"))
+                              (buffer-name)))
+         (set-window-configuration vterm-pop-current-window-config))
+        (t
+         (setq vterm-pop-current-window-config (current-window-configuration))
+         (switch-to-buffer (vterm-pop--shell))
+         (evil-insert 0))))
 
-(defun vterm-pop-posframe-hidehandler (_)
-  "Hidehandler used by `vterm-pop-posframe-toggle'."
-  (not (eq (selected-frame) vterm-pop--frame)))
-
-(defun vterm-pop-posframe-toggle ()
-  "Toggle shell in child frame."
-  (interactive)
-  (if (and (frame-live-p vterm-pop--frame)
-           (frame-visible-p vterm-pop--frame))
-      (progn
-        ;; Hide child frame and refocus in parent frame
-        (make-frame-invisible vterm-pop--frame)
-        (select-frame-set-input-focus (frame-parent vterm-pop--frame))
-        (setq vterm-pop--frame nil))
-    (let* ((width  (max 100 (round (* (frame-width) 0.62))))
-           (height (round (* (frame-height) 0.62)))
-           (buffer (vterm-pop--shell))
-           (window (get-buffer-window buffer)))
-      ;; Hide window: for `popper'
-      (when (window-live-p window)
-        (delete-window window))
-
-      ;; Shell pop in child frame
-      (setq vterm-pop--frame
-            (posframe-show
-             buffer
-             :poshandler #'posframe-poshandler-frame-center
-             :width width
-             :height height
-             :min-width width
-             :min-height height
-             :border-width 2
-             :border-color "gray"
-             :override-parameters '((cursor-type . t))
-             :respect-mode-line t
-             :accept-focus t))
-
-      ;; Focus in child frame
-      (select-frame-set-input-focus vterm-pop--frame)
-      (with-current-buffer buffer
-        (evil-insert 0)))))
 
 (after! vterm
   ;; make tqdm bar look better
@@ -109,5 +64,13 @@
   (define-key vterm-mode-map (kbd "<insert-state> C-b") 'vterm-send-C-b)
   (define-key vterm-mode-map (kbd "<insert-state> C-l") 'vterm--self-insert)
   (define-key vterm-mode-map (kbd "<insert-state> C-w h") 'evil-window-left)
+
+  (defun vterm-insert-CUDA-VISIBLE-DEVICES ()
+    (interactive)
+    (vterm-goto-char (vterm--get-prompt-point))
+    (call-interactively #'evil-insert)
+    (vterm-send-string "CUDA_VISIBLE_DEVICES="))
+  (define-key vterm-mode-map (kbd "<normal-state> C") #'vterm-insert-CUDA-VISIBLE-DEVICES)
+
   (after! evil-escape
     (delq! 'vterm-mode evil-escape-excluded-major-modes)))

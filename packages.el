@@ -127,7 +127,7 @@
 ;(package! lsp-grammarly :recipe (:host github :repo "emacs-grammarly/lsp-grammarly" :files ("*")) :pin "02926aa")
 (package! lsp-grammarly :recipe (:host github :repo "emacs-grammarly/lsp-grammarly" :files ("*")))
 
-(package! lsp-bridge :recipe (:host github :repo "manateelazycat/lsp-bridge" :files ("*")))
+(package! lsp-bridge :recipe (:host github :repo "kongds/lsp-bridge" :files ("*")))
 
 (package! tabnine-capf :recipe (:host github :repo "50ways2sayhard/tabnine-capf" :files ("*")))
 
@@ -152,3 +152,5 @@
 (package! emacsql-sqlite-builtin)
 
 (package! flycheck-grammarly :recipe (:host github :repo "emacs-grammarly/flycheck-grammarly" :files ("*")))
+
+(package! mini-frame)

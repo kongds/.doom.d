@@ -1,8 +1,8 @@
 diff --git a/core/buffer.py b/core/buffer.py
-index d6531fe..b6d2fad 100755
+index 5b65543..c6436fc 100755
 --- a/core/buffer.py
 +++ b/core/buffer.py
-@@ -301,7 +301,7 @@ class Buffer(QGraphicsScene):
+@@ -302,7 +302,7 @@ class Buffer(QGraphicsScene):
      def start_search_input_monitor_thread(self, callback_tag):
          self.fetch_search_input_thread = FetchSearchInputThread(callback_tag)
          self.fetch_search_input_thread.search_changed.connect(self.handle_input_response)
@@ -11,7 +11,7 @@ index d6531fe..b6d2fad 100755
          self.fetch_search_input_thread.start()
  
      def stop_search_input_monitor_thread(self):
-@@ -488,6 +488,10 @@ class FetchMarkerInputThread(QThread):
+@@ -489,6 +489,10 @@ class FetchMarkerInputThread(QThread):
  
                  marker_input_quit = minibuffer_input and len(minibuffer_input) > 0 and minibuffer_input[-1] in self.marker_quit_keys
                  marker_input_finish = minibuffer_input in self.markers
@@ -23,10 +23,10 @@ index d6531fe..b6d2fad 100755
                  if marker_input_quit or marker_input_finish:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index 2628655..99be670 100755
+index f053437..eb60694 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
-@@ -43,6 +43,7 @@ import pathlib
+@@ -36,6 +36,7 @@ import pathlib
  import threading
  import tempfile
  import json
@@ -34,7 +34,7 @@ index 2628655..99be670 100755
  
  MOUSE_LEFT_BUTTON = 1
  MOUSE_WHEEL_BUTTON = 4
-@@ -938,6 +939,7 @@ class BrowserBuffer(Buffer):
+@@ -939,6 +940,7 @@ class BrowserBuffer(Buffer):
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, self.enable_javascript)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptCanAccessClipboard, self.enable_javascript_access_clipboard)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.ShowScrollBars, self.enable_scrollbar)
@@ -42,7 +42,7 @@ index 2628655..99be670 100755
  
              if self.unknown_url_scheme_policy == "DisallowUnknownUrlSchemes":
                  self.settings.setUnknownUrlSchemePolicy(self.settings.UnknownUrlSchemePolicy.DisallowUnknownUrlSchemes)
-@@ -1045,6 +1047,47 @@ class BrowserBuffer(Buffer):
+@@ -1049,6 +1051,47 @@ class BrowserBuffer(Buffer):
                  f.write(base64.b64decode(b64bytes))
  
              message_to_emacs("Save image: " + image_path)
@@ -90,7 +90,7 @@ index 2628655..99be670 100755
          else:
              if hasattr(self, "try_start_aria2_daemon"):
                  self.try_start_aria2_daemon()
-@@ -1184,11 +1227,11 @@ class BrowserBuffer(Buffer):
+@@ -1192,11 +1235,11 @@ class BrowserBuffer(Buffer):
          elif callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
              self.buffer_widget.clean_search_and_select()
  
@@ -105,10 +105,10 @@ index 2628655..99be670 100755
              self.buffer_widget._search_text(self.buffer_widget.search_term, True)
  
 diff --git a/eaf.el b/eaf.el
-index b6df986..cfd30cd 100644
+index 04e342e..63d6fd2 100644
 --- a/eaf.el
 +++ b/eaf.el
-@@ -1042,42 +1042,45 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1050,42 +1050,45 @@ provide at least one way to let everyone experience EAF. ;)"
      (defvar eaf--topmost-switch-to-python nil
        "Record if Emacs should switch to Python process.")
  
@@ -179,7 +179,7 @@ index b6df986..cfd30cd 100644
  
      (defun eaf--topmost-focus-out ()
        "Prepare the screenshot and hide all eaf buffers."
-@@ -1086,7 +1089,8 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1094,7 +1097,8 @@ provide at least one way to let everyone experience EAF. ;)"
            (with-current-buffer (window-buffer window)
              (when (derived-mode-p 'eaf-mode)
                (eaf--clip-image window)
@@ -189,7 +189,7 @@ index b6df986..cfd30cd 100644
  
      (defun eaf--clip-image (window)
        "Clip the image of the qwidget."
-@@ -1125,6 +1129,7 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1133,6 +1137,7 @@ provide at least one way to let everyone experience EAF. ;)"
  
      (add-to-list 'delete-frame-functions #'eaf--topmost-delete-frame-handler)))
  
@@ -197,7 +197,7 @@ index b6df986..cfd30cd 100644
  (defun eaf-monitor-configuration-change (&rest _)
    "EAF function to respond when detecting a window configuration change."
    (when (and eaf--monitor-configuration-p
-@@ -1162,6 +1167,14 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1170,6 +1175,14 @@ provide at least one way to let everyone experience EAF. ;)"
                                    (- w window-divider-right-padding)
                                    (- h window-divider-bottom-padding))
                            view-infos)))))))

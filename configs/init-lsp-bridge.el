@@ -78,6 +78,7 @@
   (setq acm-enable-quick-access t)
   (setq acm-quick-access-modifier 'super)
   (setq acm-quick-access-keys '("j" "l" "f" "s" "." "g" "d" "b" "x" ","))
+  ;;(setq acm-quick-access-keys '("j" "l" "3" "4" "5" "6" "7" "8" "9" ","))
   (setq acm-enable-tabnine nil)
   (setq acm-enable-yas nil)
   (setq acm-enable-preview t)

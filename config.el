@@ -101,6 +101,8 @@
 
             (global-company-mode -1)
 
+            (toggle-frame-maximized-or-fullframe)
+
             ;; face
             (set-fontset-font t 'han (font-spec :family "苹方-简"))))
 
@@ -148,7 +150,10 @@
       (set-face-background 'acm-frame-select-face (face-attribute 'highlight :background))
       (set-face-foreground 'acm-frame-select-face (face-attribute 'highlight :foreground))
       (when lsp-bridge-is-starting
-        (lsp-bridge-restart-process))))
+        (lsp-bridge-restart-process)
+        (acm-reset-colors)
+        (kill-buffer acm-buffer)
+        (kill-buffer acm-doc-buffer))))
 
 ;; vertico support pyim
 (after! vertico
@@ -158,6 +163,15 @@
     (let ((result (funcall orig-func component)))
       (pyim-cregexp-build result)))
   (advice-add 'orderless-regexp :around #'my-orderless-regexp))
+
+
+;; use ts mode
+(when (and (featurep 'treesit)
+         (treesit-available-p))
+    (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+    (add-to-list 'major-mode-remap-alist '(json-mode . json-ts-mode))
+    (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode)))
+
 
 (load! "+bindings")
 
@@ -214,6 +228,8 @@
 (load! "configs/init-lsp-bridge")
 ;;
 (load! "configs/init-elisp")
+;;
+(load! "configs/init-magit")
 
 (doom-load-packages-incrementally '(python treesit acm lsp-bridge corfu))
 (doom-load-packages-incrementally '(zmq citar elfeed jupyter evil-org))

@@ -1,5 +1,5 @@
 diff --git a/color-rg.el b/color-rg.el
-index 877b250..fd5a7b2 100644
+index c186c92..6bd965e 100644
 --- a/color-rg.el
 +++ b/color-rg.el
 @@ -621,6 +621,11 @@ This function is called from `compilation-filter-hook'."
@@ -14,7 +14,7 @@ index 877b250..fd5a7b2 100644
                      `(,(format "finished (%d matches found)\n" color-rg-hit-count) . "matched"))
                     ((not (buffer-modified-p))
                      '("finished with no matches found\n" . "no match"))
-@@ -871,12 +876,14 @@ user more freedom to use rg with special arguments."
+@@ -877,12 +882,14 @@ user more freedom to use rg with special arguments."
  (defun color-rg-read-input ()
    (let* ((current-symbol (color-rg-pointer-string))
           (input-string
@@ -35,23 +35,34 @@ index 877b250..fd5a7b2 100644
      (when (string-blank-p input-string)
        (setq input-string current-symbol))
      input-string))
-@@ -1197,6 +1204,8 @@ This assumes that `color-rg-in-string-p' has already returned true, i.e.
-               (color-rg-read-input)))
-          (search-directory
-           (or directory
-+              (if (featurep 'projectile)
-+                  (projectile-project-root))
-               default-directory))
-          (search-globs
-           (or globs
-@@ -1227,8 +1236,8 @@ This assumes that `color-rg-in-string-p' has already returned true, i.e.
-     (if project
-         (expand-file-name
-          (cond
--          ((fboundp 'project-root) (project-root project))
--          ((fboundp 'project-roots) (car (project-roots project)))))
-+          ((fboundp project-root) (project-root project))
-+          ((fboundp project-roots) (car (project-roots project)))))
-       default-directory)))
+@@ -1198,17 +1205,19 @@ This assumes that `color-rg-in-string-p' has already returned true, i.e.
+   ;; Set `enable-local-variables' to :safe, avoid emacs ask annoyingly question when open file by color-rg.
+   (setq enable-local-variables :safe)
+   ;; Search.
+-  (let ((search-keyword
+-         (or keyword
+-             (color-rg-read-input)))
+-        (search-directory
+-         (expand-file-name
+-          (or directory
+-              default-directory)))
+-        (search-globs
+-         (or globs
+-             "everything")))
+-    (color-rg-search search-keyword
++  (let* ((search-keyboard
++          (or keyword
++              (color-rg-read-input)))
++         (search-directory
++          (expand-file-name
++           (or directory
++               (if (featurep 'projectile)
++                   (projectile-project-root))
++               default-directory)))
++         (search-globs
++          (or globs
++              "everything")))
++    (color-rg-search search-keyboard
+                      search-directory
+                      search-globs)))
  
- (defalias 'color-rg-search-input-in-project 'color-rg-search-project)

@@ -118,7 +118,8 @@
           ((string-match "(Pdb)" current-line)
            ;; pdb stop
            (message "PDB start")
-           (vterm-remote-tmux-rerun-pdb-mode 1)
+           ;; not good
+           ;; (vterm-remote-tmux-rerun-pdb-mode 1)
            (let ((current-window (selected-window)))
              (switch-to-buffer-other-window work-remote-tmux-rerun--buffer)
              (select-window current-window))

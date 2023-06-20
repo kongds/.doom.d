@@ -52,9 +52,51 @@
   (define-key evil-insert-state-map (kbd "C-n") nil)
   (define-key evil-insert-state-map (kbd "C-p") nil)
 
+  ;; use C-e in minibuffer
+  (define-key  evil-ex-completion-map (kbd "C-e") #'move-end-of-line)
+
   (map!
    (:leader
     :desc "evil window right" :n "w l" #'my-evil-move-right-window
     :desc "evil window left" :n "w h" #'my-evil-move-left-window
     :desc "evil window next" :n "w w" #'my-evil-move-next-window
     )))
+
+
+
+(after! evil-text-object
+  (defmacro evil-textobj-tree-sitter-get-textobj-with-fallback (group &optional query fallback)
+    (declare (debug t) (indent defun))
+    (let* ((groups (if (eq (type-of group) 'string)
+                       (list group)
+                     group))
+           (funsymbol (intern (concat "evil-textobj-tree-sitter-function--"
+                                      (mapconcat 'identity groups "-"))))
+           (interned-groups (mapcar #'intern groups)))
+      `(evil-define-text-object ,funsymbol
+         ;; rest argument is named because of compiler warning `argument _ not left unused`
+         (count &rest unused)
+         (if tree-sitter-mode
+             (let ((range (evil-textobj-tree-sitter--range count ',interned-groups ,query)))
+               (if (not (eq range nil))
+                   (evil-range (car range)
+                               (cdr range))
+                 (evil-textobj-tree-sitter--message-not-found ',groups)))
+           (message "%s" (append (list ,fallback count) unused))
+           (apply (append (list ,fallback count) unused))))))
+
+
+  (define-key evil-outer-text-objects-map "a"
+              (evil-textobj-tree-sitter-get-textobj-with-fallback ("conditional.outer" "loop.outer") nil #'evil-outer-arg))
+  (define-key evil-inner-text-objects-map "a"
+              (evil-textobj-tree-sitter-get-textobj-with-fallback ("conditional.inner" "loop.inner") nil #'evil-inner-arg)))
+
+  ;;(define-key evil-outer-text-objects-map "f"
+  ;;            (evil-textobj-tree-sitter-get-textobj-with-fallback "function.outer" nil '+evil:defun-txtobj))
+  ;;(define-key evil-inner-text-objects-map "f"
+  ;;            (evil-textobj-tree-sitter-get-textobj-with-fallback "function.inner" nil '+evil:defun-txtobj))
+
+  ;;(append (list 1 ) '(1 2 3))
+
+  ;;(apply '(+evil:defun-txtobj 1 nil nil nil))
+  ;;(define-key evil-inner-text-objects-map "f" '+evil:defun-txtobj)

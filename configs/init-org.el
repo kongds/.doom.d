@@ -86,7 +86,8 @@
 
 (after! org-roam
   :init
-  (when (version<= "29" emacs-version)
+  (when (and (version<= "29" emacs-version)
+             (version< emacs-version "30"))
     (require 'emacsql-sqlite-builtin)
     (setq org-roam-database-connector 'sqlite-builtin))
   :config

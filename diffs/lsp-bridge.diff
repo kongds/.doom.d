@@ -1,8 +1,32 @@
+diff --git a/acm/acm-backend-codeium.el b/acm/acm-backend-codeium.el
+index 32dcc10..f87cce2 100644
+--- a/acm/acm-backend-codeium.el
++++ b/acm/acm-backend-codeium.el
+@@ -160,6 +160,7 @@
+ (defun acm-backend-codeium-candidate-expand (candidate-info bound-start &optional preview)
+   ;; We need replace whole area with codeium label.
+   (let ((end-position (line-end-position)))
++    (setq end-position (point))
+     (forward-line (- (plist-get candidate-info :line) (count-lines (point-min) (line-beginning-position))))
+     (if preview
+         (acm-preview-create-overlay (point) end-position (plist-get candidate-info :label))
+diff --git a/acm/acm-backend-copilot.el b/acm/acm-backend-copilot.el
+index f038ae1..048b860 100644
+--- a/acm/acm-backend-copilot.el
++++ b/acm/acm-backend-copilot.el
+@@ -61,6 +61,7 @@ in the proxy plist. For example:
+ (defun acm-backend-copilot-candidate-expand (candidate-info bound-start &optional preview)
+   ;; We need replace whole area with copilot label.
+   (let ((end-position (line-end-position)))
++    (setq end-position (point))
+     (forward-line (- (plist-get candidate-info :line) (count-lines (point-min) (line-beginning-position))))
+     (if preview
+         (acm-preview-create-overlay (point) end-position (plist-get candidate-info :label))
 diff --git a/acm/acm-frame.el b/acm/acm-frame.el
-index 7b5fd28..330e7ec 100644
+index abc9846..8be0225 100644
 --- a/acm/acm-frame.el
 +++ b/acm/acm-frame.el
-@@ -152,13 +152,15 @@
+@@ -155,13 +155,15 @@
                  ))
    (add-function :after after-focus-change-function #'acm-frame-restore-font))
  
@@ -21,10 +45,10 @@ index 7b5fd28..330e7ec 100644
       (acm-frame-set-frame-max-size ,frame ,max-width ,max-height)
  
 diff --git a/acm/acm.el b/acm/acm.el
-index dab90e7..b375442 100644
+index 7c1f9d6..462ef06 100644
 --- a/acm/acm.el
 +++ b/acm/acm.el
-@@ -209,7 +209,8 @@
+@@ -219,7 +219,8 @@
      (define-key map "\M-." #'acm-select-first)
      (define-key map "\C-v" #'acm-select-next-page)
      (define-key map "\M-v" #'acm-select-prev-page)
@@ -34,7 +58,7 @@ index dab90e7..b375442 100644
      (define-key map "\C-m" #'acm-complete)
      (define-key map "\t" #'acm-complete)
      (define-key map "\n" #'acm-complete)
-@@ -221,8 +222,8 @@
+@@ -231,8 +232,8 @@
      (define-key map "\M-k" #'acm-doc-scroll-down)
      (define-key map "\M-l" #'acm-hide)
      (define-key map "\C-g" #'acm-hide)
@@ -45,7 +69,7 @@ index dab90e7..b375442 100644
      (define-key map "3" #'acm-insert-number-or-complete-candiate)
      (define-key map "4" #'acm-insert-number-or-complete-candiate)
      (define-key map "5" #'acm-insert-number-or-complete-candiate)
-@@ -230,7 +231,7 @@
+@@ -240,7 +241,7 @@
      (define-key map "7" #'acm-insert-number-or-complete-candiate)
      (define-key map "8" #'acm-insert-number-or-complete-candiate)
      (define-key map "9" #'acm-insert-number-or-complete-candiate)
@@ -54,7 +78,7 @@ index dab90e7..b375442 100644
      map)
    "Keymap used when popup is shown.")
  
-@@ -447,6 +448,12 @@ Only calculate template candidate when type last character."
+@@ -523,6 +524,12 @@ Only calculate template candidate when type last character."
                (max (- acm-menu-length (+ (length template-first-part-candidates) (length tabnine-candidates)))
                     mode-candidates-min-index))
  
@@ -67,8 +91,8 @@ index dab90e7..b375442 100644
          ;; Build mode candidates.
          (if (> (length mode-candidates) mode-candidates-split-index)
              (progn
-@@ -822,7 +829,7 @@ The key of candidate will change between two LSP results."
-                         (+ cursor-y offset-y))))
+@@ -874,7 +881,7 @@ The key of candidate will change between two LSP results."
+                         (+ cursor-y offset-y)))))
      (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
  
 -(defun acm-doc-try-show (&optional update-completion-item)
@@ -76,7 +100,7 @@ index dab90e7..b375442 100644
    (when acm-enable-doc
      (let* ((candidate (acm-menu-current-candidate))
             (backend (plist-get candidate :backend))
-@@ -866,6 +873,19 @@ The key of candidate will change between two LSP results."
+@@ -918,6 +925,19 @@ The key of candidate will change between two LSP results."
            ;; Hide doc frame immediately if backend is not LSP.
            (_ (acm-doc-hide)))))))
  
@@ -97,7 +121,7 @@ index dab90e7..b375442 100644
    (let* ((emacs-width (frame-pixel-width))
           (emacs-height (frame-pixel-height))
 diff --git a/core/codeium.py b/core/codeium.py
-index 9ae0f26..f908309 100644
+index a680456..23f5ad2 100644
 --- a/core/codeium.py
 +++ b/core/codeium.py
 @@ -23,6 +23,8 @@ import time
@@ -171,24 +195,23 @@ index 9ae0f26..f908309 100644
                  completion_parts = completion.get("completionParts", [{}])[0]
                  annotation = (
 diff --git a/core/fileaction.py b/core/fileaction.py
-index c29d029..46ed609 100755
+index 533d3b1..8de6267 100755
 --- a/core/fileaction.py
 +++ b/core/fileaction.py
-@@ -201,15 +201,19 @@ class FileAction:
+@@ -203,15 +203,19 @@ class FileAction:
          self.last_change_file_time = time.time()
  
          # Send textDocument/completion 100ms later.
 -        delay = 0 if is_running_in_server() else 0.1
--        self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix))
+-        self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix, self.version))
 -        self.try_completion_timer.start()
--        
 +        if position['line'] < 0:
 +            print("error in change file", start, end, range_length, change_text, position, before_char, buffer_name, prefix, self.org_line_bias)
 +        else:
 +            delay = 0 if is_running_in_server() else 0.1
-+            self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix))
++            self.try_completion_timer = threading.Timer(delay, lambda : self.try_completion(position, before_char, prefix, self.version))
 +            self.try_completion_timer.start()
-+
+ 
      def update_file(self, buffer_name, org_line_bias=None):
          self.org_line_bias = org_line_bias
          buffer_content = get_buffer_content(self.filepath, buffer_name)
@@ -197,8 +220,8 @@ index c29d029..46ed609 100755
 +            print(lsp_server, 'update_file')
          self.version += 1
  
-     def try_completion(self, position, before_char, prefix):
-@@ -388,7 +392,13 @@ class FileAction:
+     def try_completion(self, position, before_char, prefix, version=None):
+@@ -410,7 +414,13 @@ class FileAction:
      def rename_file(self, old_filepath, new_filepath):
          self.get_lsp_servers()[0].send_did_rename_files_notification(old_filepath, new_filepath)
  
@@ -210,24 +233,24 @@ index c29d029..46ed609 100755
 +            # return
 +
          handler: Handler = self.method_handlers[lsp_server.server_info["name"]][handler_name]
-         
+ 
          handler.latest_request_id = request_id = generate_request_id()
-@@ -404,6 +414,10 @@ class FileAction:
-             method=handler.method,
+@@ -427,6 +437,10 @@ class FileAction:
              params=params,
              request_id=request_id)
-+
+ 
 +        if handler_name == "completion":
 +            self.completion_request_ids = request_id
 +            self.completion_start_time = time.time()
-         
++        
      def exit(self):
          for lsp_server in (self.org_lang_servers.values() if self.org_file else self.get_lsp_servers()):
+             if lsp_server.server_name in LSP_SERVER_DICT:
 diff --git a/core/lspserver.py b/core/lspserver.py
-index a0c3cce..341267d 100755
+index 3afab18..f29dec8 100755
 --- a/core/lspserver.py
 +++ b/core/lspserver.py
-@@ -626,6 +626,14 @@ class LspServer:
+@@ -654,6 +654,14 @@ class LspServer:
              else:
                  if "method" not in message and message["id"] in self.request_dict:
                      handler = self.request_dict[message["id"]]
@@ -243,10 +266,10 @@ index a0c3cce..341267d 100755
                          request_id=message["id"],
                          response=message["result"],
 diff --git a/core/search_file_words.py b/core/search_file_words.py
-index db3edf8..b3270e7 100755
+index b23884b..095475a 100755
 --- a/core/search_file_words.py
 +++ b/core/search_file_words.py
-@@ -79,7 +79,11 @@ class SearchFileWords:
+@@ -80,7 +80,12 @@ class SearchFileWords:
              return
  
          if buffer_name in self.search_content_dict:
@@ -255,33 +278,36 @@ index db3edf8..b3270e7 100755
 +                content = rebuild_content_from_diff(self.search_content_dict[buffer_name], start_pos, end_pos, change_text)
 +            except:
 +                print('change_buffer error: buffer_name: {}, start_pos: {}, end_pos: {}, change_text: {}'.format(buffer_name, start_pos, end_pos, change_text))
-+                assert 0
++                return
++                #assert 0
          else:
              content = get_emacs_func_result('get-buffer-content', buffer_name, True)
  
-@@ -125,12 +129,14 @@ class SearchFileWords:
-             logger.error(traceback.format_exc())
-             
-     def search_word(self, prefix, all_words):
--        match_words = list(filter(lambda word: word.lower().startswith(prefix.lower()), all_words))
-+
-+        sprefix = prefix.split('.')[-1]
-+        match_words = list(filter(lambda word: word.lower().startswith(sprefix.lower()), all_words))
-         candidates = []
--        if prefix.isupper():
-+        if prefix.isupper() and '.' not in prefix:
-             candidates = list(map(lambda word: word.upper(), match_words))
+@@ -145,12 +150,16 @@ class SearchFileWords:
+                 else:
+                     break
          else:
--            candidates = list(map(lambda word: prefix + word[len(prefix):], match_words))
-+            candidates = list(map(lambda word: prefix + word[len(sprefix):], match_words))
+-            match_words = list(filter(lambda word: word.lower().startswith(prefix.lower()), all_words))
+-            if prefix.isupper():
++            sprefix = prefix.split('.')[-1]
++            match_words = list(filter(lambda word: word.lower().startswith(sprefix.lower()), all_words))
++            candidates = []
++            if prefix.isupper() and '.' not in prefix:
+                 candidates = list(map(lambda word: word.upper(), match_words))
+             else:
+-                candidates = list(map(lambda word: prefix + word[len(prefix):], match_words))
++                candidates = list(map(lambda word: prefix + word[len(sprefix):], match_words))
++
+             candidates.sort(key=len, reverse=False)
++
+         return candidates
              
-         candidates.sort(key=len, reverse=False)
-         
+     def search_dispatcher(self):
 diff --git a/langserver/pyright-background-analysis.json b/langserver/pyright-background-analysis.json
-index 9444e0c..c3962be 100644
+index 06d7c3c..92fb9e2 100644
 --- a/langserver/pyright-background-analysis.json
 +++ b/langserver/pyright-background-analysis.json
-@@ -12,7 +12,7 @@
+@@ -11,7 +11,7 @@
        "autoImportCompletions": true,
        "typeshedPaths": [],
        "stubPath": "",
@@ -291,11 +317,29 @@ index 9444e0c..c3962be 100644
        "typeCheckingMode": "basic",
        "logLevel": "verbose",
 diff --git a/lsp-bridge-diagnostic.el b/lsp-bridge-diagnostic.el
-index 819ae3e..aec1f80 100644
+index 5394a67..4d7b694 100644
 --- a/lsp-bridge-diagnostic.el
 +++ b/lsp-bridge-diagnostic.el
-@@ -227,14 +227,17 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
+@@ -170,7 +170,16 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
  
+ (defvar lsp-bridge-diagnostic-display-error-at-point-timer nil)
+ 
+-(autoload 'lsp-bridge--with-file-buffer "lsp-bridge")
++;;(autoload 'lsp-bridge--with-file-buffer "lsp-bridge")
++
++(cl-defmacro lsp-bridge--with-file-buffer (filename filehost &rest body)
++  "Evaluate BODY in buffer with FILEPATH."
++  (declare (indent 1))
++  `(when-let ((buffer (pcase filehost
++                        ("" (lsp-bridge-get-match-buffer-by-filepath ,filename))
++                        (_ (lsp-bridge-get-match-buffer-by-remote-file ,filehost ,filename)))))
++     (with-current-buffer buffer
++       ,@body)))
+ 
+ (defun lsp-bridge-diagnostic-hide-tooltip ()
+   (acm-frame-hide-frame lsp-bridge-diagnostic-frame))
+@@ -263,15 +272,17 @@ You can set this value with `(2 3 4) if you just need render error diagnostic."
+     ;; Show diagnostic tooltip.
      (with-current-buffer (get-buffer-create lsp-bridge-diagnostic-buffer)
        (erase-buffer)
 -      (lsp-bridge-diagnostic-insert-colored-string (overlay-get diagnostic-overlay 'color) diagnostic-display-message)
@@ -307,18 +351,19 @@ index 819ae3e..aec1f80 100644
       ((acm-frame-can-display-p)
        (acm-frame-new lsp-bridge-diagnostic-frame
                       lsp-bridge-diagnostic-buffer
--                     "lsp bridge diagnostic frame"))
+-                     "lsp bridge diagnostic frame")
+-
 +                     "lsp bridge diagnostic frame"
 +                     ;; zero margin
-+                     nil nil nil 0))
-      (t (message diagnostic-message)))))
- 
- (defun lsp-bridge-diagnostic-maybe-display-error-at-point ()
++                     nil nil nil 0)
+       (set-face-background (acm-frame-border-face)
+                            foreground-color
+                            lsp-bridge-diagnostic-frame))
 diff --git a/lsp-bridge.el b/lsp-bridge.el
-index 8d26c61..59e1e1a 100644
+index ee3ba19..4b3b92d 100644
 --- a/lsp-bridge.el
 +++ b/lsp-bridge.el
-@@ -793,22 +793,27 @@ So we build this macro to restore postion after code format."
+@@ -893,23 +893,27 @@ So we build this macro to restore postion after code format."
              (lsp-bridge-enable-org-babel
               (lsp-bridge-org-babel-check-lsp-server)))))))
  
@@ -330,7 +375,8 @@ index 8d26c61..59e1e1a 100644
           (lsp-bridge-org-babel-check-lsp-server))
 +        (lsp-bridge-has-lsp-server--p-set lsp-bridge-has-lsp-server--p)
          (t
--         (when-let* ((filename (or (ignore-errors (file-truename buffer-file-name))
+-         (when-let* ((filename (or (ignore-errors (file-truename
+-                                                   (lsp-bridge-get-buffer-file-name-text)))
 -                                   (when (lsp-bridge-is-remote-file)
 -                                     lsp-bridge-remote-file-path))))
 -           (let* ((multi-lang-server-by-extension (or (lsp-bridge-get-multi-lang-server-by-extension filename)
@@ -357,7 +403,7 @@ index 8d26c61..59e1e1a 100644
  
  (defun lsp-bridge-call-async (method &rest args)
    "Call Python EPC function METHOD and ARGS asynchronously."
-@@ -964,7 +969,7 @@ So we build this macro to restore postion after code format."
+@@ -1068,7 +1072,7 @@ So we build this macro to restore postion after code format."
        (cond ((member this-command-string '("self-insert-command" "org-self-insert-command"))
               (setq this-command 'acm-filter-insert-char)
               (setq last-command 'acm-filter-insert-char))
@@ -366,12 +412,31 @@ index 8d26c61..59e1e1a 100644
               (setq this-command 'acm-filter-delete-char)
               (setq last-command 'acm-filter-delete-char))
              ))))
-@@ -1042,29 +1047,33 @@ So we build this macro to restore postion after code format."
+@@ -1117,11 +1121,12 @@ So we build this macro to restore postion after code format."
+             (lsp-bridge-code-action-popup-quit))))
+ 
+       ;; Try send inlay hint if window scroll.
+-      (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
+-      (let ((window-pos (window-start)))
+-        (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
+-          (lsp-bridge-inlay-hint)
+-          (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos)))
++      (when lsp-bridge-enable-inlay-hint
++        (redisplay t) ; NOTE: we need call `redisplay' to force `window-start' return RIGHT line number.
++        (let ((window-pos (window-start)))
++          (when (not (equal lsp-bridge-inlay-hint-last-update-pos window-pos))
++            (lsp-bridge-inlay-hint)
++            (setq-local lsp-bridge-inlay-hint-last-update-pos window-pos))))
+       )))
+ 
+ (defun lsp-bridge-close-buffer-file ()
+@@ -1154,30 +1159,34 @@ So we build this macro to restore postion after code format."
                                              server-name
                                              completion-trigger-characters
                                              server-names)
 -  (lsp-bridge--with-file-buffer filename filehost
 -                                ;; Save completion items.
+-                                (setq-local acm-backend-lsp-cache-candidates nil)
 -                                (setq-local acm-backend-lsp-completion-position position)
 -                                (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
 -                                (setq-local acm-backend-lsp-server-names server-names)
@@ -391,6 +456,7 @@ index 8d26c61..59e1e1a 100644
 +            (plist-get position :character)))
 +    (lsp-bridge--with-file-buffer filename filehost
 +                                  ;; Save completion items.
++                                  (setq-local acm-backend-lsp-cache-candidates nil)
 +                                  (setq-local acm-backend-lsp-completion-position position)
 +                                  (setq-local acm-backend-lsp-completion-trigger-characters completion-trigger-characters)
 +                                  (setq-local acm-backend-lsp-server-names server-names)
@@ -417,96 +483,81 @@ index 8d26c61..59e1e1a 100644
             ;; Try popup completion frame.
             (if (cl-every (lambda (pred)
                             (if (functionp pred)
-@@ -1269,6 +1278,8 @@ So we build this macro to restore postion after code format."
+@@ -1388,6 +1397,8 @@ So we build this macro to restore postion after code format."
    (setq lsp-bridge-last-change-position
          (list (current-buffer) (buffer-chars-modified-tick) (point))))
  
 +(defvar-local lsp-org-babel-save-current--point nil)
 +
  (defun lsp-bridge-monitor-after-change (begin end length)
-   ;; Use `save-match-data' protect match data, avoid conflict with command call `search-regexp'.
-   (save-match-data
-@@ -1276,6 +1287,9 @@ So we build this macro to restore postion after code format."
-       ;; Record last command to `lsp-bridge-last-change-command'.
-       (setq lsp-bridge-last-change-command (format "%s" this-command))
+   ;; Nothing change actual if `begin' and `end' equal `lsp-bridge--before-change-begin-point' and `lsp-bridge--before-change-end-point'
+   ;; Then we should not send any request to search backend.
+@@ -1400,6 +1411,9 @@ So we build this macro to restore postion after code format."
+           ;; Record last command to `lsp-bridge-last-change-command'.
+           (setq lsp-bridge-last-change-command (format "%s" this-command))
  
-+      (if (member lsp-bridge-last-change-command '("evil-delete-backward-char-and-join"))
-+          (setq-local lsp-bridge-prohibit-completion t))
++          (if (member lsp-bridge-last-change-command '("evil-delete-backward-char-and-join"))
++              (setq-local lsp-bridge-prohibit-completion t))
 +
-       ;; Record last change position to avoid popup outdate completions.
-       (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
+           ;; Record last change position to avoid popup outdate completions.
+           (setq lsp-bridge-last-change-position (list (current-buffer) (buffer-chars-modified-tick) (point)))
  
-@@ -1286,14 +1300,32 @@ So we build this macro to restore postion after code format."
-       (lsp-bridge-org-babel-monitor-after-change begin end length)
+@@ -1409,19 +1423,26 @@ So we build this macro to restore postion after code format."
+           ;; Sync change for org babel if we enable it
+           (lsp-bridge-org-babel-monitor-after-change begin end length)
  
-       ;; Send change_file request to trigger LSP completion.
--      (when (or (lsp-bridge-call-file-api-p)
--                (lsp-bridge-is-remote-file))
-+      (when-let ((pos (lsp-bridge--position))
-+                 (ok (or (lsp-bridge-call-file-api-p)
-+                         (lsp-bridge-is-remote-file))))
-+        ;; patch for org babel
-+        (when (and (member this-command '(+org/return evil-org-open-below))
-+                   (not (eq (plist-get lsp-bridge--before-change-begin-pos :line)
-+                            (plist-get lsp-bridge--before-change-end-pos :line)))
-+                   lsp-org-babel-save-current--point
-+                   (> length 1))
-+          (setq end lsp-org-babel-save-current--point)
-+          (setq begin lsp-org-babel-save-current--point)
-+          (setq length 0)
-+          (save-excursion
-+            (goto-char lsp-org-babel-save-current--point)
-+            (forward-line)
-+            (setq end (eol)))
-+          (setq lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
-+          (setq lsp-bridge--before-change-end-pos (lsp-bridge--point-position begin))
-+          (setq pos (lsp-bridge--point-position end)))
-+
-         (lsp-bridge-call-file-api "change_file"
-                                   lsp-bridge--before-change-begin-pos
-                                   lsp-bridge--before-change-end-pos
-                                   length
-                                   (buffer-substring-no-properties begin end)
--                                  (lsp-bridge--position)
-+                                  pos
-                                   (acm-char-before)
-                                   (buffer-name)
-                                   (acm-get-input-prefix)))
-@@ -1301,7 +1333,6 @@ So we build this macro to restore postion after code format."
- 
-       ;; Complete other non-LSP backends.
-       (lsp-bridge-complete-other-backends)
+-          ;; Send LSP requests.
+-          (when (or (lsp-bridge-call-file-api-p)
+-                    (lsp-bridge-is-remote-file))
 -
-       ;; Update search words backend.
-       (lsp-bridge-search-words-update
-        lsp-bridge--before-change-begin-pos
-@@ -1319,6 +1350,7 @@ So we build this macro to restore postion after code format."
+-            ;; Uncomment below code to debug `change_file' protocol.
+-            ;; (message (format "change_file: '%s' '%s' '%s' '%s' '%s' '%s'"
+-            ;;                  length
+-            ;;                  lsp-bridge--before-change-begin-pos
+-            ;;                  lsp-bridge--before-change-end-pos
+-            ;;                  (lsp-bridge--position)
+-            ;;                  change-text
+-            ;;                  (buffer-substring-no-properties (line-beginning-position) (point))
+-            ;;                  ))
++          ;; Send change_file request to trigger LSP completion.
++          (when-let ((pos (lsp-bridge--position))
++                     (ok (or (lsp-bridge-call-file-api-p)
++                           (lsp-bridge-is-remote-file))))
++            ;; patch for org babel
++            (when (and (member this-command '(+org/return evil-org-open-below))
++                       (not (eq (plist-get lsp-bridge--before-change-begin-pos :line)
++                                (plist-get lsp-bridge--before-change-end-pos :line)))
++                       lsp-org-babel-save-current--point
++                       (> length 1))
++              (setq end lsp-org-babel-save-current--point)
++              (setq begin lsp-org-babel-save-current--point)
++              (setq length 0)
++              (save-excursion
++                (goto-char lsp-org-babel-save-current--point)
++                (forward-line)
++                (setq end (eol)))
++              (setq lsp-bridge--before-change-begin-pos (lsp-bridge--point-position begin))
++              (setq lsp-bridge--before-change-end-pos (lsp-bridge--point-position begin))
++              (setq pos (lsp-bridge--point-position end)))
  
-         ;; Codeium search.
-         (when (and acm-enable-codeium
-+                   (not lsp-bridge-prohibit-completion)
-                    ;; Codeium backend not support remote file now, disable it temporary.
-                    (not (lsp-bridge-is-remote-file))
-                    ;; Don't enable codeium on Markdown mode, Org mode, ielm and minibuffer, very disruptive to writing.
-@@ -2151,8 +2183,9 @@ SymbolKind (defined in the LSP)."
-     ("tabnine" (setq-local acm-backend-tabnine-items items))
-     ("tailwind-keywords" (setq-local acm-backend-tailwind-items items))
-     ("paths" (setq-local acm-backend-path-items items)))
--  (lsp-bridge-try-completion))
--
-+  ;; escape file-words update, cause codeium backend is not updated
-+  (unless (equal backend-name "file-words")
-+    (lsp-bridge-try-completion)))
- 
- ;;; support which-func-mode
- ;;;
+             ;; Send change_file request to trigger LSP completion.
+             (lsp-bridge-call-file-api "change_file"
+@@ -1429,7 +1450,7 @@ So we build this macro to restore postion after code format."
+                                       lsp-bridge--before-change-end-pos
+                                       length
+                                       change-text
+-                                      (lsp-bridge--position)
++                                      pos
+                                       (acm-char-before)
+                                       (buffer-name)
+                                       (acm-get-input-prefix))
 diff --git a/lsp_bridge.py b/lsp_bridge.py
-index 88c6c17..b9cd3cb 100755
+index e2dd85a..cf215cb 100755
 --- a/lsp_bridge.py
 +++ b/lsp_bridge.py
-@@ -680,6 +680,9 @@ class LspBridge:
-     def build_file_action_function(self, name):
-         def _do(filepath, *args):
+@@ -766,6 +766,9 @@ class LspBridge:
+             if is_remote_path(filepath):
+                 return
              open_file_success = True
 +            if filepath == '/Users/royokong/.org/roam/.org-src-babel':
 +                print('skip org src babel')
@@ -514,7 +565,7 @@ index 88c6c17..b9cd3cb 100755
  
              if not is_in_path_dict(FILE_ACTION_DICT, filepath):
                  open_file_success = self.open_file(filepath)  # _do is called inside event_loop, so we can block here.
-@@ -766,12 +769,15 @@ def read_lang_server_info(lang_server_path):
+@@ -867,12 +870,15 @@ def read_lang_server_info(lang_server_path):
  
  def load_single_server_info(lang_server):
      lang_server_info_path = ""
@@ -536,3 +587,18 @@ index 88c6c17..b9cd3cb 100755
  
      with open(lang_server_info_path, encoding="utf-8", errors="ignore") as f:
          return read_lang_server_info(f)
+diff --git a/multiserver/pyright-background-analysis_ruff.json b/multiserver/pyright-background-analysis_ruff.json
+index c5442f3..788c4fa 100644
+--- a/multiserver/pyright-background-analysis_ruff.json
++++ b/multiserver/pyright-background-analysis_ruff.json
+@@ -1,8 +1,8 @@
+ {
+   "completion": ["pyright-background-analysis"],
+   "completion_item_resolve": ["pyright-background-analysis"],
+-  "diagnostics": ["ruff"],
+-  "code_action": ["ruff"],
++  "diagnostics": ["pyright", "ruff"],
++  "code_action": ["pyright", "ruff"],
+   "execute_command": ["pyright-background-analysis", "ruff"],
+   "find_define": "pyright-background-analysis",
+   "find_type_define": "pyright-background-analysis",

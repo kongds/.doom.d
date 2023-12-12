@@ -1,8 +1,8 @@
 diff --git a/core/buffer.py b/core/buffer.py
-index 5b65543..c6436fc 100755
+index b89ce80..aa73e3d 100755
 --- a/core/buffer.py
 +++ b/core/buffer.py
-@@ -302,7 +302,7 @@ class Buffer(QGraphicsScene):
+@@ -305,7 +305,7 @@ class Buffer(QGraphicsScene):
      def start_search_input_monitor_thread(self, callback_tag):
          self.fetch_search_input_thread = FetchSearchInputThread(callback_tag)
          self.fetch_search_input_thread.search_changed.connect(self.handle_input_response)
@@ -11,7 +11,7 @@ index 5b65543..c6436fc 100755
          self.fetch_search_input_thread.start()
  
      def stop_search_input_monitor_thread(self):
-@@ -489,6 +489,10 @@ class FetchMarkerInputThread(QThread):
+@@ -493,6 +493,10 @@ class FetchMarkerInputThread(QThread):
  
                  marker_input_quit = minibuffer_input and len(minibuffer_input) > 0 and minibuffer_input[-1] in self.marker_quit_keys
                  marker_input_finish = minibuffer_input in self.markers
@@ -23,18 +23,19 @@ index 5b65543..c6436fc 100755
                  if marker_input_quit or marker_input_finish:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index f053437..eb60694 100755
+index 6a8ee4c..bbe72ab 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
-@@ -36,6 +36,7 @@ import pathlib
- import threading
- import tempfile
- import json
+@@ -37,6 +37,8 @@ from PyQt6.QtWebChannel import QWebChannel
+ from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineProfile, QWebEngineScript, QWebEngineSettings
+ from PyQt6.QtWebEngineWidgets import QWebEngineView
+ from PyQt6.QtWidgets import QApplication, QWidget
++import json
 +import subprocess
  
  MOUSE_LEFT_BUTTON = 1
  MOUSE_WHEEL_BUTTON = 4
-@@ -939,6 +940,7 @@ class BrowserBuffer(Buffer):
+@@ -929,6 +931,7 @@ class BrowserBuffer(Buffer):
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, self.enable_javascript)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptCanAccessClipboard, self.enable_javascript_access_clipboard)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.ShowScrollBars, self.enable_scrollbar)
@@ -42,7 +43,7 @@ index f053437..eb60694 100755
  
              if self.unknown_url_scheme_policy == "DisallowUnknownUrlSchemes":
                  self.settings.setUnknownUrlSchemePolicy(self.settings.UnknownUrlSchemePolicy.DisallowUnknownUrlSchemes)
-@@ -1049,6 +1051,47 @@ class BrowserBuffer(Buffer):
+@@ -1039,6 +1042,47 @@ class BrowserBuffer(Buffer):
                  f.write(base64.b64decode(b64bytes))
  
              message_to_emacs("Save image: " + image_path)
@@ -90,25 +91,20 @@ index f053437..eb60694 100755
          else:
              if hasattr(self, "try_start_aria2_daemon"):
                  self.try_start_aria2_daemon()
-@@ -1192,11 +1235,11 @@ class BrowserBuffer(Buffer):
-         elif callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
-             self.buffer_widget.clean_search_and_select()
- 
--    def handle_search_forward(self, callback_tag):
-+    def handle_search_forward(self, callback_tag="search_text_forward"):
-         if callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
+@@ -1191,7 +1235,7 @@ class BrowserBuffer(Buffer):
              self.buffer_widget._search_text(self.buffer_widget.search_term)
  
+     @PostGui()
 -    def handle_search_backward(self, callback_tag):
 +    def handle_search_backward(self, callback_tag="search_text_backward"):
          if callback_tag == "search_text_forward" or callback_tag == "search_text_backward":
              self.buffer_widget._search_text(self.buffer_widget.search_term, True)
  
 diff --git a/eaf.el b/eaf.el
-index 04e342e..63d6fd2 100644
+index bc446a9..64770f6 100644
 --- a/eaf.el
 +++ b/eaf.el
-@@ -1050,42 +1050,45 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1066,46 +1066,46 @@ provide at least one way to let everyone experience EAF. ;)"
      (defvar eaf--topmost-switch-to-python nil
        "Record if Emacs should switch to Python process.")
  
@@ -128,19 +124,24 @@ index 04e342e..63d6fd2 100644
        "Manage Emacs's focus change."
 -      (let* ((front (cond ((eq system-type 'darwin)
 -                           (shell-command-to-string "app-frontmost --name"))
--                          ((string-equal (getenv "XDG_CURRENT_DESKTOP") "sway")
--                           (if (executable-find "jshon")
--                               (shell-command-to-string (concat eaf-build-dir "swaymsg-treefetch/swaymsg-focusfetcher.sh"))
--                             (message "Please install jshon for swaywm support.")))
--                          ((string-equal (getenv "XDG_CURRENT_DESKTOP") "Hyprland")
+-                          ((eaf--on-sway-p)
+-                           (if (executable-find "jq")
+-                               (shell-command-to-string "swaymsg -t get_tree | jq -r '..|try select(.focused == true).app_id'")
+-                             (message "Please install jq for swaywm support.")))
+-                          ((eaf--on-hyprland-p)
 -                           (or
 -                            (gethash "class" (json-parse-string (shell-command-to-string "hyprctl -j activewindow")))
 -                            ""))
+-                          ((eaf--on-unity-p)
+-                           (if (executable-find "xdotool")
+-                               (shell-command-to-string "xdotool getactivewindow getwindowname")
+-                             (message "Please install xdotool for Unity support.")))
 -                          (t
 -                           (require 'dbus)
 -                           (dbus-call-method :session "org.gnome.Shell" "/org/eaf/wayland" "org.eaf.wayland" "get_active_window" :timeout 1000))))
 -             (front-app-name (string-trim front)))
-+      (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh")))
++      (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh"))
++            (front-app-name (string-trim front)))
          (cond
 -         ((member front-app-name (list "Python" "python3"))
 -          (setq eaf--topmost-switch-to-python t))
@@ -179,7 +180,7 @@ index 04e342e..63d6fd2 100644
  
      (defun eaf--topmost-focus-out ()
        "Prepare the screenshot and hide all eaf buffers."
-@@ -1094,7 +1097,8 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1114,7 +1114,8 @@ provide at least one way to let everyone experience EAF. ;)"
            (with-current-buffer (window-buffer window)
              (when (derived-mode-p 'eaf-mode)
                (eaf--clip-image window)
@@ -189,7 +190,7 @@ index 04e342e..63d6fd2 100644
  
      (defun eaf--clip-image (window)
        "Clip the image of the qwidget."
-@@ -1133,6 +1137,7 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1153,6 +1154,7 @@ provide at least one way to let everyone experience EAF. ;)"
  
      (add-to-list 'delete-frame-functions #'eaf--topmost-delete-frame-handler)))
  
@@ -197,7 +198,7 @@ index 04e342e..63d6fd2 100644
  (defun eaf-monitor-configuration-change (&rest _)
    "EAF function to respond when detecting a window configuration change."
    (when (and eaf--monitor-configuration-p
-@@ -1170,6 +1175,14 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1192,6 +1194,14 @@ provide at least one way to let everyone experience EAF. ;)"
                                    (- w window-divider-right-padding)
                                    (- h window-divider-bottom-padding))
                            view-infos)))))))

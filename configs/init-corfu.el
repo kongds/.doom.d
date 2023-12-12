@@ -123,4 +123,7 @@
   (add-to-list 'completion-at-point-functions #'cape-tex)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-keyword)
+  :config
+  ;; disable dabbrev in minibuffer
+  (setq cape-dabbrev-min-length 100000)
 )

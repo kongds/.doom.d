@@ -49,7 +49,7 @@
             (set-process-filter proc #'(lambda (process string)
                                          (when (buffer-live-p (process-buffer proc))
                                            (when (s-contains?  "ssh not up" string )
-                                             (message string)))))
+                                             (message (replace-regexp-in-string "\n" "" string))))))
             (set-process-sentinel proc #'(lambda (process signal)
                                            (when (memq (process-status process) '(exit signal))
                                              (kill-buffer shell-buffer-name)
@@ -100,7 +100,7 @@
       +modeline-startsync
       +modeline-modes
       (vc-mode ("  "
-                ,(all-the-icons-octicon "git-branch" :v-adjust 0.0)
+                ,(nerd-icons-octicon "nf-oct-git_branch" :v-adjust 0.0)
                 vc-mode " "))
       "  "
       +modeline-encoding
@@ -123,7 +123,7 @@
         (beginning-of-buffer)
         (next-line)
         (insert (format
-       "    {\n        \"src\": \"%s\",\n        \"des\": [\"jt@172.17.62.88:/home/jt/%s\",\n                \"jt@192.168.1.115:/home/jt/%s\"]\n    },\n"
+       "    {\n        \"src\": \"%s\",\n        \"des\": [\"jt@172.17.62.88:/home/jt/%s\",\n                \"jt@10.2.16.28:/home/jt/%s\"]\n    },\n"
        project-root project-name project-name))
         (save-buffer)
         (kill-buffer (current-buffer)))
@@ -133,7 +133,7 @@
                                    " jt@172.17.62.88:/home/jt/") (get-buffer-create "*scp-172*"))
       (async-shell-command (concat "scp -r "
                                    (replace-regexp-in-string "/$" "" project-root)
-                                   " jt@192.168.1.115:/home/jt/") (get-buffer-create "*scp-192*"))
+                                   " jt@10.2.16.28:/home/jt/") (get-buffer-create "*scp-10*"))
 
       ))
   )

@@ -2,6 +2,8 @@
 
 (use-package! sort-tab
   :config
+  (require 'consult)
+  (require 'persp-mode)
 
   (defun sort-tab-workspace-buffer-list ()
     (cl-concatenate 'list
@@ -16,7 +18,11 @@
                                                        (when-let ((workspace (persp-get-by-name
                                                                               (safe-persp-name (get-current-persp)))))
                                                          (and (not (eq (string-match "◀" (buffer-name buf)) 0))   ;; remove telega buffers
-                                                              (not (eq (string-match "192-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
+                                                              (not (eq (string-match "LLM1-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
+                                                              (not (eq (string-match "LLM2-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
+                                                              (not (eq (string-match "LLM3-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
+                                                              (not (eq (string-match "LLM4-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
+                                                              (not (eq (string-match "10-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
                                                               (not (eq (string-match "172-" (buffer-name buf)) 0))
                                                               (persp-contain-buffer-p
                                                                buf workspace))))))))
@@ -29,10 +35,11 @@
   (advice-add 'sort-tab-get-buffer-list
               :before-until #'sort-tab-get-buffer-list-workspace)
 
-
   (defun sort-tab-not-focus (&rest args)
     (when (eq (current-buffer) (sort-tab-get-buffer))
-        (other-window 1)))
+      (if (eq this-command 'my-evil-move-next-window)
+          (select-window (next-window))
+        (other-window 1))))
 
   (advice-add 'sort-tab-turn-off
               :after #'(lambda()

@@ -103,8 +103,15 @@
 
             (toggle-frame-maximized-or-fullframe)
 
+            ;; init holo-layer
+            ;; (add-to-list 'load-path "~/holo-layer")
+            ;; (setq holo-layer-enable-cursor-animation t)
+            ;; (require 'holo-layer)
+            ;; (holo-layer-enable)
+
             ;; face
-            (set-fontset-font t 'han (font-spec :family "苹方-简"))))
+            (set-fontset-font t 'han (font-spec :family "苹方-简"))
+            (set-fontset-font t 'unicode "Apple Color Emoji" nil 'append)))
 
 (after! python
   (set-repl-handler! 'python-mode #'+python/open-ipython-repl)
@@ -145,15 +152,20 @@
     ;; reload to doom-nord again to
     ;; avoid blink in echo area
     (load-theme 'doom-nord))
+  (when (featurep 'holo-layer)
+    (setq holo-layer-cursor-color (face-background 'cursor))
+    (holo-layer-restart-process))
   (when (featurep 'lsp-bridge)
-      (set-face-background 'acm-frame-default-face (face-attribute 'default :background))
-      (set-face-background 'acm-frame-select-face (face-attribute 'highlight :background))
-      (set-face-foreground 'acm-frame-select-face (face-attribute 'highlight :foreground))
-      (when lsp-bridge-is-starting
-        (lsp-bridge-restart-process)
-        (acm-reset-colors)
-        (kill-buffer acm-buffer)
-        (kill-buffer acm-doc-buffer))))
+    (run-with-timer 0.1 nil
+                    #'(lambda()
+                        (set-face-background 'acm-frame-default-face (face-attribute 'default :background))
+                        (set-face-background 'acm-frame-select-face (face-attribute 'highlight :background))
+                        (set-face-foreground 'acm-frame-select-face (face-attribute 'highlight :foreground))
+                        (lsp-bridge-restart-process)
+                        (acm-reset-colors)
+                        (kill-buffer acm-buffer)
+                        (kill-buffer acm-doc-buffer)
+                        (kill-buffer lsp-bridge-diagnostic-buffer)))))
 
 ;; vertico support pyim
 (after! vertico
@@ -164,14 +176,32 @@
       (pyim-cregexp-build result)))
   (advice-add 'orderless-regexp :around #'my-orderless-regexp))
 
-
 ;; use ts mode
 (when (and (featurep 'treesit)
-         (treesit-available-p))
+           (treesit-available-p))
     (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
     (add-to-list 'major-mode-remap-alist '(json-mode . json-ts-mode))
     (add-to-list 'major-mode-remap-alist '(sh-mode . bash-ts-mode)))
 
+
+(defun toggle-emacs-proxy ()
+  (interactive)
+  (cond ((equal url-proxy-services nil)
+         (setq url-proxy-services
+               '(("no_proxy" . "^\\(localhost\\|10\\..*\\|192\\.168\\..*\\)")
+                 ("http" . "127.0.0.1:1087")
+                 ("https" . "127.0.0.1:1087")))
+         (setenv "https_proxy" "http://127.0.0.1:1087")
+         (setenv "http_proxy" "http://127.0.0.1:1087")
+         (setenv "ALL_PROXY" "socks://172.0.0.1:1080"))
+        (t
+         (setq url-proxy-services nil)
+         (setenv "https_proxy" nil)
+         (setenv "http_proxy" nil)
+         (setenv "ALL_PROXY" nil)))
+  ;; restart
+  (copilot-diagnose)
+  (lsp-bridge-restart-process))
 
 (load! "+bindings")
 
@@ -231,7 +261,8 @@
 ;;
 (load! "configs/init-magit")
 
-(doom-load-packages-incrementally '(python treesit acm lsp-bridge corfu))
+;;(doom-load-packages-incrementally '(python treesit acm lsp-bridge corfu))
+(doom-load-packages-incrementally '(corfu))
 (doom-load-packages-incrementally '(zmq citar elfeed jupyter evil-org))
 (doom-load-packages-incrementally '(telega pdf-tools org-noter))
 

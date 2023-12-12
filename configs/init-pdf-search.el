@@ -181,6 +181,51 @@
     "o" 'pdf-outline-consult))
 
 (after! pdf-view
+  ;; remove y-or-n-p for restart
+  (defun pdf-info-process-assert-running (&optional force)
+    "Assert a running process.
+    
+    If it never ran, i.e. `pdf-info-process' is t, start it
+    unconditionally.
+    
+    Otherwise, if FORCE is non-nil start it, if it is not running.
+    Else restart it with respect to the variable
+    `pdf-info-restart-process-p', which see.
+    
+    If getting the process to run fails, this function throws an
+    error."
+    (interactive "P")
+    (unless (and (processp (pdf-info-process))
+                 (eq (process-status (pdf-info-process))
+                     'run))
+      (when (pdf-info-process)
+        (tq-close pdf-info--queue)
+        (setq pdf-info--queue nil))
+      (unless (or force
+                  (eq pdf-info--queue t)
+                  (and (eq pdf-info-restart-process-p 'ask)
+                       (not noninteractive)
+                       )
+                  (and pdf-info-restart-process-p
+                       (not (eq pdf-info-restart-process-p 'ask))))
+  
+        (when (eq pdf-info-restart-process-p 'ask)
+          (setq pdf-info-restart-process-p nil))
+        (error "The epdfinfo server quit"))
+      (pdf-info-check-epdfinfo)
+      (let* ((process-connection-type)    ;Avoid 4096 Byte bug #12440.
+             (default-directory "~")
+             (proc (apply #'start-process
+                          "epdfinfo" " *epdfinfo*" pdf-info-epdfinfo-program
+                          (when pdf-info-epdfinfo-error-filename
+                            (list pdf-info-epdfinfo-error-filename)))))
+        (with-current-buffer " *epdfinfo*"
+          (erase-buffer))
+        (set-process-query-on-exit-flag proc nil)
+        (set-process-coding-system proc 'utf-8-unix 'utf-8-unix)
+        (setq pdf-info--queue (tq-create proc))))
+    pdf-info--queue)
+
   (evil-collection-define-key 'normal 'pdf-view-mode-map
     "N" 'pdf-history-forward
     "B" 'pdf-history-backward))

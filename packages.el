@@ -138,7 +138,7 @@
 (package! ef-theme :recipe (:host github :repo "protesilaos/ef-themes" :files ("*")))
 
 ;;(package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "b581ac9")
-(package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "ac3634e2e7efe9c29c4311196e0ed67085d58f11")
+(package! telega :recipe (:host github :repo "zevlg/telega.el" :files ("*")) :pin "2e196820c9331926b02045a3ba9e19fc49846d29")
 
 (package! line-reminder :recipe (:host github :repo "emacs-vs/line-reminder"))
 
@@ -154,3 +154,5 @@
 (package! flycheck-grammarly :recipe (:host github :repo "emacs-grammarly/flycheck-grammarly" :files ("*")))
 
 (package! mini-frame)
+
+(package! beacon)

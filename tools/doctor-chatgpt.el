@@ -105,30 +105,32 @@ information we want to display."
         (setq match (split-string (string-trim (substring output el))))
         (setq doctor-chatgpt-replying nil)
         (with-current-buffer "*doctor*"
-          (read-only-mode -1)
-          (goto-char (point-max))
-          (insert (substring output 0 el))
-          (goto-char (point-max))
-          (read-only-mode 1)
-          (chatgpt--create-tokens-overlay (nth 0 match)
-                                          (nth 1 match)
-                                          (nth 2 match)))
+          (save-excursion
+            (read-only-mode -1)
+            (goto-char (point-max))
+            (insert (substring output 0 el))
+            (goto-char (point-max))
+            (read-only-mode 1)
+            (chatgpt--create-tokens-overlay (nth 0 match)
+                                            (nth 1 match)
+                                            (nth 2 match))))
         (setq output ""))
       (when (> (length output) 1) (push output doctor-chatgpt-recv-list))
       (with-current-buffer "*doctor*"
-        (read-only-mode -1)
-        (goto-char (point-max))
-        (insert output)
-        (if doctor-chatgpt-replying
-            (read-only-mode 1)
-          (if doctor-chatgpt-recv-list (insert "\n\n"))
+        (save-excursion
+          (read-only-mode -1)
           (goto-char (point-max))
-          (forward-line -2)
-          (while (eq (line-beginning-position) (line-end-position))
-            (message "delete ")
-            (delete-char -1))
-          (goto-char (point-max))
-          (setq doctor-chatgpt-send-start-point (point-max))))))))
+          (insert output)
+          (if doctor-chatgpt-replying
+              (read-only-mode 1)
+            (if doctor-chatgpt-recv-list (insert "\n\n"))
+            (goto-char (point-max))
+            (forward-line -2)
+            (while (eq (line-beginning-position) (line-end-position))
+              (message "delete ")
+              (delete-char -1))
+            (goto-char (point-max))
+            (setq doctor-chatgpt-send-start-point (point-max)))))))))
 
 (defun doctor-chatgpt-start-process ()
   "Start a chat with ChatGPT."
@@ -139,7 +141,7 @@ information we want to display."
   (setq doctor-chatgpt-send-start-point 114)  ;; skip doctor prompt
   (setq doctor-chatgpt-process
         (start-process "*doctor-chatgpt*" "*doctor-chatgpt*"
-                       "/opt/homebrew/bin/python3" (expand-file-name "~/.doom.d/tools/revChatGPT_wrap.py")
+                       "/opt/homebrew/bin/python" (expand-file-name "~/.doom.d/tools/revChatGPT_wrap.py")
                        "--api_key" doctor-chatgpt-offical-key "--version" (number-to-string doctor-chatgpt-version)
                        "--model" doctor-chatgpt-model))
   (setq doctor-chatgpt-ready nil)

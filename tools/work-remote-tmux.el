@@ -35,14 +35,6 @@
                            "\\/")))))
     (work-remote-tmux-start-sesstion ip dir)))
 
-(defun work-remote-tmux-start-open-172 ()
-  (interactive)
-  (work-remote-tmux-start-open work-remote-server-172))
-
-(defun work-remote-tmux-start-open-192 ()
-  (interactive)
-  (work-remote-tmux-start-open work-remote-server-192))
-
 (defvar work-remote-tmux-current-window-config nil)
 
 (defun work-remote-tmux-toggle (ip)
@@ -214,53 +206,62 @@
   (interactive (list (if (use-region-p)
                          (buffer-substring (region-beginning) (region-end))
                        nil)))
-  (when command (deactivate-mark))
+  (if command
+      (let ((cp (point)))
+        (evil-yank (region-beginning) (region-end))
+        (deactivate-mark)
+        (goto-char cp))
+    (save-buffer))
 
-  (save-buffer)
+
   (setq work-remote-tmux-rerun--running t)
-  (if startsync-running (run-with-timer 0.1 nil 'work-remote-tmux-rerun command)
+  (if startsync-running
+      (run-with-timer 0.1 nil 'work-remote-tmux-rerun command)
     (let ((l-vterm-window nil)
           (l-vterm-buffer nil)
           (window-conf (current-window-configuration)))
 
       (dolist (window (window-list))
-        (when  (or (cl-search "172-" (buffer-name (window-buffer window)))
-                   (cl-search "192-" (buffer-name (window-buffer window))))
-          (setq l-vterm-window window)))
+        (dolist (prefix work-remote-tmux-server-prefix)
+          (when (cl-search prefix (buffer-name (window-buffer window)))
+            (setq l-vterm-window window))))
 
       (dolist (buffer (buffer-list))
-        (when (or (cl-search "172-" (buffer-name buffer))
-                  (cl-search "192-" (buffer-name buffer)))
-          (setq l-vterm-buffer buffer)))
+        (dolist (prefix work-remote-tmux-server-prefix)
+          (when (cl-search prefix (buffer-name buffer))
+            (setq l-vterm-buffer buffer))))
 
       (cond
        (l-vterm-window
         (select-window  l-vterm-window))
        (l-vterm-buffer
         (switch-to-buffer l-vterm-buffer))
-       ((or (not work-remote-tmux-rerun--buffer)
-            (cl-search "172-" (buffer-name work-remote-tmux-rerun--buffer)))
-        (work-remote-tmux-toggle work-remote-server-172))
-       ((or (not work-remote-tmux-rerun--buffer)
-            (cl-search "192-" (buffer-name work-remote-tmux-rerun--buffer)))
-        (work-remote-tmux-toggle work-remote-server-192)))
+       (t
+        (let ((found nil))
+          (dolist (prefix work-remote-tmux-server-prefix)
+            (when (and (not found)
+                       (or (not work-remote-tmux-rerun--buffer)
+                           (cl-search prefix (buffer-name work-remote-tmux-rerun--buffer))))
+              (setq found t)
+              (work-remote-tmux-toggle (work-remote-tmux-get-ip-by-prefix prefix)))))))
 
       ;; kill current buffer
-      (vterm-send-key "c" nil nil t)
-      (sleep-for 0.05)
-      (vterm-send-key "d" nil nil t)
-      (sleep-for 0.05)
-      (vterm-send-return)
-      (sleep-for 0.1)
-
-      (setq work-remote-tmux-rerun--start-point (point))
-      (setq work-remote-tmux-rerun--buffer (current-buffer))
-      (setq work-remote-tmux-rerun--wait-timer-count 600)
-      (setq work-remote-tmux-rerun--prompt "^.* ➜ .* ✗ $")
+      (unless command
+        (vterm-send-key "c" nil nil t)
+        (sleep-for 0.05)
+        (vterm-send-key "d" nil nil t)
+        (sleep-for 0.05)
+        (vterm-send-return)
+        (sleep-for 0.1)
+        (setq work-remote-tmux-rerun--start-point (point))
+        (setq work-remote-tmux-rerun--buffer (current-buffer))
+        (setq work-remote-tmux-rerun--wait-timer-count 600)
+        (setq work-remote-tmux-rerun--prompt "^.* ➜ .* ✗ $"))
 
       (if command
-          (vterm-send-string command)
+          (vterm-yank)
         (vterm-send-key "p" nil nil t))
+
       (sleep-for 0.1)
 
       (setq work-remote-tmux-rerun--prompt-command
@@ -269,7 +270,8 @@
 
       (vterm-send-return)
 
-      (run-with-timer 0.5 nil #'vterm-remote-tmux-rerun--check-end)
+      (unless command
+          (run-with-timer 0.5 nil #'vterm-remote-tmux-rerun--check-end))
       (set-window-configuration window-conf))))
 
 
@@ -433,9 +435,22 @@
            (vterm-send-return))
        (work-remote-tmux-toggle ,server))))
 
+(defvar work-remote-tmux-server-prefix '("172-" "10-" "LLM1-"))
+(defun work-remote-tmux-get-ip-by-prefix (prefix)
+  (cond
+   ((string-match-p "172-" prefix) work-remote-server-172)
+   ((string-match-p "10-" prefix) work-remote-server-192)
+   ((string-match-p "LLM1-" prefix) "LLM1")
+   ((string-match-p "LLM2-" prefix) "LLM2")
+   ((string-match-p "LLM3-" prefix) "LLM3")
+   ((string-match-p "LLM4-" prefix) "LLM4")))
+
 (work-remote-tmux-toggle-server work-remote-server-172)
 (work-remote-tmux-toggle-server work-remote-server-192)
-
+(work-remote-tmux-toggle-server "LLM1")
+(work-remote-tmux-toggle-server "LLM2")
+(work-remote-tmux-toggle-server "LLM3")
+(work-remote-tmux-toggle-server "LLM4")
 
 (map!
   "s-i" #'work-remote-tmux-toggle-work-remote-server-172
@@ -448,13 +463,13 @@
               (other-window 1))
             (work-remote-tmux-toggle work-remote-server-172))
 
-
   "s-r" #'work-remote-tmux-rerun
 
   "s-R" #'work-remote-tmux-restart-job
 
-  "s-j" #'work-remote-tmux-toggle-work-remote-server-192
+  "s-l" #'work-remote-tmux-toggle-work-remote-server-192
 
+  "s-j" #'work-remote-tmux-toggle-LLM1
   "s-J" #'(lambda (args)
             (interactive "P")
             (other-window 1)

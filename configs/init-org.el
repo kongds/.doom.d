@@ -2,6 +2,9 @@
 (after! org
   :config
 
+  ;; (after! org-appear
+  ;;   (remove-hook 'org-mode-hook #'org-appear-mode))
+
   (after! ox
     (defun format-image-inline (source attributes info)
       (format "<img src=\"data:image/%s;base64,%s\"%s />"
@@ -17,15 +20,19 @@
     (org-export-define-derived-backend 'html-inline-images 'html
       :menu-entry '(?h "Export to HTML" ((?m "As MHTML file and open" org-html-export-to-mhtml)))))
 
-  (setq org-hide-emphasis-markers t)
+  ;; disable indent for bugs in org
+  ;; (setq org-startup-indented nil)
+
+  (setq org-hide-emphasis-markers nil)
   (setq ob-async-no-async-languages-alist '("python" "jupyter-python"))
   (setq org-emphasis-alist
         (quote (
                 ("/" italic)
-                ("_" underline)
+                ;;("_" underline)
+                ;;("*" (:foreground "yellow" :background "black"))
                 ("+" (:strike-through t))
                 ("~" org-verbatim verbatim)
-                ("*" (:foreground "yellow" :background "black")))))
+                )))
   (setq org-html-text-markup-alist
         '((bold . "<mark style=\"font-style:normal;font-weight:normal\">%s</mark>")
           (code . "<code>%s</code>")
@@ -106,7 +113,7 @@
   :config
   (setq bibtex-completion-bibliography (list "/Users/royokong/mendeley.bib/library.bib" "/Users/royokong/library.bib")
         org-ref-get-pdf-filename-function #'(lambda (key)
-                                            (car (bibtex-completion-find-pdf-in-field key)))
+                                              (car (bibtex-completion-find-pdf-in-field key)))
         org-ref-completion-library 'org-ref-ivy-cite))
 
 (after! org-download
@@ -185,6 +192,87 @@
         (insert (concat "\n" head))
         (insert "\n\n#+end_src\n")
         (previous-line 3))))
+
+  ;; remove  the error "`org-element-at-point' cannot be used in non-Org buffer %S (%s)"
+  ;; from org-element-at-point
+  (defun org-element-at-point (&optional epom cached-only)
+    "Determine closest element around point or EPOM.
+  
+  When EPOM is an element, return it immediately.
+  Otherwise, determine element at EPOM marker or position.
+  
+  Only check cached element when CACHED-ONLY is non-nil and return nil
+  unconditionally when element at EPOM is not in cache.
+  
+  Return value is a list like (TYPE PROPS) where TYPE is the type
+  of the element and PROPS a plist of properties associated to the
+  element.
+  
+  Possible types are defined in `org-element-all-elements'.
+  Properties depend on element or object type, but always include
+  `:begin', `:end', and `:post-blank' properties.
+  
+  As a special case, if point is at the very beginning of the first
+  item in a list or sub-list, returned element will be that list
+  instead of the item.  Likewise, if point is at the beginning of
+  the first row of a table, returned element will be the table
+  instead of the first row.
+  
+  When point is at the end of the buffer, return the innermost
+  element ending there.
+  
+  This function may modify the match data."
+    (if (org-element-type epom t) epom
+      (setq epom (or epom (point)))
+      (org-with-point-at epom
+        ;; Allow re-parsing when the command can benefit from it.
+        (when (and cached-only
+                   (memq this-command org-element--cache-non-modifying-commands))
+          (setq cached-only nil))
+        (let (element)
+          (when (org-element--cache-active-p)
+            (if (not (org-with-base-buffer nil org-element--cache)) (org-element-cache-reset)
+              (unless cached-only (org-element--cache-sync (current-buffer) epom))))
+          (setq element (if cached-only
+                            (when (and (org-element--cache-active-p)
+                                       (or (not org-element--cache-sync-requests)
+                                           (< epom
+                                              (org-element--request-beg
+                                               (car org-element--cache-sync-requests)))))
+                              (org-element--cache-find epom))
+                          (condition-case-unless-debug err
+                              (org-element--parse-to epom)
+                            (error
+                             (org-element--cache-warn
+                              "Org parser error in %s::%S. Resetting.\n The error was: %S\n Backtrace:\n%S\n Please report this to Org mode mailing list (M-x org-submit-bug-report)."
+                              (buffer-name (current-buffer))
+                              epom
+                              err
+                              (when (and (fboundp 'backtrace-get-frames)
+                                         (fboundp 'backtrace-to-string))
+                                (backtrace-to-string (backtrace-get-frames 'backtrace))))
+                             (org-element-cache-reset)
+                             (org-element--parse-to epom)))))
+          (when (and (org-element--cache-active-p)
+                     element
+                     (org-element--cache-verify-element element))
+            (setq element (org-element--parse-to epom)))
+          (unless (org-element-type-p element 'org-data)
+            (unless (and cached-only
+                         (not (and element
+                                 (or (= epom (org-element-begin element))
+                                     (and (not (org-element-type-p element org-element-greater-elements))
+                                          (>= epom (org-element-begin element))
+                                          (< epom (org-element-end element)))
+                                     (and (org-element-contents-begin element)
+                                          (>= epom (org-element-begin element))
+                                          (< epom (org-element-contents-begin element)))
+                                     (and (not (org-element-contents-end element))
+                                          (>= epom (org-element-begin element))
+                                          (< epom (org-element-end element)))))))
+              (if (not (org-element-type-p element 'section))
+                  element
+                (org-element-at-point (1+ epom) cached-only))))))))
 
   (after! evil-collection
     (evil-collection-define-key 'normal 'org-mode-map (kbd "C-o") 'org-babel-new-block))

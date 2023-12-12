@@ -60,6 +60,7 @@
     :desc "evil window right" :n "w l" #'my-evil-move-right-window
     :desc "evil window left" :n "w h" #'my-evil-move-left-window
     :desc "evil window next" :n "w w" #'my-evil-move-next-window
+    :desc "evil window next" :n "l" #'my-evil-move-next-window
     )))
 
 

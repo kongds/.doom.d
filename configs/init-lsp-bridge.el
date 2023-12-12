@@ -1,12 +1,16 @@
 ;;; configs/init-lsp-bridge.el -*- lexical-binding: t; -*-
 
-;;(add-to-list 'load-path "/Users/royokong/lsp-bridge")
+;;(add-to-list 'load-path "/Users/royokong/lsp-bridge-dev-copilot")
+(setq acm-enable-copilot nil)
+(after! copilot
+  (setq acm-backend-copilot-network-proxy copilot-network-proxy))
 
 (defun lsp-bridge-maybe-start-from-hook ()
   (unless (or (string-match "\*org-src-fontification:" (buffer-name))
               (string-match "\*Org Src" (buffer-name))
               (string-match "\*temp" (buffer-name))
               (string-match ".org-src-babel" (buffer-name))
+              (string-prefix-p " markdown-code-fontification:" (buffer-name))
               (equal (buffer-name) "*Capture*"))
     (setq-local corfu-auto nil)
     (lsp-bridge-mode))
@@ -87,6 +91,7 @@
   (setq acm-candidate-match-function 'regexp-quote)
   (setq acm-enable-dabbrev nil)
   (setq acm-enable-codeium t)
+  (setq acm-enable-telega nil)
   (setq lsp-bridge-python-lsp-server "pyright-background-analysis")
   (setq lsp-bridge-disable-backup nil)
   (setq lsp-bridge-symbols-enable-which-func t)
@@ -96,6 +101,7 @@
   (setq lsp-bridge-python-ruff-lsp-server "pyright-background-analysis_ruff")
   (setq lsp-bridge-enable-org-babel t)
   (setq lsp-bridge-enable-hover-diagnostic t)
+  (setq lsp-bridge-enable-inlay-hint nil)
 
   :config
   (add-to-list 'evil-emacs-state-modes 'lsp-bridge-ref-mode)
@@ -128,6 +134,14 @@
             (run-at-time 1 t #'lsp-bridge-restart-process-try-eob)))
     (delete-frame acm-menu-frame)
     (delete-frame acm-doc-frame))
+
+
+  (after! evil-collection
+    (evil-collection-define-key 'normal  'lsp-bridge-peek-mode-map
+      (kbd "n") #'lsp-bridge-peek-file-content-next-line
+      (kbd "p") #'lsp-bridge-peek-file-content-prev-line
+      (kbd "N") #'lsp-bridge-peek-list-next-line
+      (kbd "P") #'lsp-bridge-peek-list-prev-line))
 
   (advice-add #'lsp-bridge-restart-process
               :after #'lsp-bridge-restart-process-after)

@@ -27,6 +27,11 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
                       (- (display-pixel-width) 20)
                       (- (display-pixel-height) bias) t))))
 
+(defun toggle-frame-maximized-or-fullframe-2 ()
+  (interactive)
+    (set-frame-position (selected-frame) 0 0)
+    (set-frame-size (selected-frame) (- 2560 24) (- 1440 0) t))
+
 (defun make-second-screen-frame ()
   (interactive)
   (if (cl-find-if (lambda (frame) (equal "second-screen" (frame-parameter frame 'name)))

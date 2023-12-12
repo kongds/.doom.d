@@ -9,7 +9,7 @@ def main():
     parser.add_argument(
         "--api_key",
         type=str,
-        required=True,
+        required=False,
         help="OpenAI API key",
     )
     parser.add_argument(
@@ -38,21 +38,22 @@ def main():
     )
 
     args = parser.parse_args()
+    if args.model == 'gpt-4':
+        ## use chat
+        # args.version = 1
+        pass
     # Initialize chatbot
     if args.version == 1:
         from revChatGPT.V1 import configure
         config = configure()
-        chatbot = V1.Chatbot(config,
-                             conversation_id=config.get("conversation_id"),
-                             parent_id=config.get("parent_id"),
-                             collect_data=False,)
+        chatbot = V1.Chatbot(config)
     else:
         chatbot = V3.Chatbot(api_key=args.api_key, system_prompt=args.base_prompt, engine=args.model)
     print('Logging in...')
     while True:
         print()
         # Display the prompt
-        if len(chatbot.conversation["default"]) > 1:
+        if  args.version != 1 and len(chatbot.conversation["default"]) > 1:
             tiktoken.model.MODEL_TO_ENCODING["gpt-4"] = "cl100k_base"
             encoding = tiktoken.encoding_for_model(chatbot.engine)
             prompt_tokens, reply_tokens = 0, 0

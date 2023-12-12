@@ -1,8 +1,8 @@
 diff --git a/sort-tab.el b/sort-tab.el
-index 2de092a..cde9e05 100644
+index fba00b2..ac9392b 100644
 --- a/sort-tab.el
 +++ b/sort-tab.el
-@@ -196,10 +196,11 @@
+@@ -202,10 +202,11 @@ If you want buffer hide, return t, or return nil.")
      (set-window-parameter sort-tab-window 'no-delete-other-windows nil)
      (set-window-parameter sort-tab-window 'window-side nil)
      (set-window-parameter sort-tab-window 'window-slot nil)
@@ -16,7 +16,7 @@ index 2de092a..cde9e05 100644
  
    ;; Reset sort-tab window.
    (setq sort-tab-window nil)
-@@ -227,7 +228,8 @@
+@@ -233,7 +234,8 @@ If you want buffer hide, return t, or return nil.")
  
  (defun sort-tab-stop-count-freq ()
    "Stop counting buffer used frequency."
@@ -26,7 +26,7 @@ index 2de092a..cde9e05 100644
    (setq sort-tab-buffer-freq-count-timer nil))
  
  (defun sort-tab-buffer-freq (buf)
-@@ -289,11 +291,14 @@
+@@ -295,13 +297,16 @@ If you want buffer hide, return t, or return nil.")
  
  (defun sort-tab-buffer-need-hide-p (buf)
    (let* ((name (buffer-name buf)))
@@ -37,12 +37,14 @@ index 2de092a..cde9e05 100644
       (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*" " *" "COMMIT_EDITMSG"))
       (eq (aref name 0) ?\s)
       (sort-tab-is-magit-buffer-p buf)
+      (when sort-tab-hide-function
+        (funcall sort-tab-hide-function buf))
 -     )))
 +     ))))
  
  (defun sort-tab-is-normal-buffer-p (current-buffer)
    (and
-@@ -321,26 +326,28 @@
+@@ -329,13 +334,16 @@ If you want buffer hide, return t, or return nil.")
       ,@body
  
       (when (eq sort-tab-align 'center)
@@ -66,92 +68,38 @@ index 2de092a..cde9e05 100644
  
       ;; Record last active buffer.
       (setq sort-tab-last-active-buffer (current-buffer))
-      ))
- 
- (defun sort-tab-update-list ()
-+  (when (not (equal (window-buffer) (sort-tab-get-buffer)))
-+  (setq sort-tab-update-list-updating t)
-   (let ((current-buffer (window-buffer)))
-     (cond
--     ;; Erase sort-tab content if current buffer is sort-tab buffer.
--     ((string-equal sort-tab-buffer-name (buffer-name current-buffer))
--      (sort-tab-update-tabs))
-      ;; Display tabs if current-buffer is normal buffer.
--     (t
-+     ((sort-tab-is-normal-buffer-p current-buffer)
-       ;; Debug usage.
-       ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
-       ;;   (goto-char (point-max))
-@@ -350,25 +357,43 @@
- 
-       (let* ((current-tab-start-column 0)
-              (current-tab-end-column 0)
-+             (tab-count 0)
-              (tab-window (get-buffer-window (sort-tab-get-buffer)))
-              found-current-tab
-              tab
-              (buffer-index -1))
-         (sort-tab-update-tabs
--         ;; Show hide buffer at left when current buffer is match hidden rule.
--         (when (sort-tab-is-hidden-buffer-p current-buffer)
--           (insert (sort-tab-get-tab-name current-buffer current-buffer))
--           (insert sort-tab-propertized-separator))
--
-          ;; Don't sort tabs if using sort-tab commands.
-          (unless (string-prefix-p "sort-tab-" (prin1-to-string last-command))
--           (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
-+           (setq sort-tab-visible-buffers
-+                  (sort-tab-get-buffer-list)))
+@@ -370,13 +378,29 @@ If you want buffer hide, return t, or return nil.")
+             (current-tab-end-column 0)
+             (tab-window (get-buffer-window (sort-tab-get-buffer)))
+             (buffer-index -1)
++            (tab-count 0)
+             found-current-tab
+             tab)
+        (dolist (buf visible-buffer-infos)
+          ;; Insert tab.
+          (setq buffer-index (+ buffer-index 1))
+          (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
+-         (insert tab)
 +
-+         (setq sort-tab-visible-buffers
-+               (-filter
-+                (lambda (buf)
-+                    ;; filter #<killed buffer>
-+                    (buffer-name buf)) sort-tab-visible-buffers))
++         (cl-incf tab-count)
++         (if (eq buf current-buffer)
++             (insert tab)
++           (insert
++            (concat
++             (propertize
++              (prin1-to-string tab-count)
++              'face 'bold)
++             "."
++             (propertize
++              (substring-no-properties tab 1)
++              'face
++              (if (eq (frame-parameter nil 'background-mode) 'dark)
++                  '(:foreground "#bdae93" )
++                '(:foreground "#665c54"))))))
+          (insert sort-tab-propertized-separator)
  
-          (dolist (buf sort-tab-visible-buffers)
-            ;; Insert tab.
-            (setq buffer-index (+ buffer-index 1))
-            (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
--           (insert tab)
-+           ;; (insert tab)
-+           (cl-incf tab-count)
-+           (if (eq buf current-buffer)
-+               (insert tab)
-+             (insert
-+              (concat
-+               (propertize
-+                (prin1-to-string tab-count)
-+                'face 'bold)
-+               "."
-+               (propertize
-+                (substring-no-properties tab 1)
-+                'face
-+                (if (eq (frame-parameter nil 'background-mode) 'dark)
-+                    '(:foreground "#bdae93" )
-+                  '(:foreground "#665c54"))))))
-            (insert sort-tab-propertized-separator)
- 
-            ;; Calculate the current tab column.
-@@ -385,7 +410,16 @@
-                     (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
-                    ((< current-tab-start-column (window-hscroll))
-                     (set-window-hscroll tab-window current-tab-start-column))
--                   )))))))))
-+                   ))))))
-+     ;; Only display hide buffer at top if current buffer is match hide rule.
-+     ((sort-tab-is-hidden-buffer-p current-buffer)
-+      (sort-tab-update-tabs
-+       ;; Insert current buffer.
-+       (insert (sort-tab-get-tab-name current-buffer current-buffer))
-+       (insert sort-tab-propertized-separator)))
-+     ;; Erase sort-tab content if current buffer is sort-tab buffer.
-+     ((string-equal sort-tab-buffer-name (buffer-name current-buffer))
-+      (sort-tab-update-tabs))))))
- 
- (defun sort-tab-get-tab-name (buf current-buffer &optional buffer-index)
-   (propertize
-@@ -400,6 +434,12 @@
+          ;; Calculate the current tab column.
+@@ -419,6 +443,12 @@ If you want buffer hide, return t, or return nil.")
               (when (sort-tab-is-eaf-browser-buffer-p buf)
                 (setq bufname (replace-regexp-in-string "\\s-" "" bufname)))
  
@@ -164,7 +112,7 @@ index 2de092a..cde9e05 100644
               (if (> (length bufname) sort-tab-name-max-length)
                   (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
                 bufname)))
-@@ -483,7 +523,8 @@
+@@ -502,7 +532,8 @@ If you want buffer hide, return t, or return nil.")
    (let ((visible-buffers sort-tab-visible-buffers))
      (setq sort-tab-visible-buffers nil)
      (dolist (buf visible-buffers)
@@ -172,9 +120,9 @@ index 2de092a..cde9e05 100644
 +      (unless (buffer-modified-p buf)
 +        (kill-buffer buf)))))
  
- (defun sort-tab-close-mode-tabs ()
+ (defun sort-tab-close-other-tabs ()
    (interactive)
-@@ -524,7 +565,25 @@
+@@ -552,7 +583,25 @@ If you want buffer hide, return t, or return nil.")
  
  (defun sort-tab-select-visible-nth-tab (&optional tab-index)
    (interactive "p")

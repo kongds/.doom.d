@@ -1,5 +1,5 @@
 diff --git a/elfeed-search.el b/elfeed-search.el
-index d1d9b57..fb06f8c 100644
+index 1fcfadd..52abe1e 100644
 --- a/elfeed-search.el
 +++ b/elfeed-search.el
 @@ -504,6 +504,7 @@ This function must *only* be called within the body of

@@ -146,26 +146,41 @@
 ;; theme
 (defun toggle-dark-light-theme ()
   (interactive)
-  (if (equal doom-theme 'doom-nord)
-      (load-theme 'ef-summer)
-    (load-theme 'doom-nord)
-    ;; reload to doom-nord again to
-    ;; avoid blink in echo area
-    (load-theme 'doom-nord))
-  (when (featurep 'holo-layer)
-    (setq holo-layer-cursor-color (face-background 'cursor))
-    (holo-layer-restart-process))
-  (when (featurep 'lsp-bridge)
-    (run-with-timer 0.1 nil
-                    #'(lambda()
-                        (set-face-background 'acm-frame-default-face (face-attribute 'default :background))
-                        (set-face-background 'acm-frame-select-face (face-attribute 'highlight :background))
-                        (set-face-foreground 'acm-frame-select-face (face-attribute 'highlight :foreground))
-                        (lsp-bridge-restart-process)
-                        (acm-reset-colors)
-                        (kill-buffer acm-buffer)
-                        (kill-buffer acm-doc-buffer)
-                        (kill-buffer lsp-bridge-diagnostic-buffer)))))
+  (let ((dark-theme (equal doom-theme 'doom-nord)))
+    (if dark-theme
+        (load-theme 'ef-summer)
+      (load-theme 'doom-nord)
+      ;; reload to doom-nord again to
+      ;; avoid blink in echo area
+      (load-theme 'doom-nord))
+
+    (when (featurep 'holo-layer)
+      (setq holo-layer-cursor-color (face-background 'cursor))
+      (holo-layer-restart-process))
+
+
+    ;; fontify *-ts-mod
+    (set-face-attribute 'font-lock-property-use-face nil
+                        :foreground (face-foreground 'font-lock-constant-face)
+                        :slant 'italic)
+    (set-face-attribute 'font-lock-variable-use-face nil
+                        :foreground (face-foreground 'default))
+    (if dark-theme
+        (set-face-attribute 'font-lock-preprocessor-face nil
+                            :foreground (face-foreground 'font-lock-variable-name-face)))
+
+    (when (featurep 'lsp-bridge)
+      (run-with-timer 0.1 nil
+                      #'(lambda()
+                          (set-face-background 'acm-frame-default-face (face-attribute 'default :background))
+                          (set-face-background 'acm-frame-select-face (face-attribute 'highlight :background))
+                          (set-face-foreground 'acm-frame-select-face (face-attribute 'highlight :foreground))
+                          (lsp-bridge-restart-process)
+                          (acm-reset-colors)
+                          (when (buffer-live-p acm-buffer)
+                            (kill-buffer acm-buffer)
+                            (kill-buffer acm-doc-buffer)
+                            (kill-buffer lsp-bridge-diagnostic-buffer)))))))
 
 ;; vertico support pyim
 (after! vertico
@@ -203,6 +218,8 @@
   (copilot-diagnose)
   (lsp-bridge-restart-process))
 
+
+
 (load! "+bindings")
 
 (load! "+patches")
@@ -211,6 +228,9 @@
 
 ;; configs
 
+(when (treesit-available-p)
+  (load! "configs/init-ts-mode"))
+;;
 (load! "configs/init-imenu")
 ;;
 (load! "configs/init-treemacs")

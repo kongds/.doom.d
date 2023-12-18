@@ -19,10 +19,12 @@
     (yas-minor-mode -1))
 
   ;; use lsp bridge as diagnosis
-  (when (member major-mode '(python-mode c-mode c++-mode sh-mode))
+  (when (member major-mode '(python-mode c-mode c++-mode sh-mode
+                             python-ts-mode c-ts-mode c++-ts-mode bash-ts-mode))
     (flycheck-mode -1))
 
-  (when (member major-mode '(python-mode c-mode c++-mode))
+  (when (member major-mode '(python-mode c-mode c++-mode
+                             python-ts-mode c-ts-mode c++-ts-mode))
     (setq-local +lookup-definition-functions '(lsp-bridge-find-def t)
                 +lookup-implementations-functions '(lsp-bridge-find-impl t)
                 +lookup-references-functions '(lsp-bridge-find-references t))))
@@ -33,7 +35,8 @@
                 python-mode-hook
                 sh-mode-hook
                 emacs-lisp-mode-hook
-                org-mode-hook))
+                org-mode-hook
+                ))
   (add-hook hook #'lsp-bridge-maybe-start-from-hook))
 
 (add-hook 'tex-mode-hook #'(lambda()

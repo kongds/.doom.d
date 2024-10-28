@@ -2,6 +2,8 @@
 (after! org
   :config
 
+  (require 'org-eldoc)
+
   ;; (after! org-appear
   ;;   (remove-hook 'org-mode-hook #'org-appear-mode))
 
@@ -25,14 +27,14 @@
 
   (setq org-hide-emphasis-markers nil)
   (setq ob-async-no-async-languages-alist '("python" "jupyter-python"))
-  (setq org-emphasis-alist
-        (quote (
-                ("/" italic)
-                ;;("_" underline)
-                ;;("*" (:foreground "yellow" :background "black"))
-                ("+" (:strike-through t))
-                ("~" org-verbatim verbatim)
-                )))
+  ;; (setq org-emphasis-alist
+  ;;       (quote (
+  ;;               ("/" italic)
+  ;;               ;;("_" underline)
+  ;;               ;;("*" (:foreground "yellow" :background "black"))
+  ;;               ("+" (:strike-through t))
+  ;;               ("~" org-verbatim verbatim)
+  ;;               )))
   (setq org-html-text-markup-alist
         '((bold . "<mark style=\"font-style:normal;font-weight:normal\">%s</mark>")
           (code . "<code>%s</code>")

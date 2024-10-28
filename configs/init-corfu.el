@@ -9,7 +9,7 @@
 (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
 ;; make completion work on  evil-ex
 (add-hook 'org-mode-hook #'corfu-mode)
-(add-hook 'tex-mode-hook #'corfu-mode)
+;;(add-hook 'tex-mode-hook #'corfu-mode)
 
 (use-package! corfu
   :commands corfu-mode

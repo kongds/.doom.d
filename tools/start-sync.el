@@ -59,6 +59,22 @@
                                              (shell-command-sentinel process signal))))))))
   (setq startsync-update-dir nil))
 
+(defun startsync-update-dirs ()
+  (interactive)
+  (setq startsync-dirs
+        (let ((json-data (with-current-buffer  (find-file-noselect "~/startSync.json")
+                           (goto-char 0)
+                           (json-parse-buffer)
+                           ))
+              (index 0) out)
+          (while (< index (length json-data))
+            (push (gethash "src" (aref json-data index) nil) out)
+            (cl-incf index)
+            )
+          (kill-buffer (get-buffer "startSync.json"))
+          out))
+  )
+
 (def-modeline-var! +modeline-startsync
   '(:eval
     (if startsync-running
@@ -76,18 +92,7 @@
   (add-hook 'before-save-hook 'startsync-before-save-hook)
   (add-hook 'after-save-hook 'startsync-after-save-hook)
 
-  (setq startsync-dirs
-        (let ((json-data (with-current-buffer  (find-file-noselect "~/startSync.json")
-                           (goto-char 0)
-                           (json-parse-buffer)
-                           ))
-              (index 0) out)
-          (while (< index (length json-data))
-            (push (gethash "src" (aref json-data index) nil) out)
-            (cl-incf index)
-            )
-          (kill-buffer (get-buffer "startSync.json"))
-          out))
+  (startsync-update-dirs)
 
   (def-modeline! :main
     '(""

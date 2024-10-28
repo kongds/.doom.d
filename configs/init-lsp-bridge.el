@@ -1,7 +1,7 @@
 ;;; configs/init-lsp-bridge.el -*- lexical-binding: t; -*-
 
-;;(add-to-list 'load-path "/Users/royokong/lsp-bridge-dev-copilot")
-(setq acm-enable-copilot nil)
+(add-to-list 'load-path "/Users/royokong/lsp-bridge")
+
 (after! copilot
   (setq acm-backend-copilot-network-proxy copilot-network-proxy))
 
@@ -40,9 +40,9 @@
   (add-hook hook #'lsp-bridge-maybe-start-from-hook))
 
 (add-hook 'tex-mode-hook #'(lambda()
-                             (setq-local corfu-auto t)
-                             (setq-local corfu-auto-delay 0.1)
-                             (setq-local completion-at-point-functions (list (cape-super-capf #'cape-dabbrev #'cape-tex #'cape-dict #'cape-file)))))
+                             (setq-local acm-enable-search-sdcv-words t)
+                             (lsp-bridge-mode)))
+
 (after! lookup
   ;; fix rtags find defination
   ;; (point-marker) cannot work with different buffer
@@ -94,7 +94,9 @@
   (setq acm-candidate-match-function 'regexp-quote)
   (setq acm-enable-dabbrev nil)
   (setq acm-enable-codeium t)
+  (setq acm-enable-copilot nil)
   (setq acm-enable-telega nil)
+
   (setq lsp-bridge-python-lsp-server "pyright-background-analysis")
   (setq lsp-bridge-disable-backup nil)
   (setq lsp-bridge-symbols-enable-which-func t)
@@ -102,6 +104,7 @@
   (setq lsp-bridge-enable-signature-help nil)
   (setq lsp-bridge-org-babel-lang-list nil)
   (setq lsp-bridge-python-ruff-lsp-server "pyright-background-analysis_ruff")
+  (setq lsp-bridge-python-multi-lsp-server "pyright-background-analysis_ruff")
   (setq lsp-bridge-enable-org-babel t)
   (setq lsp-bridge-enable-hover-diagnostic t)
   (setq lsp-bridge-enable-inlay-hint nil)
@@ -171,8 +174,8 @@
   :after lsp-bridge
   :config
   ;; bindings
-  (define-key acm-mode-map (kbd "TAB") 'acm-select-next)
-  (define-key acm-mode-map (kbd "S-TAB") 'acm-select-prev)
+  (define-key acm-mode-map [tab] 'acm-select-next)
+  (define-key acm-mode-map [backtab] 'acm-select-prev)
   (define-key acm-mode-map (kbd "C-n") 'acm-select-next)
   (define-key acm-mode-map (kbd "C-p") 'acm-select-prev)
 

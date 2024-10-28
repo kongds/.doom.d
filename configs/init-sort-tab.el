@@ -18,6 +18,7 @@
                                                        (when-let ((workspace (persp-get-by-name
                                                                               (safe-persp-name (get-current-persp)))))
                                                          (and (not (eq (string-match "◀" (buffer-name buf)) 0))   ;; remove telega buffers
+                                                              (not (eq (string-match "AMDLLM1-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
                                                               (not (eq (string-match "LLM1-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
                                                               (not (eq (string-match "LLM2-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
                                                               (not (eq (string-match "LLM3-" (buffer-name buf)) 0)) ;; remove 192, 172 iterm
@@ -77,5 +78,9 @@
 
   (setq sort-tab-align 'center)
   (setq sort-tab-name-max-length 20)
-)
 
+
+  ;; advice to force update to remove or add buffer in workspace
+  (advice-add #'persp--buffer-in-persps-add :after #'(lambda (buf persp) (sort-tab-update-list)))
+  (advice-add #'persp-kill-buffer-query-function :after #'sort-tab-update-list)
+)

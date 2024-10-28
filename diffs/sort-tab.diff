@@ -1,8 +1,16 @@
 diff --git a/sort-tab.el b/sort-tab.el
-index fba00b2..ac9392b 100644
+index 9d93fdb..958ae11 100644
 --- a/sort-tab.el
 +++ b/sort-tab.el
-@@ -202,10 +202,11 @@ If you want buffer hide, return t, or return nil.")
+@@ -176,6 +176,7 @@ If you want buffer hide, return t, or return nil.")
+     (local-set-key (kbd "<drag-mouse-1>") 'push-button))
+ 
+   ;; Add update hook.
++  ;; (add-hook 'window-configuration-change-hook #'sort-tab-update-list)
+   (add-hook 'buffer-list-update-hook #'sort-tab-update-list))
+ 
+ (defun sort-tab-create-window ()
+@@ -208,10 +209,11 @@ If you want buffer hide, return t, or return nil.")
      (set-window-parameter sort-tab-window 'no-delete-other-windows nil)
      (set-window-parameter sort-tab-window 'window-side nil)
      (set-window-parameter sort-tab-window 'window-slot nil)
@@ -16,7 +24,15 @@ index fba00b2..ac9392b 100644
  
    ;; Reset sort-tab window.
    (setq sort-tab-window nil)
-@@ -233,7 +234,8 @@ If you want buffer hide, return t, or return nil.")
+@@ -220,6 +222,7 @@ If you want buffer hide, return t, or return nil.")
+   (sort-tab-stop-count-freq)
+ 
+   ;; Remove update hook.
++  ;; (remove-hook 'window-configuration-change-hook #'sort-tab-update-list)
+   (remove-hook 'buffer-list-update-hook #'sort-tab-update-list))
+ 
+ (defun sort-tab-live-p ()
+@@ -239,7 +242,8 @@ If you want buffer hide, return t, or return nil.")
  
  (defun sort-tab-stop-count-freq ()
    "Stop counting buffer used frequency."
@@ -26,7 +42,7 @@ index fba00b2..ac9392b 100644
    (setq sort-tab-buffer-freq-count-timer nil))
  
  (defun sort-tab-buffer-freq (buf)
-@@ -295,13 +297,16 @@ If you want buffer hide, return t, or return nil.")
+@@ -306,13 +310,16 @@ If you want buffer hide, return t, or return nil.")
  
  (defun sort-tab-buffer-need-hide-p (buf)
    (let* ((name (buffer-name buf)))
@@ -44,7 +60,7 @@ index fba00b2..ac9392b 100644
  
  (defun sort-tab-is-normal-buffer-p (current-buffer)
    (and
-@@ -329,13 +334,16 @@ If you want buffer hide, return t, or return nil.")
+@@ -340,13 +347,16 @@ If you want buffer hide, return t, or return nil.")
       ,@body
  
       (when (eq sort-tab-align 'center)
@@ -68,19 +84,22 @@ index fba00b2..ac9392b 100644
  
       ;; Record last active buffer.
       (setq sort-tab-last-active-buffer (current-buffer))
-@@ -370,13 +378,29 @@ If you want buffer hide, return t, or return nil.")
+@@ -381,6 +391,7 @@ If you want buffer hide, return t, or return nil.")
              (current-tab-end-column 0)
              (tab-window (get-buffer-window (sort-tab-get-buffer)))
              (buffer-index -1)
 +            (tab-count 0)
              found-current-tab
              tab)
-        (dolist (buf visible-buffer-infos)
+        ;; Calculate the current tab column.
+@@ -388,10 +399,21 @@ If you want buffer hide, return t, or return nil.")
           ;; Insert tab.
           (setq buffer-index (+ buffer-index 1))
           (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
--         (insert tab)
-+
+-         (insert-button tab
+-                        'action `(lambda (x)
+-                                   (sort-tab-select-visible-nth-tab ,(1+ buffer-index)))
+-                        'face '(:underline nil))
 +         (cl-incf tab-count)
 +         (if (eq buf current-buffer)
 +             (insert tab)
@@ -99,7 +118,7 @@ index fba00b2..ac9392b 100644
           (insert sort-tab-propertized-separator)
  
           ;; Calculate the current tab column.
-@@ -419,6 +443,12 @@ If you want buffer hide, return t, or return nil.")
+@@ -443,6 +465,12 @@ If you want buffer hide, return t, or return nil.")
               (when (sort-tab-is-eaf-browser-buffer-p buf)
                 (setq bufname (replace-regexp-in-string "\\s-" "" bufname)))
  
@@ -112,7 +131,7 @@ index fba00b2..ac9392b 100644
               (if (> (length bufname) sort-tab-name-max-length)
                   (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
                 bufname)))
-@@ -502,7 +532,8 @@ If you want buffer hide, return t, or return nil.")
+@@ -526,7 +554,8 @@ If you want buffer hide, return t, or return nil.")
    (let ((visible-buffers sort-tab-visible-buffers))
      (setq sort-tab-visible-buffers nil)
      (dolist (buf visible-buffers)
@@ -122,7 +141,7 @@ index fba00b2..ac9392b 100644
  
  (defun sort-tab-close-other-tabs ()
    (interactive)
-@@ -552,7 +583,25 @@ If you want buffer hide, return t, or return nil.")
+@@ -576,15 +605,37 @@ If you want buffer hide, return t, or return nil.")
  
  (defun sort-tab-select-visible-nth-tab (&optional tab-index)
    (interactive "p")
@@ -149,3 +168,18 @@ index fba00b2..ac9392b 100644
  
  (defun sort-tab-select-visible-tab ()
    (interactive)
+   (let* ((event last-command-event)
+          (key (make-vector 1 event))
+-         (key-desc (key-description key)))
+-    (sort-tab-select-visible-nth-tab
+-     (string-to-number (car (last (split-string key-desc "-")))))))
++         (current-buffer (window-buffer))
++         (key-desc (key-description key))
++         (index (string-to-number (car (last (split-string key-desc "-"))))))
++    (if (sort-tab-is-hidden-buffer-p current-buffer)
++        (setq index (1- index)))
++
++    (sort-tab-select-visible-nth-tab index)))
+ 
+ (defun sort-tab-kill-buffer-advisor (orig-fun &optional arg &rest args)
+   (if (equal (buffer-name) sort-tab-buffer-name)

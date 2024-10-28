@@ -1,6 +1,7 @@
 ;;; configs/init-copilot.el -*- lexical-binding: t; -*-
 
 (use-package! copilot
+  :commands copilot-mode
   :hook ((prog-mode . copilot-mode)
          (org-mode . copilot-mode))
   :custom
@@ -11,4 +12,5 @@
   :config
   (define-key evil-insert-state-map (kbd "C-e") 'copilot-accept-completion)
   (define-key evil-insert-state-map (kbd "M-]") 'copilot-next-completion)
-  (define-key evil-insert-state-map (kbd "M-[") 'copilot-previous-completion))
+  (define-key evil-insert-state-map (kbd "M-[") 'copilot-previous-completion)
+  )

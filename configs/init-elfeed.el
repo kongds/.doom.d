@@ -18,6 +18,8 @@
       (lambda (x)
         (let* ((x (string-trim x))
                (x (replace-regexp-in-string ":pdf" "" x))
+               (x (replace-regexp-in-string "..\\$." "$" x))
+               (x (replace-regexp-in-string ".._." "_" x))
                (x (replace-regexp-in-string ":Users" "/Users" x)))
           x)
         )

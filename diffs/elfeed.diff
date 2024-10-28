@@ -77,7 +77,7 @@ index 4915cae..e7d22a3 100644
               do (insert (propertize "Enclosure: " 'face 'message-header-name))
               do (elfeed-insert-link (car enclosure))
 diff --git a/elfeed.el b/elfeed.el
-index bbfef26..f6dc86a 100644
+index 029e729..52081e5 100644
 --- a/elfeed.el
 +++ b/elfeed.el
 @@ -291,6 +291,7 @@ If PROTOCOL is nil, returns URL."

@@ -35,23 +35,11 @@ LANG is a string, and the returned major mode is a symbol."
 (add-hook 'json-ts-mode-hook #'(lambda () (run-hooks 'json-mode-hook)))
 (add-hook 'bash-ts-mode-hook #'(lambda () (run-hooks 'sh-mode-hook)))
 
-;; fontfiy
-;; from https://github.com/gmlarumbe/emacsconf/blob/c9169e2b8ea4ef9dd29d27f111d1fc9c578d24e2/lisp-prog/python/python-ts-font-lock.el#L198
-(defgroup python-ts-font-lock nil
-  "Python tree-sitter faces."
-  :group 'python)
-
-(defface python-ts-punctuation-face
-  '((default :inherit font-lock-keyword-face))
-  "Face for punctuation symbols, e.g:
-!,;:?'=<>*"
-  :group 'python-ts-font-lock)
-
 
 (setq treesit-language-source-alist
       '((bash "https://github.com/tree-sitter/tree-sitter-bash")
         (cmake "https://github.com/uyha/tree-sitter-cmake")
-        (c "https://github.com/uyha/tree-sitter-c")
+        (c "https://github.com/tree-sitter/tree-sitter-c")
         (css "https://github.com/tree-sitter/tree-sitter-css")
         (elisp "https://github.com/Wilfred/tree-sitter-elisp")
         (go "https://github.com/tree-sitter/tree-sitter-go")
@@ -66,20 +54,32 @@ LANG is a string, and the returned major mode is a symbol."
         (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
         (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 
-(setq python--treesit-settings
-      (append python--treesit-settings
-              (treesit-font-lock-rules
-               :language 'python
-               :override t
-               :feature 'keyword
-               `([,@python--treesit-keywords "is not"] @font-lock-keyword-face
-                 ["="  "." "," "+" "-" "*" "/" "//" "=="] @python-ts-punctuation-face) ; DANGER: Check brackets/operators/delimiters below
+;; fontfiy
+;; from https://github.com/gmlarumbe/emacsconf/blob/c9169e2b8ea4ef9dd29d27f111d1fc9c578d24e2/lisp-prog/python/python-ts-font-lock.el#L198
+;; (defgroup python-ts-font-lock nil
+;;   "Python tree-sitter faces."
+;;   :group 'python)
+;;
+;; (defface python-ts-punctuation-face
+;;   '((default :inherit font-lock-keyword-face))
+;;   "Face for punctuation symbols, e.g:
+;; !,;:?'=<>*"
+;;   :group 'python-ts-font-lock)
 
-               :language 'python
-               :override t
-               :feature 'variable
-               '((dotted_name) @default
-                 ;;(keyword_argument name: (identifier) @font-lock-variable-name-face )
-                 (keyword_argument name: (identifier) @font-lock-preprocessor-face )
-                 )
-               )))
+;; (setq python--treesit-settings
+;;       (append python--treesit-settings
+;;               (treesit-font-lock-rules
+;;                :language 'python
+;;                :override t
+;;                :feature 'keyword
+;;                `([,@python--treesit-keywords "is not"] @font-lock-keyword-face
+;;                  ["="  "." "," "+" "-" "*" "/" "//" "=="] @python-ts-punctuation-face) ; DANGER: Check brackets/operators/delimiters below
+;;
+;;                :language 'python
+;;                :override t
+;;                :feature 'variable
+;;                '((dotted_name) @default
+;;                  ;;(keyword_argument name: (identifier) @font-lock-variable-name-face )
+;;                  (keyword_argument name: (identifier) @font-lock-preprocessor-face )
+;;                  )
+;;                )))

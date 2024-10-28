@@ -23,7 +23,7 @@ index b89ce80..aa73e3d 100755
                  if marker_input_quit or marker_input_finish:
                      self.running_flag = False
 diff --git a/core/webengine.py b/core/webengine.py
-index 6a8ee4c..bbe72ab 100755
+index 1177f33..fe73337 100755
 --- a/core/webengine.py
 +++ b/core/webengine.py
 @@ -37,6 +37,8 @@ from PyQt6.QtWebChannel import QWebChannel
@@ -33,9 +33,9 @@ index 6a8ee4c..bbe72ab 100755
 +import json
 +import subprocess
  
- MOUSE_LEFT_BUTTON = 1
- MOUSE_WHEEL_BUTTON = 4
-@@ -929,6 +931,7 @@ class BrowserBuffer(Buffer):
+ class BrowserView(QWebEngineView):
+ 
+@@ -931,6 +933,7 @@ class BrowserBuffer(Buffer):
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, self.enable_javascript)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.JavascriptCanAccessClipboard, self.enable_javascript_access_clipboard)
              self.settings.setAttribute(QWebEngineSettings.WebAttribute.ShowScrollBars, self.enable_scrollbar)
@@ -43,7 +43,7 @@ index 6a8ee4c..bbe72ab 100755
  
              if self.unknown_url_scheme_policy == "DisallowUnknownUrlSchemes":
                  self.settings.setUnknownUrlSchemePolicy(self.settings.UnknownUrlSchemePolicy.DisallowUnknownUrlSchemes)
-@@ -1039,6 +1042,47 @@ class BrowserBuffer(Buffer):
+@@ -1041,6 +1044,47 @@ class BrowserBuffer(Buffer):
                  f.write(base64.b64decode(b64bytes))
  
              message_to_emacs("Save image: " + image_path)
@@ -91,7 +91,7 @@ index 6a8ee4c..bbe72ab 100755
          else:
              if hasattr(self, "try_start_aria2_daemon"):
                  self.try_start_aria2_daemon()
-@@ -1191,7 +1235,7 @@ class BrowserBuffer(Buffer):
+@@ -1193,7 +1237,7 @@ class BrowserBuffer(Buffer):
              self.buffer_widget._search_text(self.buffer_widget.search_term)
  
      @PostGui()
@@ -101,10 +101,10 @@ index 6a8ee4c..bbe72ab 100755
              self.buffer_widget._search_text(self.buffer_widget.search_term, True)
  
 diff --git a/eaf.el b/eaf.el
-index bc446a9..64770f6 100644
+index 3d6e611..33d52de 100644
 --- a/eaf.el
 +++ b/eaf.el
-@@ -1066,46 +1066,46 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1067,46 +1067,46 @@ provide at least one way to let everyone experience EAF. ;)"
      (defvar eaf--topmost-switch-to-python nil
        "Record if Emacs should switch to Python process.")
  
@@ -140,7 +140,7 @@ index bc446a9..64770f6 100644
 -                           (require 'dbus)
 -                           (dbus-call-method :session "org.gnome.Shell" "/org/eaf/wayland" "org.eaf.wayland" "get_active_window" :timeout 1000))))
 -             (front-app-name (string-trim front)))
-+      (let ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh"))
++      (let* ((front (shell-command-to-string "bash /Users/royokong/fontmost_app.sh"))
 +            (front-app-name (string-trim front)))
          (cond
 -         ((member front-app-name (list "Python" "python3"))
@@ -180,7 +180,7 @@ index bc446a9..64770f6 100644
  
      (defun eaf--topmost-focus-out ()
        "Prepare the screenshot and hide all eaf buffers."
-@@ -1114,7 +1114,8 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1115,7 +1115,8 @@ provide at least one way to let everyone experience EAF. ;)"
            (with-current-buffer (window-buffer window)
              (when (derived-mode-p 'eaf-mode)
                (eaf--clip-image window)
@@ -190,7 +190,7 @@ index bc446a9..64770f6 100644
  
      (defun eaf--clip-image (window)
        "Clip the image of the qwidget."
-@@ -1153,6 +1154,7 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1154,6 +1155,7 @@ provide at least one way to let everyone experience EAF. ;)"
  
      (add-to-list 'delete-frame-functions #'eaf--topmost-delete-frame-handler)))
  
@@ -198,7 +198,7 @@ index bc446a9..64770f6 100644
  (defun eaf-monitor-configuration-change (&rest _)
    "EAF function to respond when detecting a window configuration change."
    (when (and eaf--monitor-configuration-p
-@@ -1192,6 +1194,14 @@ provide at least one way to let everyone experience EAF. ;)"
+@@ -1193,6 +1195,14 @@ provide at least one way to let everyone experience EAF. ;)"
                                    (- w window-divider-right-padding)
                                    (- h window-divider-bottom-padding))
                            view-infos)))))))

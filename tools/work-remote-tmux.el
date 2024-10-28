@@ -249,8 +249,8 @@
       (unless command
         (vterm-send-key "c" nil nil t)
         (sleep-for 0.05)
-        (vterm-send-key "d" nil nil t)
-        (sleep-for 0.05)
+        ;;(vterm-send-key "d" nil nil t)
+        ;;(sleep-for 0.05)
         (vterm-send-return)
         (sleep-for 0.1)
         (setq work-remote-tmux-rerun--start-point (point))
@@ -435,22 +435,18 @@
            (vterm-send-return))
        (work-remote-tmux-toggle ,server))))
 
-(defvar work-remote-tmux-server-prefix '("172-" "10-" "LLM1-"))
+(defvar work-remote-tmux-server-prefix '("172-" "10-" "LLM1-" "AMDLLM1-"))
 (defun work-remote-tmux-get-ip-by-prefix (prefix)
   (cond
    ((string-match-p "172-" prefix) work-remote-server-172)
    ((string-match-p "10-" prefix) work-remote-server-192)
    ((string-match-p "LLM1-" prefix) "LLM1")
-   ((string-match-p "LLM2-" prefix) "LLM2")
-   ((string-match-p "LLM3-" prefix) "LLM3")
-   ((string-match-p "LLM4-" prefix) "LLM4")))
+   ((string-match-p "AMDLLM1-" prefix) "AMDLLM1")))
 
 (work-remote-tmux-toggle-server work-remote-server-172)
 (work-remote-tmux-toggle-server work-remote-server-192)
 (work-remote-tmux-toggle-server "LLM1")
-(work-remote-tmux-toggle-server "LLM2")
-(work-remote-tmux-toggle-server "LLM3")
-(work-remote-tmux-toggle-server "LLM4")
+(work-remote-tmux-toggle-server "AMDLLM1")
 
 (map!
   "s-i" #'work-remote-tmux-toggle-work-remote-server-172

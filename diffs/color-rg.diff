@@ -1,8 +1,8 @@
 diff --git a/color-rg.el b/color-rg.el
-index 11bb772..be2f856 100644
+index f0fa9fa..45dc769 100755
 --- a/color-rg.el
 +++ b/color-rg.el
-@@ -621,6 +621,11 @@ This function is called from `compilation-filter-hook'."
+@@ -643,6 +643,11 @@ This function is called from `compilation-filter-hook'."
                      (run-at-time "1sec" nil
                                   (lambda ()
                                     (color-rg-clone-to-temp-buffer)))
@@ -14,7 +14,7 @@ index 11bb772..be2f856 100644
                      `(,(format "finished (%d matches found)\n" color-rg-hit-count) . "matched"))
                     ((not (buffer-modified-p))
                      '("finished with no matches found\n" . "no match"))
-@@ -886,12 +891,14 @@ user more freedom to use rg with special arguments."
+@@ -920,12 +925,14 @@ user more freedom to use rg with special arguments."
  (defun color-rg-read-input ()
    (let* ((current-symbol (color-rg-pointer-string))
           (input-string
@@ -35,7 +35,7 @@ index 11bb772..be2f856 100644
      (when (string-blank-p input-string)
        (setq input-string current-symbol))
      input-string))
-@@ -1207,17 +1214,19 @@ This assumes that `color-rg-in-string-p' has already returned true, i.e.
+@@ -1241,17 +1248,19 @@ This assumes that `color-rg-in-string-p' has already returned true, i.e.
    ;; Set `enable-local-variables' to :safe, avoid emacs ask annoyingly question when open file by color-rg.
    (setq enable-local-variables :safe)
    ;; Search.

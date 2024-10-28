@@ -39,6 +39,7 @@ def main():
 
     args = parser.parse_args()
     if args.model == 'gpt-4':
+        args.model = 'gpt-4-turbo'
         ## use chat
         # args.version = 1
         pass
@@ -48,7 +49,9 @@ def main():
         config = configure()
         chatbot = V1.Chatbot(config)
     else:
-        chatbot = V3.Chatbot(api_key=args.api_key, system_prompt=args.base_prompt, engine=args.model)
+        chatbot = V3.Chatbot(api_key=args.api_key,
+                             system_prompt=args.base_prompt, engine=args.model,
+                             max_tokens=4096)
     print('Logging in...')
     while True:
         print()

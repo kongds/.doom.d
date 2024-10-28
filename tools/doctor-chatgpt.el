@@ -11,7 +11,7 @@
   :type 'int
   :group 'doctor-chatgpt)
 
-(defcustom doctor-chatgpt-model "gpt-3.5-turbo"
+(defcustom doctor-chatgpt-model "gpt-4";;"gpt-3.5-turbo"
   "The model of chatgpt."
   :type 'string
   :group 'doctor-chatgpt)
@@ -84,6 +84,9 @@ information we want to display."
     (overlay-put ov 'priority 100)
     (overlay-put ov 'after-string str)))
 
+(defvar chatgpt-echo-price nil
+  "Echo the price of the chatgpt.")
+
 (defun doctor-chatgpt-filter (process output)
   "Filter for chatgpt process."
   (let ((buffer (process-buffer process)))
@@ -111,9 +114,10 @@ information we want to display."
             (insert (substring output 0 el))
             (goto-char (point-max))
             (read-only-mode 1)
-            (chatgpt--create-tokens-overlay (nth 0 match)
-                                            (nth 1 match)
-                                            (nth 2 match))))
+            (when chatgpt-echo-price
+              (chatgpt--create-tokens-overlay (nth 0 match)
+                                              (nth 1 match)
+                                              (nth 2 match)))))
         (setq output ""))
       (when (> (length output) 1) (push output doctor-chatgpt-recv-list))
       (with-current-buffer "*doctor*"
@@ -175,6 +179,8 @@ information we want to display."
        (format (cond
                 ((equal current-mode 'elfeed-show-mode)
                 "%sExplain this in Chinese")
+                ((equal current-mode 'latex-mode)
+                 "Below is a paragraph from an academic paper. Polish the writing to meet the academic style,improve the spelling, grammar, clarity, concision and overall readability. When necessary, rewrite the whole sentence. Furthermore, list all modification and explain the reasons to do so in markdown table. Paragraph:\n%s")
                 (t
                  "%sExplain this code"))
                arg))))

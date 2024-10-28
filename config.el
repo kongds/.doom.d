@@ -206,11 +206,18 @@
                '(("no_proxy" . "^\\(localhost\\|10\\..*\\|192\\.168\\..*\\)")
                  ("http" . "127.0.0.1:1087")
                  ("https" . "127.0.0.1:1087")))
+         (setq eaf-proxy-host "127.0.0.1"
+               eaf-proxy-port "1087"
+               eaf-proxy-type "http")
          (setenv "https_proxy" "http://127.0.0.1:1087")
          (setenv "http_proxy" "http://127.0.0.1:1087")
+         (setenv "NO_PROXY" "127.0.0.1")
          (setenv "ALL_PROXY" "socks://172.0.0.1:1080"))
         (t
          (setq url-proxy-services nil)
+         (setq eaf-proxy-host ""
+               eaf-proxy-port ""
+               eaf-proxy-type "")
          (setenv "https_proxy" nil)
          (setenv "http_proxy" nil)
          (setenv "ALL_PROXY" nil)))
@@ -219,6 +226,17 @@
   (lsp-bridge-restart-process))
 
 
+(defvar hide-modeline-check-timer nil)
+;; add idle timer to ensure modeline is hidden
+(setq hide-modeline-check-timer
+      (run-with-idle-timer
+       2 t
+       (lambda()
+         (cl-loop for buffer in '("*sort-tab*" " *lsp-bridge-diagnostic*")
+               do (when (get-buffer buffer)
+                    (with-current-buffer buffer
+                      (when mode-line-format
+                        (setq mode-line-format nil))))))))
 
 (load! "+bindings")
 
@@ -257,8 +275,6 @@
 ;;
 (load! "configs/init-blink-search")
 ;;
-(load! "configs/init-copilot")
-;;
 (load! "configs/init-color-rg")
 ;;
 (load! "configs/init-pdf-search")
@@ -280,6 +296,8 @@
 (load! "configs/init-elisp")
 ;;
 (load! "configs/init-magit")
+;;
+(load! "configs/init-copilot")
 
 ;;(doom-load-packages-incrementally '(python treesit acm lsp-bridge corfu))
 (doom-load-packages-incrementally '(corfu))
@@ -299,7 +317,7 @@
 
 (use-package! get-gpu-status :commands get-gpu-status)
 
-(use-package! hl-evil :commands hl-timer-toggle)
+(use-package! hl-evil :after (:any vterm python sh-script))
 
 (use-package! doctor-chatgpt :after doctor)
 

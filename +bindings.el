@@ -168,7 +168,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first."
   "k" #'previous-line)
 
  (:after python
-  :map python-mode-map
+  :map python-ts-mode-map
   :n "X" #'(lambda ()
              (interactive)
              (evil-open-below 0)
